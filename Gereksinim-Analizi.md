@@ -28,9 +28,9 @@
    - **API Metodu:** 
    - **Açıklama:** 
 
-8. **Tur Şirketi Detayı Gösterme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+8. **Tur Şirketi Detay Gösterme** (Recep Arslan)
+   - **API Metodu:** `GET /api/companies/{companyID}`
+   - **Açıklama:** Kullanıcının seçtiği tur firmasına ait profil bilgileri (firma adı, iletişim bilgileri, puanı, yorumları vb.) görüntülemesi sağlanır.
 
 9. **Tur Filtreleme** ()
    - **API Metodu:** 
@@ -80,37 +80,38 @@
    - **API Metodu:** 
    - **Açıklama:** 
 
-21. **Tur Firması Giriş Yapma** () 
-   - **API Metodu:** 
-   - **Açıklama:** 
+21. **Tur Firması Giriş Yapma** (Recep Arslan) 
+   - **API Metodu:** `POST /api/companies/auth/login`
+   - **Açıklama:** Sisteme kayıtlı tur firmalarının kimlik doğrulaması yaparak giriş yapmasını sağlar.
+   Gönderilen e-posta/kullanıcı adı ve şifre bilgileri doğrulanır. Başarılı girişte JWT veya benzeri bir erişim token’ı döndürülür.
 
-22. **Tur Firması Kayıt Olma** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+22. **Tur Firması Kayıt Olma** (Recep Arslan)
+   - **API Metodu:** `POST /api/companies/auth/register`
+   - **Açıklama:** Yeni bir tur firmasının sisteme kayıt olmasını sağlar. Firma bilgileri doğrulanarak veritabanına kaydedilir.
 
-23. **Tur Firması Kayıt Silme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+23. **Tur Firması Kayıt Silme** (Recep Arslan)
+   - **API Metodu:** `DELETE /api/companies/{companyID}`
+   - **Açıklama:** Tur firmasının hesabının sistemden kalıcı olarak silinmesi sağlanır. Bu işlem yalnızca ilgili firma tarafından yapılabilir ve geri alınamaz.
 
-24. **Tur Firması Tur Listeleme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+24. **Tur Firması Tur Listeleme** (Recep Arslan)
+   - **API Metodu:** `GET /api/companies/{companyID}/tours`
+   - **Açıklama:** Tur firmasının kendi turlarını görmesi sağlanır. Bu sayede bu turlar üzerinden kolayca gerekli işlemler yapılabilir.
 
-25. **Tur Ekleme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+25. **Tur Ekleme** (Recep Arslan)
+   - **API Metodu:** `POST /api/companies/{companyID}/tours`
+   - **Açıklama:** Tur firmasının gerekli bilgileri doldurarak kendisine ait yeni bir tur ekleyebilmesi sağlanır.
 
-26. **Tur Güncelleme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+26. **Tur Güncelleme** (Recep Arslan)
+   - **API Metodu:** `PUT /api/companies/{companyID}/tours/{tourID}`
+   - **Açıklama:** Her tur firması yalnızca kendi oluşturduğu turları güncelleyebilir. Tur kontenjanı, fiyat, tarih gibi bilgiler değiştirilebilir. Ayrıca firma kendi katılımcılarını da sisteme ekleyebilir.
 
-27. **Tur Firması Tur Detayı Görüntüleme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+27. **Tur Firması Tur Detayı Görüntüleme** (Recep Arslan)
+   - **API Metodu:** `GET /api/companies/{companyID}/tours/{tourID}`
+   - **Açıklama:** Tur firmasının kendisine ait turların detaylarını görüntülemesi sağlanır. Bu sayede firma tur katılımcı listesi, toplam kontenjan, dolu kontenjan ve kalan kontenjan gibi bilgileri görüntüleyebilir.
 
-28. **Tur Silme** ()
-   - **API Metodu:** 
-   - **Açıklama:** 
+28. **Tur Silme** (Recep Arslan)
+   - **API Metodu:** `DELETE /api/companies/{companyID}/tours/{tourID}`
+   - **Açıklama:** Firma kendisine ait olan bir turu sistemden kalıcı olarak silebilir. Eğer turda aktif katılımcılar bulunuyorsa, ilgili satın alımlar sistem tarafından otomatik olarak iptal edilir.
 
 29. **Rehber Giriş Yapma** ()
    - **API Metodu:** 
@@ -146,7 +147,7 @@
 
 # Gereksinim Dağılımları()
 
-1. [Furkan Fatih Şahin'in Gereksinimleri](Furkan-Fatih-Sahin/Furkan-Fatih-Sahin-gereksinimler.md)
-2. [Recep Arslan'ın Gereksinimleri](Recep-Arslan/Recep-Arslan-gereksinimler.md)
-3. [Beyza Keklikoğlu'nun Gereksinimleri](Beyza-Keklikoglu/Beyza-Keklikoglu-gereksinimler.md)
-4. [Ümmü Fidan'ın Gereksinimleri](Ummu-Fidan/Ummu-Fidan-gereksinimler.md)
+1. [Furkan Fatih Şahin'in Gereksinimleri](Furkan-Fatih-Sahin/Furkan-Fatih-Sahin-Gereksinimler.md)
+2. [Recep Arslan'ın Gereksinimleri](Recep-Arslan/Recep-Arslan-Gereksinimler.md)
+3. [Beyza Keklikoğlu'nun Gereksinimleri](Beyza-Keklikoglu/Beyza-Keklikoglu-Gereksinimler.md)
+4. [Ümmü Fidan'ın Gereksinimleri](Ummu-Fidan/Ummu-Fidan-Gereksinimler.md)
