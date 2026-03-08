@@ -1,0 +1,1966 @@
+openapi: 3.0.3
+info:
+  title: TravelBook API
+  version: 1.0.0
+  description: TravelBook platformu için RESTful API tanımlaması
+  contact:
+    name: CodeLegends Team
+    email: receparslan965@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: User Auth
+    description: Kullanıcı kimlik doğrulama işlemleri
+  - name: Users
+    description: Kullanıcı profil işlemleri
+  - name: Tours
+    description: Tur işlemleri
+  - name: Purchases
+    description: Tur satın alma işlemleri
+  - name: Favorites
+    description: Favori tur işlemleri
+  - name: Reviews
+    description: Yorum işlemleri
+  - name: Company Auth
+    description: Tur firması kimlik doğrulama işlemleri
+  - name: Companies
+    description: Tur firması işlemleri
+  - name: Company Tours
+    description: Tur firması tur yönetimi
+  - name: Guide Auth
+    description: Rehber kimlik doğrulama işlemleri
+  - name: Guides
+    description: Rehber işlemleri
+  - name: Guide Tours
+    description: Rehber tur işlemleri
+
+paths:
+  # ===================== USER AUTH =====================
+  /users/auth/login:
+    post:
+      tags: [User Auth]
+      summary: Kullanıcı Giriş Yapma
+      description: Kullanıcının sisteme e-posta ve şifre bilgileri ile giriş yapmasını sağlar.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Geçersiz e-posta veya şifre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/auth/register:
+    post:
+      tags: [User Auth]
+      summary: Kullanıcı Kayıt Olma
+      description: Yeni kullanıcının sisteme kayıt olmasını sağlar. Kullanıcı ad, soyad, e-posta ve şifre gibi gerekli bilgileri girerek hesap oluşturur.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+      responses:
+        '201':
+          description: Kayıt başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Geçersiz bilgiler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: E-posta zaten kayıtlı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== USERS =====================
+  /users/{userId}:
+    get:
+      tags: [Users]
+      summary: Kullanıcı Profil Bilgileri
+      description: Kullanıcının isim, soyisim, cinsiyet ve yaşadığı yer gibi bilgilerin görüntülenmesini sağlar.
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Profil bilgileri başarıyla döndürüldü
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Kullanıcı bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Users]
+      summary: Kullanıcı Kayıt Silme
+      description: Kimliği doğrulanmış kullanıcının kendi hesabını sistemden kalıcı olarak silmesini sağlar. Bu işlem geri alınamaz.
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: Kullanıcı başarıyla silindi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi hesabınızı silebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Kullanıcı bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}/password:
+    put:
+      tags: [Users]
+      summary: Kullanıcı Şifre Güncelleme
+      description: Kullanıcının mevcut şifresini değiştirerek yeni bir şifre belirlemesini sağlar.
+      operationId: updateUserPassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdateRequest'
+      responses:
+        '200':
+          description: Şifre başarıyla güncellendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Geçersiz şifre bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Mevcut şifre hatalı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi şifrenizi güncelleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== TOURS =====================
+  /tours:
+    get:
+      tags: [Tours]
+      summary: Tüm Turların Listelenmesi ve Filtreleme
+      description: Sistemde mevcut olan tüm turların listelenmesini sağlar. Tarih, fiyat veya konum gibi kriterlere göre filtreleme yapılabilir.
+      operationId: listTours
+      parameters:
+        - name: location
+          in: query
+          description: Tur konumuna göre filtrele
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          description: Minimum fiyat filtresi
+          schema:
+            type: number
+            format: double
+        - name: maxPrice
+          in: query
+          description: Maksimum fiyat filtresi
+          schema:
+            type: number
+            format: double
+        - name: startDate
+          in: query
+          description: Başlangıç tarihi filtresi
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Bitiş tarihi filtresi
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Sayfa numarası
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Sayfa başına kayıt sayısı
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Turlar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourListResponse'
+
+  /tours/{tourId}:
+    get:
+      tags: [Tours]
+      summary: Tur Detayı Gösterme
+      description: Seçilen bir turun detaylı bilgilerinin görüntülenmesini sağlar. Tur açıklaması, gezilecek yerler, fiyat, konum, tarih, görseller ve diğer detaylar.
+      operationId: getTourDetail
+      parameters:
+        - $ref: '#/components/parameters/tourId'
+      responses:
+        '200':
+          description: Tur detayları başarıyla döndürüldü
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourDetail'
+        '404':
+          description: Tur bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== PURCHASES =====================
+  /tours/{tourId}/purchases:
+    post:
+      tags: [Purchases]
+      summary: Tur Satın Alma
+      description: Kullanıcının seçtiği bir turu satın almasını sağlar. Satın alma işlemi simülasyon olarak gerçekleştirilir.
+      operationId: purchaseTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/tourId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+      responses:
+        '201':
+          description: Satın alma başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Purchase'
+        '400':
+          description: Geçersiz istek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tur bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /purchases/{purchaseId}:
+    delete:
+      tags: [Purchases]
+      summary: Tur Satın Alma İptali
+      description: Kullanıcının daha önce satın aldığı bir turu iptal etmesini sağlar.
+      operationId: cancelPurchase
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseId
+          in: path
+          required: true
+          description: Satın alma ID'si
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Satın alma başarıyla iptal edildi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Satın alma kaydı bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}/purchases:
+    get:
+      tags: [Purchases]
+      summary: Seyahatlerim
+      description: Kullanıcının geçmişte ve gelecek tarihli satın aldığı turların listelenmesini sağlar.
+      operationId: getUserPurchases
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - name: status
+          in: query
+          description: "Tur durumu filtresi: past (geçmiş) veya future (gelecek)"
+          schema:
+            type: string
+            enum: [past, future]
+      responses:
+        '200':
+          description: Satın alınan turlar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Purchase'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi seyahatlerinizi görüntüleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== FAVORITES =====================
+  /users/{userId}/favorites:
+    get:
+      tags: [Favorites]
+      summary: Favori Tur Listeleme
+      description: Kullanıcının favorilerine eklediği turları listeler.
+      operationId: listFavorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Favori turlar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TourSummary'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Favorites]
+      summary: Favori Tur Ekleme
+      description: Kullanıcının bir turu favori listesine eklemesini sağlar.
+      operationId: addFavorite
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteRequest'
+      responses:
+        '201':
+          description: Tur favorilere eklendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Geçersiz istek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Tur zaten favorilerde
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}/favorites/{tourId}:
+    delete:
+      tags: [Favorites]
+      summary: Favori Tur Silme
+      description: Kullanıcının favori listesindeki turu silmesini sağlar.
+      operationId: removeFavorite
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/tourId'
+      responses:
+        '204':
+          description: Tur favorilerden kaldırıldı
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Favori bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== REVIEWS =====================
+  /tours/{tourId}/reviews:
+    post:
+      tags: [Reviews]
+      summary: Yorum Ekleme
+      description: Kullanıcının bir tur hakkında yorum yapmasını sağlar. Kullanıcı yorum metni ve puan girer.
+      operationId: addReview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/tourId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '201':
+          description: Yorum başarıyla eklendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Geçersiz yorum bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reviews/{reviewId}:
+    put:
+      tags: [Reviews]
+      summary: Yorum Güncelleme
+      description: Kullanıcının daha önce yaptığı yorumu güncellemesini sağlar. Kullanıcı yalnızca kendi yorumlarını düzenleyebilir.
+      operationId: updateReview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/reviewId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '200':
+          description: Yorum başarıyla güncellendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi yorumlarınızı güncelleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Yorum bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Reviews]
+      summary: Yorum Silme
+      description: Kullanıcının daha önce yaptığı yorumu kalıcı olarak silmesini sağlar. Bu işlem geri alınamaz.
+      operationId: deleteReview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/reviewId'
+      responses:
+        '204':
+          description: Yorum başarıyla silindi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi yorumlarınızı silebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Yorum bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== COMPANY AUTH =====================
+  /companies/auth/login:
+    post:
+      tags: [Company Auth]
+      summary: Tur Firması Giriş Yapma
+      description: Sisteme kayıtlı tur firmalarının kimlik doğrulaması yaparak giriş yapmasını sağlar.
+      operationId: loginCompany
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Geçersiz kimlik bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /companies/auth/register:
+    post:
+      tags: [Company Auth]
+      summary: Tur Firması Kayıt Olma
+      description: Yeni bir tur firmasının sisteme kayıt olmasını sağlar. Firma bilgileri doğrulanarak veritabanına kaydedilir.
+      operationId: registerCompany
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyRegisterRequest'
+      responses:
+        '201':
+          description: Kayıt başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Geçersiz bilgiler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Firma zaten kayıtlı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== COMPANIES =====================
+  /companies:
+    get:
+      tags: [Companies]
+      summary: Tüm Tur Firmalarını Listeleme
+      description: Sistemde kayıtlı olan tüm tur şirketlerinin genel bilgilerinin listelenmesini sağlar.
+      operationId: listCompanies
+      responses:
+        '200':
+          description: Firmalar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanySummary'
+
+  /companies/{companyId}:
+    get:
+      tags: [Companies]
+      summary: Tur Şirketi Detay Gösterme
+      description: Kullanıcının seçtiği tur firmasına ait profil bilgileri (firma adı, iletişim bilgileri, puanı, yorumları vb.) görüntülenmesi sağlanır.
+      operationId: getCompanyDetail
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: Firma detayları başarıyla döndürüldü
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetail'
+        '404':
+          description: Firma bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Companies]
+      summary: Tur Firması Kayıt Silme
+      description: Tur firmasının hesabının sistemden kalıcı olarak silinmesi sağlanır. Bu işlem geri alınamaz.
+      operationId: deleteCompany
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '204':
+          description: Firma başarıyla silindi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi firmanızı silebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Firma bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== COMPANY TOURS =====================
+  /companies/{companyId}/tours:
+    get:
+      tags: [Company Tours]
+      summary: Tur Firması Tur Listeleme
+      description: Tur firmasının kendi turlarını listelemesini sağlar.
+      operationId: listCompanyTours
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: Turlar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TourSummary'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Company Tours]
+      summary: Tur Ekleme
+      description: Tur firmasının gerekli bilgileri doldurarak kendisine ait yeni bir tur eklemesini sağlar.
+      operationId: createTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TourCreateRequest'
+      responses:
+        '201':
+          description: Tur başarıyla oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourDetail'
+        '400':
+          description: Geçersiz tur bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi firmanıza tur ekleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /companies/{companyId}/tours/{tourId}:
+    get:
+      tags: [Company Tours]
+      summary: Tur Firması Tur Detayı Görüntüleme
+      description: Tur firmasının kendisine ait turların detaylarını (katılımcı listesi, kontenjan bilgileri vb.) görüntülemesini sağlar.
+      operationId: getCompanyTourDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+        - $ref: '#/components/parameters/tourId'
+      responses:
+        '200':
+          description: Tur detayları başarıyla döndürüldü
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyTourDetail'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tur bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Company Tours]
+      summary: Tur Güncelleme
+      description: Tur firmasının kendi oluşturduğu turları güncellemesini sağlar. Kontenjan, fiyat, tarih gibi bilgiler değiştirilebilir.
+      operationId: updateTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+        - $ref: '#/components/parameters/tourId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TourUpdateRequest'
+      responses:
+        '200':
+          description: Tur başarıyla güncellendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourDetail'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi turlarınızı güncelleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tur bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Company Tours]
+      summary: Tur Silme
+      description: Firma kendisine ait olan bir turu sistemden kalıcı olarak silebilir. Aktif katılımcılar varsa satın alımlar otomatik iptal edilir.
+      operationId: deleteTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+        - $ref: '#/components/parameters/tourId'
+      responses:
+        '204':
+          description: Tur başarıyla silindi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi turlarınızı silebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tur bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== GUIDE AUTH =====================
+  /guides/auth/login:
+    post:
+      tags: [Guide Auth]
+      summary: Rehber Giriş Yapma
+      description: Tur rehberlerinin sisteme kayıtlı e-posta adresleri ve şifreleri ile giriş yapmasını sağlar.
+      operationId: loginGuide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Geçersiz kimlik bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /guides/auth/register:
+    post:
+      tags: [Guide Auth]
+      summary: Rehber Kayıt Olma
+      description: Yeni tur rehberlerinin platforma kaydolmasını sağlar. Rehberin adı, soyadı, uzmanlık alanları, bildiği diller ve iletişim bilgileri gibi detaylar toplanır.
+      operationId: registerGuide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuideRegisterRequest'
+      responses:
+        '201':
+          description: Kayıt başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Geçersiz bilgiler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: E-posta zaten kayıtlı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== GUIDES =====================
+  /guides:
+    get:
+      tags: [Guides]
+      summary: Tüm Tur Rehberlerinin Listelenmesi
+      description: Sistemde kayıtlı tur rehberlerini listeler.
+      operationId: listGuides
+      responses:
+        '200':
+          description: Rehberler başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuideSummary'
+
+  /guides/{guideId}:
+    get:
+      tags: [Guides]
+      summary: Tur Rehberi Detayı Gösterme
+      description: Belirli bir rehberin tüm profesyonel detaylarının (deneyim süresi, yorumlar, puan, uzman olduğu rotalar) görüntülenmesini sağlar.
+      operationId: getGuideDetail
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+      responses:
+        '200':
+          description: Rehber detayları başarıyla döndürüldü
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideDetail'
+        '404':
+          description: Rehber bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Guides]
+      summary: Rehber Profil Güncelleme
+      description: Tur rehberinin profil bilgilerini (biyografi, dil bilgisi, uzmanlık alanları, profil fotoğrafı vb.) güncellemesini sağlar.
+      operationId: updateGuideProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuideUpdateRequest'
+      responses:
+        '200':
+          description: Profil başarıyla güncellendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideDetail'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi profilinizi güncelleyebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Rehber bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Guides]
+      summary: Rehber Kayıt Silme
+      description: Tur rehberinin hesabını ve kişisel verilerini kalıcı olarak silmesini sağlar. Bu işlem geri alınamaz.
+      operationId: deleteGuide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+      responses:
+        '204':
+          description: Rehber başarıyla silindi
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Yalnızca kendi hesabınızı silebilirsiniz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Rehber bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===================== GUIDE TOURS =====================
+  /guides/{guideId}/tours:
+    get:
+      tags: [Guide Tours]
+      summary: Rehber Kayıtlı Tur Firmaları Listeleme
+      description: Tur rehberinin kayıtlı olduğu veya iş birliği yaptığı turları görüntülemesini sağlar.
+      operationId: listGuideTours
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+      responses:
+        '200':
+          description: Turlar başarıyla listelendi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TourSummary'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Guide Tours]
+      summary: Rehber Tur Kaydetme
+      description: Tur rehberinin belirli bir tura rehberlik hizmeti vermek amacıyla kendisini atamasını sağlar.
+      operationId: assignGuideToTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuideTourRequest'
+      responses:
+        '201':
+          description: Rehber tura başarıyla atandı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Geçersiz istek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Rehber zaten bu tura kayıtlı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /guides/{guideId}/tours/{tourId}:
+    delete:
+      tags: [Guide Tours]
+      summary: Rehber Tur Silme
+      description: Tur rehberinin kayıt olduğu veya görevlendirildiği bir turdan kaydını silmesini sağlar.
+      operationId: removeGuideFromTour
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/guideId'
+        - $ref: '#/components/parameters/tourId'
+      responses:
+        '204':
+          description: Rehber turdan başarıyla ayrıldı
+        '401':
+          description: Yetkilendirme hatası
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Kayıt bulunamadı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ===================== COMPONENTS =====================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token ile kimlik doğrulama
+
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: Kullanıcı ID'si
+      schema:
+        type: string
+
+    tourId:
+      name: tourId
+      in: path
+      required: true
+      description: Tur ID'si
+      schema:
+        type: string
+
+    companyId:
+      name: companyId
+      in: path
+      required: true
+      description: Firma ID'si
+      schema:
+        type: string
+
+    guideId:
+      name: guideId
+      in: path
+      required: true
+      description: Rehber ID'si
+      schema:
+        type: string
+
+    reviewId:
+      name: reviewId
+      in: path
+      required: true
+      description: Yorum ID'si
+      schema:
+        type: string
+
+  schemas:
+    # ---- Auth Schemas ----
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: "P@ssw0rd123"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT erişim token'ı
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        userId:
+          type: string
+          example: "usr_12345"
+        role:
+          type: string
+          enum: [user, company, guide]
+          example: "user"
+
+    # ---- User Schemas ----
+    UserRegisterRequest:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Yılmaz"
+        email:
+          type: string
+          format: email
+          example: "ali.yilmaz@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "P@ssw0rd123"
+        gender:
+          type: string
+          enum: [male, female, other]
+          example: "male"
+        location:
+          type: string
+          example: "İstanbul, Türkiye"
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "usr_12345"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Yılmaz"
+        email:
+          type: string
+          format: email
+          example: "ali.yilmaz@example.com"
+        gender:
+          type: string
+          enum: [male, female, other]
+          example: "male"
+        location:
+          type: string
+          example: "İstanbul, Türkiye"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+    PasswordUpdateRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          example: "OldP@ssw0rd"
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: "NewP@ssw0rd123"
+
+    # ---- Tour Schemas ----
+    TourSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "tour_001"
+        name:
+          type: string
+          example: "Kapadokya Balon Turu"
+        location:
+          type: string
+          example: "Nevşehir, Kapadokya"
+        price:
+          type: number
+          format: double
+          example: 2500.00
+        startDate:
+          type: string
+          format: date
+          example: "2026-06-15"
+        endDate:
+          type: string
+          format: date
+          example: "2026-06-18"
+        imageUrl:
+          type: string
+          format: uri
+          example: "https://example.com/images/kapadokya.jpg"
+        companyName:
+          type: string
+          example: "Gezgin Tur A.Ş."
+        rating:
+          type: number
+          format: double
+          example: 4.7
+
+    TourDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "tour_001"
+        name:
+          type: string
+          example: "Kapadokya Balon Turu"
+        description:
+          type: string
+          example: "Kapadokya'nın büyüleyici peri bacalarını kuş bakışı görün..."
+        location:
+          type: string
+          example: "Nevşehir, Kapadokya"
+        price:
+          type: number
+          format: double
+          example: 2500.00
+        startDate:
+          type: string
+          format: date
+          example: "2026-06-15"
+        endDate:
+          type: string
+          format: date
+          example: "2026-06-18"
+        totalCapacity:
+          type: integer
+          example: 30
+        availableCapacity:
+          type: integer
+          example: 12
+        places:
+          type: array
+          items:
+            type: string
+          example: ["Göreme Açık Hava Müzesi", "Uçhisar Kalesi", "Derinkuyu Yeraltı Şehri"]
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - "https://example.com/images/kapadokya1.jpg"
+            - "https://example.com/images/kapadokya2.jpg"
+        companyId:
+          type: string
+          example: "comp_001"
+        companyName:
+          type: string
+          example: "Gezgin Tur A.Ş."
+        guideId:
+          type: string
+          nullable: true
+          example: "guide_001"
+        guideName:
+          type: string
+          nullable: true
+          example: "Mehmet Demir"
+        rating:
+          type: number
+          format: double
+          example: 4.7
+        reviewCount:
+          type: integer
+          example: 45
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T09:00:00Z"
+
+    TourListResponse:
+      type: object
+      properties:
+        tours:
+          type: array
+          items:
+            $ref: '#/components/schemas/TourSummary'
+        totalCount:
+          type: integer
+          example: 150
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+
+    TourCreateRequest:
+      type: object
+      required: [name, description, location, price, startDate, endDate, totalCapacity]
+      properties:
+        name:
+          type: string
+          example: "Ege Kıyıları Turu"
+        description:
+          type: string
+          example: "Ege'nin en güzel koylarını keşfedin..."
+        location:
+          type: string
+          example: "Muğla, Ege"
+        price:
+          type: number
+          format: double
+          example: 3500.00
+        startDate:
+          type: string
+          format: date
+          example: "2026-07-01"
+        endDate:
+          type: string
+          format: date
+          example: "2026-07-05"
+        totalCapacity:
+          type: integer
+          example: 25
+        places:
+          type: array
+          items:
+            type: string
+          example: ["Ölüdeniz", "Kelebekler Vadisi", "Saklıkent Kanyonu"]
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - "https://example.com/images/ege1.jpg"
+
+    TourUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Ege Kıyıları Turu - Güncellendi"
+        description:
+          type: string
+          example: "Güncellenen tur açıklaması..."
+        location:
+          type: string
+          example: "Muğla, Ege"
+        price:
+          type: number
+          format: double
+          example: 3200.00
+        startDate:
+          type: string
+          format: date
+          example: "2026-07-02"
+        endDate:
+          type: string
+          format: date
+          example: "2026-07-06"
+        totalCapacity:
+          type: integer
+          example: 30
+        places:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    CompanyTourDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "tour_001"
+        name:
+          type: string
+          example: "Kapadokya Balon Turu"
+        description:
+          type: string
+          example: "Kapadokya'nın büyüleyici peri bacalarını kuş bakışı görün..."
+        location:
+          type: string
+          example: "Nevşehir, Kapadokya"
+        price:
+          type: number
+          format: double
+          example: 2500.00
+        startDate:
+          type: string
+          format: date
+          example: "2026-06-15"
+        endDate:
+          type: string
+          format: date
+          example: "2026-06-18"
+        totalCapacity:
+          type: integer
+          example: 30
+        filledCapacity:
+          type: integer
+          example: 18
+        remainingCapacity:
+          type: integer
+          example: 12
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        guideId:
+          type: string
+          nullable: true
+          example: "guide_001"
+        guideName:
+          type: string
+          nullable: true
+          example: "Mehmet Demir"
+
+    Participant:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "usr_12345"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Yılmaz"
+        purchaseDate:
+          type: string
+          format: date-time
+          example: "2026-03-01T14:00:00Z"
+
+    # ---- Purchase Schemas ----
+    PurchaseRequest:
+      type: object
+      required: [numberOfPeople]
+      properties:
+        numberOfPeople:
+          type: integer
+          minimum: 1
+          example: 2
+
+    Purchase:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "purch_001"
+        tourId:
+          type: string
+          example: "tour_001"
+        tourName:
+          type: string
+          example: "Kapadokya Balon Turu"
+        userId:
+          type: string
+          example: "usr_12345"
+        numberOfPeople:
+          type: integer
+          example: 2
+        totalPrice:
+          type: number
+          format: double
+          example: 5000.00
+        status:
+          type: string
+          enum: [active, cancelled]
+          example: "active"
+        purchaseDate:
+          type: string
+          format: date-time
+          example: "2026-03-01T14:00:00Z"
+        tourStartDate:
+          type: string
+          format: date
+          example: "2026-06-15"
+        tourEndDate:
+          type: string
+          format: date
+          example: "2026-06-18"
+
+    # ---- Favorite Schemas ----
+    FavoriteRequest:
+      type: object
+      required: [tourId]
+      properties:
+        tourId:
+          type: string
+          example: "tour_001"
+
+    # ---- Review Schemas ----
+    ReviewRequest:
+      type: object
+      required: [rating, comment]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: "Harika bir deneyimdi, kesinlikle tavsiye ederim!"
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "rev_001"
+        tourId:
+          type: string
+          example: "tour_001"
+        userId:
+          type: string
+          example: "usr_12345"
+        userName:
+          type: string
+          example: "Ali Y."
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: "Harika bir deneyimdi, kesinlikle tavsiye ederim!"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-02-20T18:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-02-21T10:00:00Z"
+
+    # ---- Company Schemas ----
+    CompanyRegisterRequest:
+      type: object
+      required: [name, email, password, phone, address]
+      properties:
+        name:
+          type: string
+          example: "Gezgin Tur A.Ş."
+        email:
+          type: string
+          format: email
+          example: "info@gezgintur.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "C0mpanyP@ss"
+        phone:
+          type: string
+          example: "+90 212 555 1234"
+        address:
+          type: string
+          example: "Beyoğlu, İstanbul"
+        description:
+          type: string
+          example: "20 yıllık deneyime sahip tur firması"
+
+    CompanySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "comp_001"
+        name:
+          type: string
+          example: "Gezgin Tur A.Ş."
+        rating:
+          type: number
+          format: double
+          example: 4.5
+        tourCount:
+          type: integer
+          example: 15
+        location:
+          type: string
+          example: "İstanbul"
+
+    CompanyDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "comp_001"
+        name:
+          type: string
+          example: "Gezgin Tur A.Ş."
+        email:
+          type: string
+          format: email
+          example: "info@gezgintur.com"
+        phone:
+          type: string
+          example: "+90 212 555 1234"
+        address:
+          type: string
+          example: "Beyoğlu, İstanbul"
+        description:
+          type: string
+          example: "20 yıllık deneyime sahip tur firması"
+        rating:
+          type: number
+          format: double
+          example: 4.5
+        tourCount:
+          type: integer
+          example: 15
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-06-01T09:00:00Z"
+
+    # ---- Guide Schemas ----
+    GuideRegisterRequest:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          example: "Mehmet"
+        lastName:
+          type: string
+          example: "Demir"
+        email:
+          type: string
+          format: email
+          example: "mehmet.demir@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "Guid3P@ss"
+        biography:
+          type: string
+          example: "10 yıllık profesyonel tur rehberi..."
+        languages:
+          type: array
+          items:
+            type: string
+          example: ["Türkçe", "İngilizce", "Almanca"]
+        expertRoutes:
+          type: array
+          items:
+            type: string
+          example: ["Kapadokya", "Efes", "Pamukkale"]
+        phone:
+          type: string
+          example: "+90 532 555 6789"
+
+    GuideSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "guide_001"
+        firstName:
+          type: string
+          example: "Mehmet"
+        lastName:
+          type: string
+          example: "Demir"
+        rating:
+          type: number
+          format: double
+          example: 4.8
+        languages:
+          type: array
+          items:
+            type: string
+          example: ["Türkçe", "İngilizce", "Almanca"]
+        expertRoutes:
+          type: array
+          items:
+            type: string
+          example: ["Kapadokya", "Efes"]
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/images/mehmet.jpg"
+
+    GuideDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "guide_001"
+        firstName:
+          type: string
+          example: "Mehmet"
+        lastName:
+          type: string
+          example: "Demir"
+        email:
+          type: string
+          format: email
+          example: "mehmet.demir@example.com"
+        phone:
+          type: string
+          example: "+90 532 555 6789"
+        biography:
+          type: string
+          example: "10 yıllık profesyonel tur rehberi..."
+        languages:
+          type: array
+          items:
+            type: string
+          example: ["Türkçe", "İngilizce", "Almanca"]
+        expertRoutes:
+          type: array
+          items:
+            type: string
+          example: ["Kapadokya", "Efes", "Pamukkale"]
+        experienceYears:
+          type: integer
+          example: 10
+        rating:
+          type: number
+          format: double
+          example: 4.8
+        reviewCount:
+          type: integer
+          example: 120
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/images/mehmet.jpg"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-15T08:00:00Z"
+
+    GuideUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "Mehmet"
+        lastName:
+          type: string
+          example: "Demir"
+        phone:
+          type: string
+          example: "+90 532 555 9999"
+        biography:
+          type: string
+          example: "Güncellenmiş biyografi..."
+        languages:
+          type: array
+          items:
+            type: string
+          example: ["Türkçe", "İngilizce", "Fransızca"]
+        expertRoutes:
+          type: array
+          items:
+            type: string
+          example: ["Kapadokya", "Efes", "Truva"]
+        profileImageUrl:
+          type: string
+          format: uri
+          example: "https://example.com/images/mehmet_new.jpg"
+
+    GuideTourRequest:
+      type: object
+      required: [tourId]
+      properties:
+        tourId:
+          type: string
+          example: "tour_001"
+
+    # ---- Common Schemas ----
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "İşlem başarıyla tamamlandı"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Geçersiz istek"
+        message:
+          type: string
+          example: "Detaylı hata açıklaması"
+        statusCode:
+          type: integer
+          example: 400
