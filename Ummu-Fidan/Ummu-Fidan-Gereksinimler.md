@@ -15,21 +15,21 @@
    - **Açıklama:** Sistemde kayıtlı tur rehberlerini listeler. Kullanıcılar bu liste sayesinde rehberler hakkında bilgi alarak tercih yapabilir.
     
 5. **TUR SATIN ALMA**
-   - **API Metodu:** POST  `/api/tours/{tourID}/purchases`
+   - **API Metodu:** POST  `/api/tours/{tourId}/purchases`
    - **Açıklama:** Kullanıcının seçtiği bir turu satın almasını sağlar. Satın alma işlemi simülasyon olarak gerçekleştirilir ve sistemde kayıt altına alınır.
     
 6. **TUR SATIN ALMA İPTALİ**
-   - **API Metodu:** DELETE  `/api/purchases/{purchasesID}`
+   - **API Metodu:** DELETE  `/api/purchases/{purchasesId}`
    - **Açıklama:** Kullanıcının daha önce satın aldığı bir turu iptal etmesini sağlar. İşlem başarılı olduğunda satın alma kaydı sistemden kaldırılır veya iptal durumuna getirilir ve sistem buna göre güncellenir.
    
 7. **FAVORİ TUR LİSTELEME**
-   - **API Metodu:** GET  `/api/users/{userID}/favorites`
+   - **API Metodu:** GET  `/api/users/{userId}/favorites`
    - **Açıklama:** Kullanıcının favorilerine eklediği turları listeler. Kullanıcı daha önce favori olarak işaretlediği turları bu bölümde görüntüleyebilir. Bu işlem için giriş yapmış olmak gerekir.
     
 8. **FAVORİ TUR EKLEME**
-   - **API Metodu:** POST  `/api/users/{userID}/favorites`
+   - **API Metodu:** POST  `/api/users/{userId}/favorites`
    - **Açıklama:** Kullanıcının bir turu favori listesine eklemesini sağlar. Eklenmek istenen tur bilgisi sisteme gönderilir ve ilgili kullanıcının favorilerine kaydedilir. Bu sayede kullanıcı daha sonra rahatlıkla bu favoriler arasından seçim yaparak tur satın alabilir.
     
 9. **FAVORİ TUR SİLME**
-   - **API Metodu:** DELETE  `/api/users/{userID}/favorites/{tourID}`
+   - **API Metodu:** DELETE  `/api/users/{userId}/favorites/{tourId}`
    - **Açıklama:** Kullanıcının favori listesindeki turu silmesini sağlar. İşlem tamamlandığında ilgili tur kullanıcının favori listesinden kaldırılır ve sistem buna göre güncellenir.

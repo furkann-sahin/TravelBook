@@ -9,15 +9,15 @@
     - **Açıklama:** Yeni kullanıcının sisteme kayıt olmasını sağlar. Kullanıcı ad, soyad, e-posta ve şifre gibi gerekli bilgileri girerek hesap oluşturur. Kayıt işlemi başarılı olduğunda kullanıcı sisteme giriş yapabilir.
 
 3. **Kullanıcı Kayıt Silme** (Beyza Keklikoğlu)
-    - **API Metodu:** `DELETE /api/users/{userID}`
+    - **API Metodu:** `DELETE /api/users/{userId}`
     - **Açıklama:** Kimliği doğrulanmış kullanıcının kendi hesabını sistemden silmesini sağlar. İşlem geri alınamaz. Silme işlemi sırasında kullanıcıya ait ilişkili verilerin (yorumlar, satın almalar vb.) sistemden silinmesi sağlanır. Kullanıcı yalnızca kendi hesabını silebilir.
 
 4. **Kullanıcı Profil Bilgileri** (Beyza Keklikoğlu)
-    - **API Metodu:**  `GET /api/users/{userID}`
+    - **API Metodu:**  `GET /api/users/{userId}`
     - **Açıklama:**  Kullanıcının isim, soyisim, cinsiyet ve yaşadığı yer gibi bilgilerin görüntülenmesini sağlar.Sadece giriş yapmış kullanıcılar kendi profil bilgilerini görüntüleyebilir.
 
 5. **Kullanıcı Şifre Güncelleme** (Beyza Keklikoğlu)
-    - **API Metodu:** `PUT /api/users/{userID}/password`
+    - **API Metodu:** `PUT /api/users/{userId}/password`
     - **Açıklama:** Kullanıcının mevcut şifresini değiştirerek yeni bir şifre belirlemesini sağlar. Kullanıcıdan mevcut şifre ve yeni şifre bilgisi alınır.Sadece giriş yapmış kullanıcılar kendi şifrelerini güncelleyebilir.
 
 6. **Tüm Turların Listelenmesi** (Beyza Keklikoğlu)
@@ -25,11 +25,11 @@
     - **Açıklama:** Sistemde mevcut olan tüm turların listelenmesini sağlar. Kullanıcılar tur adı, fiyat, tarih ve konum gibi temel bilgileri görüntüleyebilir. Bu özellik, kullanıcıların mevcut turları keşfetmesine olanak tanır.
 
 7. **Tur Detayı Gösterme** (Beyza Keklikoğlu)
-    - **API Metodu:** `GET /api/tours/{tourID}`
+    - **API Metodu:** `GET /api/tours/{tourId}`
     - **Açıklama:**  Seçilen bir turun detaylı bilgilerinin görüntülenmesini sağlar. Kullanıcılar tur açıklaması, gezilecek yerler, fiyat, konum, tarih, görseller ve diğer detayları inceleyebilir. 
 
 8. **Tur Şirketi Detay Gösterme** (Recep Arslan)
-    - **API Metodu:** `GET /api/companies/{companyID}`
+    - **API Metodu:** `GET /api/companies/{companyId}`
     - **Açıklama:** Kullanıcının seçtiği tur firmasına ait profil bilgileri (firma adı, iletişim bilgileri, puanı, yorumları vb.) görüntülemesi sağlanır.
 
 9. **Tur Filtreleme** (Ümmü Fidan)
@@ -41,43 +41,43 @@
     - **Açıklama:** Sistemde kayıtlı tur rehberlerini listeler. Kullanıcılar bu liste sayesinde rehberler hakkında bilgi alarak tercih yapabilir.
 
 11. **Tur Rehberi Detayı Gösterme** (Furkan Fatih Şahin)
-    - **API Metodu:** `GET /api/guides/{guideID}`
+    - **API Metodu:** `GET /api/guides/{guideId}`
     - **Açıklama:** Belirli bir rehberin tüm profesyonel detaylarının (deneyim süresi, aldığı yorumlar, puanı, uzman olduğu rotalar) görüntülenmesini sağlar. Bu sayfa hem rehberin kendi bilgilerini kontrol etmesi hem de tur şirketlerinin uygun rehberi seçerken detaylı inceleme yapması için kullanılır.
 
 12. **Tur Satın Alma** (Ümmü Fidan)
-    - **API Metodu:** `POST /api/tours/{tourID}/purchases`
+    - **API Metodu:** `POST /api/tours/{tourId}/purchases`
     - **Açıklama:** Kullanıcının seçtiği bir turu satın almasını sağlar. Satın alma işlemi simülasyon olarak gerçekleştirilir ve sistemde kayıt altına alınır.
 
 13. **Tur Satın Alma İptali** (Ümmü Fidan)
-    - **API Metodu:** `DELETE /api/purchases/{purchasesID}`
+    - **API Metodu:** `DELETE /api/purchases/{purchasesId}`
     - **Açıklama:** Kullanıcının daha önce satın aldığı bir turu iptal etmesini sağlar. İşlem başarılı olduğunda satın alma kaydı sistemden kaldırılır veya iptal durumuna getirilir ve sistem buna göre güncellenir.
 
 14. **Seyahatlerim** (Beyza Keklikoğlu)
-    - **API Metodu:**  `GET /api/users/{userID}/purchases?status=past|future`
+    - **API Metodu:**  `GET /api/users/{userId}/purchases?status=past|future`
     - **Açıklama:**  Kullanıcının geçmişte satın aldığı ve gelecek tarihli satın aldığı turların listelenmesini sağlar. Kullanıcılar geçmiş veya gelecekte ki bir turun bilgilerini görüntüleyebilir. Sadece giriş yapmış kullanıcılar kendi satın aldığı turlarını görüntüleyebilir.
 
 15. **Favori Tur Listeleme** (Ümmü Fidan)
-    - **API Metodu:** `GET /api/users/{userID}/favorites`
+    - **API Metodu:** `GET /api/users/{userId}/favorites`
     - **Açıklama:** Kullanıcının favorilerine eklediği turları listeler. Kullanıcı daha önce favori olarak işaretlediği turları bu bölümde görüntüleyebilir. Bu işlem için giriş yapmış olmak gerekir.
 
 16. **Favori Tur Ekleme** (Ümmü Fidan)
-    - **API Metodu:** `POST  /api/users/{userID}/favorites`
+    - **API Metodu:** `POST  /api/users/{userId}/favorites`
     - **Açıklama:** Kullanıcının bir turu favori listesine eklemesini sağlar. Eklenmek istenen tur bilgisi sisteme gönderilir ve ilgili kullanıcının favorilerine kaydedilir. Bu sayede kullanıcı daha sonra rahatlıkla bu favoriler arasından seçim yaparak tur satın alabilir.
 
 17. **Favori Tur Silme** (Ümmü Fidan)
-    - **API Metodu:** `DELETE /api/users/{userID}/favorites/{tourID}`
+    - **API Metodu:** `DELETE /api/users/{userId}/favorites/{tourId}`
     - **Açıklama:** Kullanıcının favori listesindeki turu silmesini sağlar. İşlem tamamlandığında ilgili tur kullanıcının favori listesinden kaldırılır ve sistem buna göre güncellenir.
 
 18. **Yorum Ekleme** (Beyza Keklikoğlu)
-    - **API Metodu:**  `POST /api/tours/{tourID}/reviews`
+    - **API Metodu:**  `POST /api/tours/{tourId}/reviews`
     - **Açıklama:**  Kullanıcının bir tur hakkında yorum yapmasını sağlar. Kullanıcı, yorum metni girerek ve puanlayarak tur ile ilgili görüşlerini paylaşabilir. Sadece giriş yapmış kullanıcılar yorum yapabilir.
 
 19. **Yorum Güncelleme** (Beyza Keklikoğlu)
-    - **API Metodu:**  `PUT /api/reviews/{reviewID}`
+    - **API Metodu:**  `PUT /api/reviews/{reviewId}`
     - **Açıklama:**  Kullanıcının daha önce yaptığı yorumu güncellemesini sağlar. Kullanıcı yalnızca kendi yaptığı yorumları düzenleyebilir. 
 
 20. **Yorum Silme** (Beyza Keklikoğlu)
-    - **API Metodu:** `DELETE /api/reviews/{reviewID}`
+    - **API Metodu:** `DELETE /api/reviews/{reviewId}`
     - **Açıklama:**  Kullanıcının daha önce yaptığı yorumu kalıcı olarak silmesini sağlar. Bu işlem geri alınamaz. Kullanıcı yalnızca kendi yorumlarını silebilir. 
 
 21. **Tur Firması Giriş Yapma** (Recep Arslan) 
@@ -89,27 +89,27 @@
     - **Açıklama:** Yeni bir tur firmasının sisteme kayıt olmasını sağlar. Firma bilgileri doğrulanarak veritabanına kaydedilir.
 
 23. **Tur Firması Kayıt Silme** (Recep Arslan)
-    - **API Metodu:** `DELETE /api/companies/{companyID}`
+    - **API Metodu:** `DELETE /api/companies/{companyId}`
     - **Açıklama:** Tur firmasının hesabının sistemden kalıcı olarak silinmesi sağlanır. Bu işlem yalnızca ilgili firma tarafından yapılabilir ve geri alınamaz.
 
 24. **Tur Firması Tur Listeleme** (Recep Arslan)
-    - **API Metodu:** `GET /api/companies/{companyID}/tours`
+    - **API Metodu:** `GET /api/companies/{companyId}/tours`
     - **Açıklama:** Tur firmasının kendi turlarını görmesi sağlanır. Bu sayede bu turlar üzerinden kolayca gerekli işlemler yapılabilir.
 
 25. **Tur Ekleme** (Recep Arslan)
-    - **API Metodu:** `POST /api/companies/{companyID}/tours`
+    - **API Metodu:** `POST /api/companies/{companyId}/tours`
     - **Açıklama:** Tur firmasının gerekli bilgileri doldurarak kendisine ait yeni bir tur ekleyebilmesi sağlanır.
 
 26. **Tur Güncelleme** (Recep Arslan)
-    - **API Metodu:** `PUT /api/companies/{companyID}/tours/{tourID}`
+    - **API Metodu:** `PUT /api/companies/{companyId}/tours/{tourId}`
     - **Açıklama:** Her tur firması yalnızca kendi oluşturduğu turları güncelleyebilir. Tur kontenjanı, fiyat, tarih gibi bilgiler değiştirilebilir. Ayrıca firma kendi katılımcılarını da sisteme ekleyebilir.
 
 27. **Tur Firması Tur Detayı Görüntüleme** (Recep Arslan)
-    - **API Metodu:** `GET /api/companies/{companyID}/tours/{tourID}`
+    - **API Metodu:** `GET /api/companies/{companyId}/tours/{tourId}`
     - **Açıklama:** Tur firmasının kendisine ait turların detaylarını görüntülemesi sağlanır. Bu sayede firma tur katılımcı listesi, toplam kontenjan, dolu kontenjan ve kalan kontenjan gibi bilgileri görüntüleyebilir.
 
 28. **Tur Silme** (Recep Arslan)
-    - **API Metodu:** `DELETE /api/companies/{companyID}/tours/{tourID}`
+    - **API Metodu:** `DELETE /api/companies/{companyId}/tours/{tourId}`
     - **Açıklama:** Firma kendisine ait olan bir turu sistemden kalıcı olarak silebilir. Eğer turda aktif katılımcılar bulunuyorsa, ilgili satın alımlar sistem tarafından otomatik olarak iptal edilir.
 
 29. **Rehber Giriş Yapma** (Furkan Fatih Şahin)
@@ -121,11 +121,11 @@
     - **Açıklama:** Yeni tur rehberlerinin Travel Book platformuna dahil olmasını sağlar. Kayıt sırasında rehberin adı, soyadı, uzmanlık alanları, bildiği diller ve iletişim bilgileri gibi detaylı veriler toplanır. Veritabanında yeni bir rehber profili oluşturularak rehberin platformda hizmet verebilir hale gelmesi sağlanır.
 
 31. **Rehber Kayıt Silme** (Furkan Fatih Şahin)
-    - **API Metodu:** `DELETE/api/guides/{guideID}`
+    - **API Metodu:** `DELETE/api/guides/{guideId}`
     - **Açıklama:** Tur rehberinin sistemdeki hesabını ve buna bağlı tüm kişisel verilerini kalıcı olarak silmesini sağlar. Kullanıcının "unutulma hakkı" kapsamında sunulan bu özellik, rehberin platformdaki varlığını sonlandırır. Bu işlem geri alınamaz bir işlemdir ve ilgili rehber kimliği  sistemden kaldırılır.
 
 32. **Rehber Profil Güncelleme** (Furkan Fatih Şahin) 
-    - **API Metodu:** ` PUT /api/guides/{guideID}`
+    - **API Metodu:** ` PUT /api/guides/{guideId}`
     - **Açıklama:** Tur rehberinin sistemdeki mevcut profil bilgilerini (biyografi, dil bilgisi, uzmanlık alanları, profil fotoğrafı vb.) güncel tutmasını sağlar. Rehberler deneyim kazandıkça veya iletişim bilgileri değiştikçe bu endpoint üzerinden bilgilerini revize edebilirler. Bu sayede tur şirketleri ve kullanıcılar en güncel verilere ulaşır.
  
 33. **Rehber Tüm Tur Firmaları Listeleme** (Furkan Fatih Şahin)
@@ -133,15 +133,15 @@
     - **Açıklama:** Sistemde kayıtlı olan tüm tur şirketlerinin genel bilgilerinin listelenmesini sağlar. Rehberler, birlikte çalışabilecekleri veya anlaşma yapabilecekleri profesyonel tur firmalarını bu liste üzerinden inceleyebilirler. Bu işlem, rehberler ve şirketler arasındaki iş ağının (networking) kurulmasına yardımcı olur.
 
 34. **Rehber Kayıtlı Tur Firmaları Listeleme** (Furkan Fatih Şahin)
-    - **API Metodu:** `GET /api/guides/{guideID}/tours`
+    - **API Metodu:** `GET /api/guides/{guideId}/tours`
     - **Açıklama:**  Tur rehberinin sistem üzerinde daha önce iş birliği yaptığı, rehberlik hizmeti için anlaşıp favorilerine ekleyerek takibe aldığı tur firmalarını görüntülemesini sağlar. Bu özellik, rehberin profesyonel iş ağını yönetmesine ve hangi kurumsal yapılarla aktif bir çalışma ilişkisi içinde olduğunu takip etmesine yardımcı olur. Rehber, bu liste aracılığıyla çalıştığı firmaların profillerine ve sundukları tur fırsatlarına hızlı erişim sağlar.
 
 35. **Rehber Tur Kaydetme** (Furkan Fatih Şahin)
-    - **API Metodu:** `POST /api/guides/{guideID}/tours`
+    - **API Metodu:** `POST /api/guides/{guideId}/tours`
     - **Açıklama:** Tur rehberinin belirli bir tur şirketi tarafından oluşturulmuş tura rehberlik hizmeti vermek amacıyla kendisini atamasını veya tura dahil olmasını sağlar. Bu işlem sonucunda rehber ile ilgili tur arasında bir bağ kurulur ve rehber o turun resmi görevlisi olarak sisteme işlenir.
 
 36. **Rehber Tur Silme** (Furkan Fatih Şahin)
-    - **API Metodu:** `DELETE /api/guides/{guideID}/tours/{tourID}`
+    - **API Metodu:** `DELETE /api/guides/{guideId}/tours/{tourId}`
     - **Açıklama:**  Tur rehberinin  kayıt olduğu veya görevlendirildiği bir turdan kaydını silmesini sağlar. Rehberin çalışma programında değişiklik olması veya turun iptal edilmesi gibi durumlarda, rehber ile tur arasındaki ilişki bu işlemle sonlandırılır.
 
 # Gereksinim Dağılımları
