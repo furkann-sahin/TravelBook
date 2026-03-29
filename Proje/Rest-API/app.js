@@ -1,20 +1,45 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var express = require("express");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
+const apiRouter = express.Router();
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+// Environment variables
+const dotenv = require("dotenv");
+dotenv.config();
+
+require("./src/models/db"); // Database connection and model registration
+require("./src/configs/passport"); // Register passport strategies
+
+const companyAuthRoutes = require("./src/routes/company-auth-routes");
 
 var app = express();
 
-app.use(logger('dev'));
+// Middleware to allow CORS
+const allowCrossDomain = (_, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+};
+
+app.use(allowCrossDomain);
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// API routes
+apiRouter.use("/companies", companyAuthRoutes);
+
+app.use("/api", apiRouter);
+
+// Error handling for unauthorized access
+app.use((err, _req, res, _next) => {
+  if (err.name === "UnauthorizedError") {
+    res.status(401).json({ message: err.name + ": " + err.message });
+  }
+});
 
 module.exports = app;

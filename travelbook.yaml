@@ -11,7 +11,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: http://localhost:3000/api
     description: Local development server
 
 tags:
@@ -620,8 +620,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Geçersiz bilgiler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Geçersiz kimlik bilgileri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Sunucu hatası
           content:
             application/json:
               schema:
@@ -654,6 +666,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Firma zaten kayıtlı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Sunucu hatası
           content:
             application/json:
               schema:
