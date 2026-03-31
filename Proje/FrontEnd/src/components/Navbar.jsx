@@ -242,17 +242,29 @@ export default function Navbar() {
             }}
           >
             {isAuthenticated ? (
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                onClick={() => {
-                  setDrawerOpen(false);
-                  handleLogout();
-                }}
-              >
-                Çıkış Yap
-              </Button>
+              <>
+                <Button
+                  component={RouterLink}
+                  to={`/${user?.id}/profile`}
+                  variant="contained"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Profilim
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  Çıkış Yap
+                </Button>
+              </>
             ) : (
               <>
                 <Button

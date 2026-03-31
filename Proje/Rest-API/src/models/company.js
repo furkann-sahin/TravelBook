@@ -57,6 +57,7 @@ const companySchema = new mongoose.Schema(
   {
     timestamps: true,
   },
+  { versionKey: false },
 );
 
 // Method to set password
