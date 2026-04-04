@@ -43,3 +43,17 @@ export const companyAuth = {
       body: JSON.stringify(data),
     }),
 };
+
+// Company profile API calls
+export const companyApi = {
+  getProfile: (companyId) => request(`/companies/${companyId}`),
+
+  updateProfile: (companyId, data) =>
+    request(`/companies/${companyId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteAccount: (companyId) =>
+    request(`/companies/${companyId}`, { method: "DELETE" }),
+};
