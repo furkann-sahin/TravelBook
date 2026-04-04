@@ -24,7 +24,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { tourApi } from "../services/api";
+import { tourApi, getImageUrl } from "../services/api";
 
 export default function ToursPage() {
   const [tours, setTours] = useState([]);
@@ -306,7 +306,7 @@ export default function ToursPage() {
                   <CardMedia
                     component="img"
                     height="200"
-                    image={tour.imageUrl || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"}
+                    image={getImageUrl(tour.imageUrl) || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"}
                     alt={tour.name}
                     sx={{ objectFit: "cover" }}
                   />
@@ -335,6 +335,14 @@ export default function ToursPage() {
                         <Typography variant="body2" color="text.secondary">
                           ({tour.rating})
                         </Typography>
+                      </Box>
+                    )}
+
+                    {tour.services?.length > 0 && (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
+                        {tour.services.map((service) => (
+                          <Chip key={service} label={service} size="small" variant="outlined" color="secondary" />
+                        ))}
                       </Box>
                     )}
 

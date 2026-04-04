@@ -48,6 +48,10 @@ const tourSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    services: {
+      type: [String],
+      default: [],
+    },
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",

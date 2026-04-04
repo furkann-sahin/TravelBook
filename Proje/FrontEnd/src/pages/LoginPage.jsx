@@ -51,13 +51,13 @@ export default function LoginPage() {
     try {
       await login(selectedRole, email, password);
       navigate(
-        user?.role === "user" ? 
-        `/user` 
-        : user?.role === "guide" ?
-        `/guide`
-        : user?.role === "company" ?
-        `/company`
-        : `/`
+        selectedRole === "user" ? 
+        "/user" 
+        : selectedRole === "guide" ?
+        "/guide"
+        : selectedRole === "company" ?
+        "/company"
+        : "/"
       );
     } catch (err) {
       setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");

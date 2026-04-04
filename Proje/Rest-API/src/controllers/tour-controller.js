@@ -24,7 +24,7 @@ const getTours = async (req, res) => {
     }
 
     const tours = await Tour.find(filter)
-      .select("name location price startDate endDate images rating companyId")
+      .select("name location price startDate endDate images services rating companyId")
       .sort({ startDate: 1 })
       .populate("companyId", "name");
 
@@ -36,6 +36,7 @@ const getTours = async (req, res) => {
       startDate: tour.startDate,
       endDate: tour.endDate,
       imageUrl: tour.images.length > 0 ? tour.images[0] : null,
+      services: tour.services,
       companyName: tour.companyId?.name || null,
       rating: tour.rating,
     }));
