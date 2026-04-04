@@ -88,6 +88,12 @@ export const userApi = {
       body: JSON.stringify(data),
     }),
 
+  updatePassword: (userId, data) =>
+    request(`/users/${userId}/password`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
   deleteAccount: (userId) =>
     request(`/users/${userId}`, { method: "DELETE" }),
 };

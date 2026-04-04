@@ -82,6 +82,59 @@ const updateUser = async (req, res) => {
   }
 };
 
+// Update user password
+const updateUserPassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { oldPassword, newPassword } = req.body;
+    const authenticatedUserId = req.userId || req.payload?.id;
+
+    if (authenticatedUserId !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi şifrenizi güncelleyebilirsiniz",
+      });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "oldPassword ve newPassword alanları zorunludur",
+      });
+    }
+
+    const user = await User.findById(userId).select("+passwordHash +salt");
+
+    if (!user) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Kullanıcı bulunamadı",
+      });
+    }
+
+    if (!user.validatePassword(oldPassword)) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Eski şifre hatalı",
+      });
+    }
+
+    user.setPassword(newPassword);
+    await user.save();
+
+    createResponse(res, 200, {
+      status: "success",
+      message: "Şifre başarıyla güncellendi",
+    });
+  } catch (error) {
+    console.error("Şifre güncellenirken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
+  }
+};
+
 // Delete user account
 const deleteUser = async (req, res) => {
   try {
@@ -116,5 +169,6 @@ const deleteUser = async (req, res) => {
 module.exports = {
   getUserDetail,
   updateUser,
+  updateUserPassword,
   deleteUser,
 };
