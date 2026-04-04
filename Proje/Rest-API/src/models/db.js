@@ -24,6 +24,7 @@ process.on("SIGINT", () => {
   });
 });
 
+require("./user");
 require("./company");
 require("./guide");
 require("./tour");

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { companyAuth, guideAuth } from "../../services/api";
+import { userAuth, companyAuth, guideAuth } from "../../services/api";
 
 // Helper function to decode JWT token
 function decodeToken(token) {
@@ -41,6 +41,7 @@ function loadSession() {
 const authEndpoints = {
   company: companyAuth,
   guide: guideAuth,
+  user: userAuth,
 };
 
 // Async thunks for login and registration

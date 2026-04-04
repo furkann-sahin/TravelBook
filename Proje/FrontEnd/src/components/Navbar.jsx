@@ -30,6 +30,7 @@ import { useAuth } from "../hooks/useAuth";
 // Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
 const navLinks = [
   { label: "Ana Sayfa", path: "/" },
+  { label: "Turlar", path: "/tours" },
   { label: "Hakkımızda", path: "/about" },
 ];
 
@@ -131,6 +132,23 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <>
+                  {user?.role === "company" && (
+                    <Button
+                      component={RouterLink}
+                      to="/company"
+                      sx={{
+                        color: textColor,
+                        fontWeight: 600,
+                        border: "1px solid",
+                        borderColor: "secondary.main",
+                        borderRadius: 2,
+                        px: 2,
+                        "&:hover": { bgcolor: "secondary.main", color: "#fff" },
+                      }}
+                    >
+                      Firma Paneli
+                    </Button>
+                  )}
                   <IconButton
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     sx={{ ml: 1 }}
@@ -162,7 +180,15 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        navigate(user?.role === "guide" ? "/guide/dashboard" : `/${user?.id}/profile`);
+                        navigate(
+                          user?.role === "user" ? 
+                          `/user/profile` 
+                          : user?.role === "guide" ?
+                          `/guide/profile`
+                          : user?.role === "company" ?
+                          `/company/profile`
+                          : `/`
+                        );
                       }}
                     >
                       Profilim
@@ -242,17 +268,45 @@ export default function Navbar() {
             }}
           >
             {isAuthenticated ? (
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                onClick={() => {
-                  setDrawerOpen(false);
-                  handleLogout();
-                }}
-              >
-                Çıkış Yap
-              </Button>
+              <>
+                {user?.role === "company" && (
+                  <Button
+                    component={RouterLink}
+                    to="/company"
+                    variant="contained"
+                    color="secondary"
+                    fullWidth
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    Firma Paneli
+                  </Button>
+                )}
+                <Button
+                  component={RouterLink}
+                  to={
+                    user?.role === "company"
+                      ? "/company/profile"
+                      : "/profile"
+                  }
+                  variant="outlined"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Profilim
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  Çıkış Yap
+                </Button>
+              </>
             ) : (
               <>
                 <Button

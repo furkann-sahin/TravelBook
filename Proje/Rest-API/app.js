@@ -12,6 +12,11 @@ require("./src/models/db"); // Database connection and model registration
 require("./src/configs/passport"); // Register passport strategies
 
 const companyAuthRoutes = require("./src/routes/company-auth-routes");
+const companyRoutes = require("./src/routes/company-routes");
+const companyTourRoutes = require("./src/routes/company-tour-routes");
+const userAuthRoutes = require("./src/routes/user-auth-routes");
+const userRoutes = require("./src/routes/user-routes");
+const tourRoutes = require("./src/routes/tour-routes");
 
 const guideAuthRoutes = require("./src/routes/guide-auth-routes");
 const guideRoutes = require("./src/routes/guide-routes");
@@ -36,6 +41,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
 apiRouter.use("/companies", companyAuthRoutes);
+apiRouter.use("/companies", companyRoutes);
+apiRouter.use("/companies", companyTourRoutes);
+apiRouter.use("/users", userAuthRoutes);
+apiRouter.use("/users", userRoutes);
+apiRouter.use("/tours", tourRoutes);
 
 // Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
 const guideController = require("./src/controllers/guide-controller");

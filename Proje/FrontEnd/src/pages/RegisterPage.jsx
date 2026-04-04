@@ -20,17 +20,26 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
+import PersonIcon from "@mui/icons-material/Person";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
 
 // Define user roles for registration
 const roles = [
+  { key: "user", label: "Kullanıcı", icon: <PersonIcon /> },
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
-  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> },
+  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> }
 ];
 
 const defaultForm = {
+  user: {
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+  },
   company: {
     name: "",
     email: "",
@@ -100,7 +109,15 @@ export default function RegisterPage() {
       }
 
       await register(selectedRole, data);
-      navigate(selectedRole === "guide" ? "/guide/dashboard" : "/");
+      navigate(
+        user?.role === "user" ? 
+        `/user` 
+        : user?.role === "guide" ?
+        `/guide`
+        : user?.role === "company" ?
+        `/company`
+        : `/`
+      );
     } catch (err) {
       setError(err.message || "Kayıt başarısız oldu.");
     } finally {
@@ -142,6 +159,36 @@ export default function RegisterPage() {
         value={form.confirmPassword}
         onChange={(e) => updateField("confirmPassword", e.target.value)}
         autoComplete="new-password"
+      />
+    </>
+  );
+
+  const renderUserForm = () => (
+    <>
+      <TextField
+        label="Ad Soyad"
+        required
+        fullWidth
+        value={form.name}
+        onChange={(e) => updateField("name", e.target.value)}
+      />
+      <TextField
+        label="E-posta Adresi"
+        type="email"
+        required
+        fullWidth
+        value={form.email}
+        onChange={(e) => updateField("email", e.target.value)}
+        autoComplete="email"
+      />
+      {passwordFields}
+      <TextField
+        label="Telefon"
+        type="tel"
+        fullWidth
+        value={form.phone}
+        onChange={(e) => updateField("phone", e.target.value)}
+        placeholder="+90 555 123 4567"
       />
     </>
   );
@@ -278,12 +325,15 @@ export default function RegisterPage() {
           }}
         >
           <Box
+            component={RouterLink}
+            to="/"
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 1,
               mb: 1,
+              textDecoration: "none",
             }}
           >
             <DirectionsBusIcon sx={{ fontSize: 36, color: "primary.main" }} />
@@ -336,6 +386,7 @@ export default function RegisterPage() {
             onSubmit={handleSubmit}
             sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
           >
+            {selectedRole === "user" && renderUserForm()}
             {selectedRole === "company" && renderCompanyForm()}
             {selectedRole === "guide" && renderGuideForm()}
 
@@ -358,6 +409,15 @@ export default function RegisterPage() {
               Giriş yap
             </Link>
           </Typography>
+
+          <Link
+            component={RouterLink}
+            to="/"
+            variant="body2"
+            sx={{ mt: 2, display: "inline-block", color: "text.secondary" }}
+          >
+            ← Ana Sayfaya Dön
+          </Link>
         </Paper>
       </Container>
     </Box>
