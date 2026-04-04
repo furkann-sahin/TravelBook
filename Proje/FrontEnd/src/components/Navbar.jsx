@@ -180,11 +180,15 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        if (user?.role === "company") {
-                          navigate("/company/profile");
-                        } else {
-                          navigate("/profile");
-                        }
+                        navigate(
+                          user?.role === "user" ? 
+                          `/user/profile` 
+                          : user?.role === "guide" ?
+                          `/guide/profile`
+                          : user?.role === "company" ?
+                          `/company/profile`
+                          : `/`
+                        );
                       }}
                     >
                       Profilim
