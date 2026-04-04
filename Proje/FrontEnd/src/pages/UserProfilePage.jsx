@@ -22,9 +22,15 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "" });
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "user") {
@@ -66,6 +72,40 @@ export default function UserProfilePage() {
       navigate("/");
     } catch (err) {
       setError(err.message || "Hesap silinemedi.");
+    }
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (
+      !passwordForm.oldPassword ||
+      !passwordForm.newPassword ||
+      !passwordForm.confirmPassword
+    ) {
+      setError("Lütfen tüm şifre alanlarını doldurun.");
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setError("Yeni şifreler eşleşmiyor.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await userApi.updatePassword(user.id, {
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setSuccess(res?.message || "Şifre başarıyla güncellendi.");
+      setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      setError(err.message || "Şifre güncellenemedi.");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -166,6 +206,56 @@ export default function UserProfilePage() {
             </Box>
           </Box>
         )}
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+          Şifre Güncelle
+        </Typography>
+        <Box
+          component="form"
+          onSubmit={handlePasswordUpdate}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
+          <TextField
+            label="Mevcut Şifre"
+            type="password"
+            fullWidth
+            value={passwordForm.oldPassword}
+            onChange={(e) =>
+              setPasswordForm({ ...passwordForm, oldPassword: e.target.value })
+            }
+            autoComplete="current-password"
+          />
+          <TextField
+            label="Yeni Şifre"
+            type="password"
+            fullWidth
+            value={passwordForm.newPassword}
+            onChange={(e) =>
+              setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+            }
+            autoComplete="new-password"
+          />
+          <TextField
+            label="Yeni Şifre (Tekrar)"
+            type="password"
+            fullWidth
+            value={passwordForm.confirmPassword}
+            onChange={(e) =>
+              setPasswordForm({
+                ...passwordForm,
+                confirmPassword: e.target.value,
+              })
+            }
+            autoComplete="new-password"
+          />
+          <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+            <Button type="submit" variant="contained" disabled={passwordLoading}>
+              {passwordLoading ? "Güncelleniyor…" : "Şifreyi Güncelle"}
+            </Button>
+          </Box>
+        </Box>
       </Paper>
     </Container>
   );
