@@ -78,6 +78,19 @@ export const companyTourApi = {
   listTours: (companyId) => request(`/companies/${companyId}/tours`),
 };
 
+// Public tour API calls
+export const tourApi = {
+  getTours: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.location) params.append("location", filters.location);
+    if (filters.minPrice) params.append("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
+    if (filters.date) params.append("date", filters.date);
+    const query = params.toString();
+    return request(`/tours${query ? `?${query}` : ""}`);
+  },
+};
+
 // User profile API calls
 export const userApi = {
   getProfile: (userId) => request(`/users/${userId}`),
