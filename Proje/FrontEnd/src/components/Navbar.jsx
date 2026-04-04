@@ -30,7 +30,9 @@ import { useAuth } from "../hooks/useAuth";
 // Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
 const navLinks = [
   { label: "Ana Sayfa", path: "/" },
-  { label: "Turlar", path: "/tours" },
+  { label: "Turlar", path: "/user/tours" },
+  { label: "Rehberler", path: "/guides" },
+  { label: "Favorilerim", path: "/user/favorites" },
   { label: "Hakkımızda", path: "/about" },
 ];
 

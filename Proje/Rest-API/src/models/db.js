@@ -28,3 +28,4 @@ require("./user");
 require("./company");
 require("./guide");
 require("./tour");
+require("./purchase");
