@@ -20,13 +20,20 @@ const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
 const guideRoutes = require("./src/routes/user-guides-routes");
 // const tourRoutes = require("./src/routes/tour-routes"); // Moved to user-routes
 
+const guideAuthRoutes = require("./src/routes/guide-auth-routes");
+const guideRoutes = require("./src/routes/guide-routes");
+const guideTourRoutes = require("./src/routes/guide-tour-routes");
+
 var app = express();
 
 // Middleware to allow CORS
-const allowCrossDomain = (_, res, next) => {
+const allowCrossDomain = (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 };
 
@@ -46,6 +53,15 @@ apiRouter.use("/users", userRoutes);
 apiRouter.use("/users", userFavoriteRoutes);
 apiRouter.use("/guides", guideRoutes);
 // apiRouter.use("/tours", tourRoutes); // Moved to /api/users/tours
+
+// Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
+const guideController = require("./src/controllers/guide-controller");
+apiRouter.get("/companies", guideController.listCompanies);
+
+// Rehber Rotaları (Senin Rotaların)
+apiRouter.use("/guides", guideAuthRoutes);
+apiRouter.use("/guides", guideRoutes);
+apiRouter.use("/guides", guideTourRoutes);
 
 app.use("/api", apiRouter);
 

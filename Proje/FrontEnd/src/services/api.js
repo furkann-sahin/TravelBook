@@ -29,6 +29,21 @@ async function request(endpoint, options = {}) {
   return res.json();
 }
 
+// Authentication related API calls for users
+export const userAuth = {
+  login: (email, password) =>
+    request("/users/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  register: (data) =>
+    request("/users/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
 // Authentication related API calls for companies
 export const companyAuth = {
   login: (email, password) =>
@@ -44,19 +59,39 @@ export const companyAuth = {
     }),
 };
 
-// Authentication related API calls for users
-export const userAuth = {
+// Authentication related API calls for guides
+export const guideAuth = {
   login: (email, password) =>
-    request("/users/auth/login", {
+    request("/guides/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
 
   register: (data) =>
-    request("/users/auth/register", {
+    request("/guides/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+};
+
+// User profile API calls
+export const userApi = {
+  getProfile: (userId) => request(`/users/${userId}`),
+
+  updateProfile: (userId, data) =>
+    request(`/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  updatePassword: (userId, data) =>
+    request(`/users/${userId}/password`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteAccount: (userId) =>
+    request(`/users/${userId}`, { method: "DELETE" }),
 };
 
 // Company profile API calls
@@ -101,24 +136,31 @@ export const tourApi = {
     }),
 };
 
-// User profile API calls
-export const userApi = {
-  getProfile: (userId) => request(`/users/${userId}`),
+// Guide related API calls for dashboard operations
+export const guideApi = {
+  getDetail: (guideId) => request(`/guides/${guideId}`),
 
-  updateProfile: (userId, data) =>
-    request(`/users/${userId}`, {
+  updateProfile: (guideId, data) =>
+    request(`/guides/${guideId}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
 
-  updatePassword: (userId, data) =>
-    request(`/users/${userId}/password`, {
-      method: "PUT",
-      body: JSON.stringify(data),
+  deleteAccount: (guideId) =>
+    request(`/guides/${guideId}`, { method: "DELETE" }),
+
+  listCompanies: () => request("/companies"),
+
+  listTours: (guideId) => request(`/guides/${guideId}/tours`),
+
+  assignTour: (guideId, tourId) =>
+    request(`/guides/${guideId}/tours`, {
+      method: "POST",
+      body: JSON.stringify({ tourId }),
     }),
 
-  deleteAccount: (userId) =>
-    request(`/users/${userId}`, { method: "DELETE" }),
+  removeTour: (guideId, tourId) =>
+    request(`/guides/${guideId}/tours/${tourId}`, { method: "DELETE" }),
 };
 
 // User favorite API calls

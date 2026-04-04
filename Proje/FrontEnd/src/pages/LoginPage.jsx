@@ -19,6 +19,7 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
+import CardTravelIcon from "@mui/icons-material/CardTravel";
 import PersonIcon from "@mui/icons-material/Person";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
@@ -28,11 +29,12 @@ import { useAuth } from "../hooks/useAuth";
 const roles = [
   { key: "user", label: "Kullanıcı", icon: <PersonIcon /> },
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
+  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> },
 ];
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [roleIdx, setRoleIdx] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,9 +50,17 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(selectedRole, email, password);
-      navigate(selectedRole === "company" ? "/company" : "/");
+      navigate(
+        selectedRole === "company"
+          ? "/company"
+          : selectedRole === "guide"
+            ? "/guide"
+            : "/",
+      );
     } catch (err) {
-      setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      setError(
+        err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+      );
     } finally {
       setLoading(false);
     }

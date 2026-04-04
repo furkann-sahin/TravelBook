@@ -1,8 +1,15 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 const guideSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    lastName: {
       type: String,
       trim: true,
       required: true,
@@ -14,24 +21,42 @@ const guideSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    passwordHash: {
+      type: String,
+      required: true,
+      select: false,
+    },
+    salt: {
+      type: String,
+      required: true,
+      select: false,
+    },
     phone: {
       type: String,
       trim: true,
       default: "",
     },
-    experience: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    languages: {
-      type: [String],
-      default: [],
-    },
-    bio: {
+    biography: {
       type: String,
       trim: true,
       default: "",
+    },
+    languages: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    expertRoutes: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    experienceYears: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     rating: {
       type: Number,
@@ -39,15 +64,55 @@ const guideSchema = new mongoose.Schema(
       max: 5,
       default: 0,
     },
-    profileImage: {
-      type: String,
-      default: "",
+    reviewCount: {
+      type: Number,
+      default: 0,
     },
+    profileImageUrl: {
+      type: String,
+      default: null,
+    },
+    registeredTours: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tour",
+      },
+    ],
   },
   {
     timestamps: true,
-  },
-  { versionKey: false },
+    versionKey: false,
+  }
 );
+
+// 🔐 Password işlemleri
+guideSchema.methods.setPassword = function (password) {
+  this.salt = crypto.randomBytes(16).toString("hex");
+  this.passwordHash = crypto
+    .pbkdf2Sync(password, this.salt, 600000, 64, "sha512")
+    .toString("hex");
+};
+
+guideSchema.methods.validatePassword = function (password) {
+  const hash = crypto
+    .pbkdf2Sync(password, this.salt, 600000, 64, "sha512")
+    .toString("hex");
+  return this.passwordHash === hash;
+};
+
+// 🎟 JWT oluşturma
+guideSchema.methods.generateJWT = function () {
+  return jwt.sign(
+    {
+      id: this._id,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      email: this.email,
+      role: "guide",
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+};
 
 module.exports = mongoose.model("Guide", guideSchema, "guides");

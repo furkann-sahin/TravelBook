@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      required: true,
       default: "",
     },
     favorites: [
@@ -40,8 +41,8 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    versionKey: false,
   },
-  { versionKey: false },
 );
 
 userSchema.methods.setPassword = function (password) {
