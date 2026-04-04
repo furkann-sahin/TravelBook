@@ -139,7 +139,32 @@ export const guideApi = {
   deleteAccount: (guideId) =>
     request(`/guides/${guideId}`, { method: "DELETE" }),
 
+  uploadProfileImage: async (guideId, file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const token = localStorage.getItem("tb_token");
+    const res = await fetch(`${BASE_URL}/guides/${guideId}/profile-image`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Resim yüklenemedi");
+    return data;
+  },
+
   listCompanies: () => request("/companies"),
+
+  listMyCompanies: (guideId) => request(`/guides/${guideId}/companies`),
+
+  applyToCompany: (guideId, companyId) =>
+    request(`/guides/${guideId}/companies`, {
+      method: "POST",
+      body: JSON.stringify({ companyId }),
+    }),
+
+  removeFromCompany: (guideId, companyId) =>
+    request(`/guides/${guideId}/companies/${companyId}`, { method: "DELETE" }),
 
   listTours: (guideId) => request(`/guides/${guideId}/tours`),
 

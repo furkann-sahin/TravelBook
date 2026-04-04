@@ -54,4 +54,23 @@ const deleteGuide = async (req, res) => {
     }
 };
 
-module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide };
+// Profil Resmi Yükleme
+const uploadProfileImage = async (req, res) => {
+    try {
+        if (!req.file) return createResponse(res, 400, { message: "Dosya yüklenemedi" });
+
+        const imageUrl = `/uploads/guides/${req.file.filename}`;
+        const guide = await Guide.findByIdAndUpdate(
+            req.params.guideId,
+            { profileImageUrl: imageUrl },
+            { new: true }
+        );
+        if (!guide) return createResponse(res, 404, { message: "Rehber bulunamadı" });
+        createResponse(res, 200, { profileImageUrl: imageUrl });
+    } catch (error) {
+        console.error("Resim yükleme hatası:", error);
+        createResponse(res, 500, { message: "Resim yüklenirken hata oluştu" });
+    }
+};
+
+module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, uploadProfileImage };

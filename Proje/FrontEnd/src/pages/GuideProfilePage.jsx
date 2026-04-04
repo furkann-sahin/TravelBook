@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // MUI Components
@@ -20,6 +20,7 @@ import {
     DialogContentText,
     DialogActions,
     TextField,
+    IconButton,
 } from "@mui/material";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
 import EmailIcon from "@mui/icons-material/Email";
@@ -34,6 +35,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import LanguageIcon from "@mui/icons-material/Language";
 import ExploreIcon from "@mui/icons-material/Explore";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -60,6 +62,10 @@ export default function GuideProfilePage() {
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
+
+    // Image upload
+    const fileInputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
 
     const fetchProfile = useCallback(async () => {
         if (!user?.id) return;
@@ -158,6 +164,22 @@ export default function GuideProfilePage() {
         }
     };
 
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setUploading(true);
+            const res = await guideApi.uploadProfileImage(user.id, file);
+            setGuide((prev) => ({ ...prev, profileImageUrl: res.data?.profileImageUrl || res.profileImageUrl }));
+            setSnackbar({ open: true, message: "Profil resmi güncellendi" });
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Resim yüklenirken hata oluştu" });
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
     // Loading state
     if (loading) {
         return (
@@ -239,21 +261,59 @@ export default function GuideProfilePage() {
                                 mt: -4,
                             }}
                         >
-                            <Avatar
-                                src={guide.profileImageUrl || undefined}
-                                sx={{
-                                    width: 96,
-                                    height: 96,
-                                    bgcolor: "secondary.main",
-                                    fontSize: 36,
-                                    fontWeight: 800,
-                                    border: "4px solid",
-                                    borderColor: "background.paper",
-                                    boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                                }}
-                            >
-                                {guide.firstName?.charAt(0)?.toUpperCase()}
-                            </Avatar>
+                            <Box sx={{ position: "relative", display: "inline-flex" }}>
+                                <Avatar
+                                    src={
+                                        guide.profileImageUrl
+                                            ? guide.profileImageUrl.startsWith("http")
+                                                ? guide.profileImageUrl
+                                                : `${import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3000"}${guide.profileImageUrl}`
+                                            : undefined
+                                    }
+                                    sx={{
+                                        width: 96,
+                                        height: 96,
+                                        bgcolor: "secondary.main",
+                                        fontSize: 36,
+                                        fontWeight: 800,
+                                        border: "4px solid",
+                                        borderColor: "background.paper",
+                                        boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                                    }}
+                                >
+                                    {guide.firstName?.charAt(0)?.toUpperCase()}
+                                </Avatar>
+                                <IconButton
+                                    size="small"
+                                    disabled={uploading}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    sx={{
+                                        position: "absolute",
+                                        bottom: 0,
+                                        right: 0,
+                                        bgcolor: "secondary.main",
+                                        color: "#fff",
+                                        width: 32,
+                                        height: 32,
+                                        border: "2px solid",
+                                        borderColor: "background.paper",
+                                        "&:hover": { bgcolor: "secondary.dark" },
+                                    }}
+                                >
+                                    {uploading ? (
+                                        <CircularProgress size={16} color="inherit" />
+                                    ) : (
+                                        <CameraAltIcon sx={{ fontSize: 16 }} />
+                                    )}
+                                </IconButton>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    hidden
+                                    onChange={handleImageUpload}
+                                />
+                            </Box>
 
                             <Box
                                 sx={{
