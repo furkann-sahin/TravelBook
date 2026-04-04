@@ -25,6 +25,7 @@ import { useAuth } from "../hooks/useAuth";
 
 // Define user roles for login
 const roles = [
+  
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
 ];
 
@@ -46,7 +47,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(selectedRole, email, password);
-      navigate("/");
+      navigate(selectedRole === "company" ? "/company" : "/");
     } catch (err) {
       setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
     } finally {
@@ -77,12 +78,15 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <Box
+            component={RouterLink}
+            to="/"
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 1,
               mb: 1,
+              textDecoration: "none",
             }}
           >
             <DirectionsBusIcon sx={{ fontSize: 36, color: "primary.main" }} />
@@ -189,6 +193,15 @@ export default function LoginPage() {
               Hesap Oluştur
             </Link>
           </Typography>
+
+          <Link
+            component={RouterLink}
+            to="/"
+            variant="body2"
+            sx={{ mt: 2, display: "inline-block", color: "text.secondary" }}
+          >
+            ← Ana Sayfaya Dön
+          </Link>
         </Paper>
       </Container>
     </Box>

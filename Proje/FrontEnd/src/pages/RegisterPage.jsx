@@ -74,7 +74,7 @@ export default function RegisterPage() {
     try {
       const { confirmPassword, ...data } = form;
       await register(selectedRole, data);
-      navigate("/");
+      navigate(selectedRole === "company" ? "/company" : "/");
     } catch (err) {
       setError(err.message || "Kayıt başarısız oldu.");
     } finally {
@@ -190,12 +190,15 @@ export default function RegisterPage() {
           }}
         >
           <Box
+            component={RouterLink}
+            to="/"
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 1,
               mb: 1,
+              textDecoration: "none",
             }}
           >
             <DirectionsBusIcon sx={{ fontSize: 36, color: "primary.main" }} />
@@ -269,6 +272,15 @@ export default function RegisterPage() {
               Giriş yap
             </Link>
           </Typography>
+
+          <Link
+            component={RouterLink}
+            to="/"
+            variant="body2"
+            sx={{ mt: 2, display: "inline-block", color: "text.secondary" }}
+          >
+            ← Ana Sayfaya Dön
+          </Link>
         </Paper>
       </Container>
     </Box>

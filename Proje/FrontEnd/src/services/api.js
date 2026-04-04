@@ -57,3 +57,8 @@ export const companyApi = {
   deleteAccount: (companyId) =>
     request(`/companies/${companyId}`, { method: "DELETE" }),
 };
+
+// Company tour API calls
+export const companyTourApi = {
+  listTours: (companyId) => request(`/companies/${companyId}/tours`),
+};
