@@ -14,6 +14,7 @@ require("./src/configs/passport"); // Register passport strategies
 const companyAuthRoutes = require("./src/routes/company-auth-routes");
 const companyRoutes = require("./src/routes/company-routes");
 const companyTourRoutes = require("./src/routes/company-tour-routes");
+const reviewRoutes = require("./src/routes/review-routes");
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
 const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
@@ -45,23 +46,21 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
-apiRouter.use("/companies", companyAuthRoutes);
-apiRouter.use("/companies", companyRoutes);
-apiRouter.use("/companies", companyTourRoutes);
 apiRouter.use("/users", userAuthRoutes);
 apiRouter.use("/users", userRoutes);
 apiRouter.use("/users", userFavoriteRoutes);
+apiRouter.use("/companies", companyAuthRoutes);
+apiRouter.use("/companies", companyRoutes);
+apiRouter.use("/companies", companyTourRoutes);
+apiRouter.use("/guides", guideAuthRoutes);
 apiRouter.use("/guides", guideRoutes);
-// apiRouter.use("/tours", tourRoutes); // Moved to /api/users/tours
+apiRouter.use("/guides", guideTourRoutes);
+apiRouter.use("/tours", tourRoutes);
+apiRouter.use("/reviews", reviewRoutes);
 
 // Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
 const guideController = require("./src/controllers/guide-controller");
 apiRouter.get("/companies", guideController.listCompanies);
-
-// Rehber Rotaları (Senin Rotaların)
-apiRouter.use("/guides", guideAuthRoutes);
-apiRouter.use("/guides", guideRoutes);
-apiRouter.use("/guides", guideTourRoutes);
 
 app.use("/api", apiRouter);
 

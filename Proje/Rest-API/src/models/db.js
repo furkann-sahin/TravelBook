@@ -28,4 +28,5 @@ require("./user");
 require("./company");
 require("./guide");
 require("./tour");
+require("./review");
 require("./purchase");

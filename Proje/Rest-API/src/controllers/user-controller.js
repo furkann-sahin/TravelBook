@@ -135,6 +135,43 @@ const updateUserPassword = async (req, res) => {
   }
 };
 
+// List user purchases
+const getUserPurchases = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status } = req.query;
+    const authenticatedUserId = req.userId || req.payload?.id;
+
+    if (authenticatedUserId !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi seyahatlerinizi görüntüleyebilirsiniz",
+      });
+    }
+
+    if (status && !["past", "future"].includes(status)) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "status parametresi past veya future olmalıdır",
+      });
+    }
+
+    const filteredPurchases = [];
+
+    createResponse(res, 200, {
+      status: "success",
+      results: filteredPurchases.length,
+      data: filteredPurchases,
+    });
+  } catch (error) {
+    console.error("Seyahatler alınırken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
+  }
+};
+
 // Delete user account
 const deleteUser = async (req, res) => {
   try {
@@ -170,5 +207,6 @@ module.exports = {
   getUserDetail,
   updateUser,
   updateUserPassword,
+  getUserPurchases,
   deleteUser,
 };

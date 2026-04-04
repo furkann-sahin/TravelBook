@@ -200,6 +200,12 @@ export default function UserProfilePage() {
               <Button variant="contained" onClick={() => setEditing(true)}>
                 Profili Düzenle
               </Button>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/users/${user.id}/purchases`)}
+              >
+                Seyahatlerim
+              </Button>
               <Button variant="outlined" color="error" onClick={handleDelete}>
                 Hesabı Sil
               </Button>

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -38,14 +39,17 @@ import { tourApi, favoriteApi } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
 export default function ToursPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState({
+    title: "",
     location: "",
     minPrice: "",
     maxPrice: "",
@@ -77,29 +81,33 @@ export default function ToursPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTours();
-  }, [fetchTours]);
-
   const handleFilterChange = (field) => (e) => {
     setFilters((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setError(null);
+
     const activeFilters = {};
+    if (filters.title.trim()) activeFilters.title = filters.title.trim();
     if (filters.location.trim()) activeFilters.location = filters.location.trim();
     if (filters.minPrice) activeFilters.minPrice = filters.minPrice;
     if (filters.maxPrice) activeFilters.maxPrice = filters.maxPrice;
     if (filters.date) activeFilters.date = filters.date;
+
     setAppliedFilters(activeFilters);
+    setHasSearched(true);
     fetchTours(activeFilters);
   };
 
   const handleClear = () => {
-    setFilters({ location: "", minPrice: "", maxPrice: "", date: "" });
+    setFilters({ title: "", location: "", minPrice: "", maxPrice: "", date: "" });
     setAppliedFilters({});
-    fetchTours();
+    setTours([]);
+    setHasSearched(false);
+    setError(null);
+    setLoading(false);
   };
 
   const handleOpenConfirm = (tour) => {
@@ -253,6 +261,27 @@ export default function ToursPage() {
           <Collapse in={filtersOpen}>
             <Box component="form" onSubmit={handleSearch}>
               <Grid container spacing={2} alignItems="flex-end">
+                {/* Title */}
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Tur Adı"
+                    placeholder="Ör: Kapadokya"
+                    value={filters.title}
+                    onChange={handleFilterChange("title")}
+                    size="small"
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon fontSize="small" color="action" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Grid>
+
                 {/* Location */}
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <TextField
@@ -316,7 +345,7 @@ export default function ToursPage() {
                 </Grid>
 
                 {/* Date */}
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                   <TextField
                     fullWidth
                     label="Tarih"
@@ -368,7 +397,7 @@ export default function ToursPage() {
         </Paper>
 
         {/* Results Info */}
-        {!loading && !error && (
+        {!loading && !error && hasSearched && (
           <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Typography variant="body2" color="text.secondary">
               {tours.length > 0
@@ -390,6 +419,12 @@ export default function ToursPage() {
           </Box>
         )}
 
+        {!loading && !hasSearched && !error && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
+            Filtre eklemeden de Ara butonuna basarak tüm turları görüntüleyebilirsiniz.
+          </Alert>
+        )}
+
         {/* Error */}
         {error && (
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -398,10 +433,13 @@ export default function ToursPage() {
         )}
 
         {/* Tour Cards */}
-        {!loading && !error && (
+        {!loading && !error && hasSearched && (
           <Grid container spacing={3}>
             {tours.map((tour) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour.id}>
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4 }}
+                key={tour.id || `${tour.name}-${tour.startDate}`}
+              >
                 <Card
                   elevation={0}
                   sx={{
@@ -457,9 +495,20 @@ export default function ToursPage() {
                       <Typography variant="h5" fontWeight={800} color="secondary.main">
                         ₺{tour.price?.toLocaleString("tr-TR")}
                       </Typography>
-                      {tour.companyName && (
-                        <Chip label={tour.companyName} size="small" variant="outlined" />
-                      )}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {tour.companyName && (
+                          <Chip label={tour.companyName} size="small" variant="outlined" />
+                        )}
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() => navigate(`/tours/${tour.id}`)}
+                          disabled={!tour.id}
+                        >
+                          Detay
+                        </Button>
+                      </Box>
                     </Box>
 
                     <Button
