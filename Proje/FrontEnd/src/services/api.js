@@ -82,6 +82,8 @@ export const companyTourApi = {
 export const tourApi = {
   getTours: (filters = {}) => {
     const params = new URLSearchParams();
+    if (filters.title) params.append("title", filters.title);
+    if (filters.price) params.append("price", filters.price);
     if (filters.location) params.append("location", filters.location);
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
@@ -89,11 +91,37 @@ export const tourApi = {
     const query = params.toString();
     return request(`/tours${query ? `?${query}` : ""}`);
   },
+
+  getTourDetail: (tourId) => request(`/tours/${tourId}`),
+
+  createReview: (tourId, data) =>
+    request(`/tours/${tourId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+export const reviewApi = {
+  updateReview: (reviewId, data) =>
+    request(`/reviews/${reviewId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteReview: (reviewId) =>
+    request(`/reviews/${reviewId}`, {
+      method: "DELETE",
+    }),
 };
 
 // User profile API calls
 export const userApi = {
   getProfile: (userId) => request(`/users/${userId}`),
+
+  getPurchases: (userId, status) =>
+    request(
+      `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+    ),
 
   updateProfile: (userId, data) =>
     request(`/users/${userId}`, {

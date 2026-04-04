@@ -5,6 +5,9 @@ const userController = require("../controllers/user-controller");
 // Get user detail
 router.get("/:userId", userController.getUserDetail);
 
+// List user purchases
+router.get("/:userId/purchases", requireAuth, userController.getUserPurchases);
+
 // Update user password
 router.put("/:userId/password", requireAuth, userController.updateUserPassword);
 
