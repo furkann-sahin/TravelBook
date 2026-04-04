@@ -34,7 +34,7 @@ const roles = [
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [roleIdx, setRoleIdx] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,16 +51,20 @@ export default function LoginPage() {
     try {
       await login(selectedRole, email, password);
       navigate(
-        user?.role === "user" ? 
-        `/user` 
-        : user?.role === "guide" ?
-        `/guide`
-        : user?.role === "company" ?
-        `/company`
-        : `/`
+        selectedRole === "user"
+          ? "/user"
+          : selectedRole === "company"
+            ? "/company"
+              ? selectedRole === "guide"
+                ? "/guide"
+                : "/"
+              : "/"
+            : "/",
       );
     } catch (err) {
-      setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      setError(
+        err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+      );
     } finally {
       setLoading(false);
     }

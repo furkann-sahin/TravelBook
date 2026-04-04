@@ -54,7 +54,7 @@ export const loginThunk = createAsyncThunk(
       const data = await endpoint.login(email, password);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(err.message || "Giriş başarısız");
     }
   },
 );
@@ -69,7 +69,7 @@ export const registerThunk = createAsyncThunk(
       const data = await endpoint.register(formData);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(err.message || "Kayıt başarısız");
     }
   },
 );
