@@ -131,6 +131,23 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <>
+                  {user?.role === "company" && (
+                    <Button
+                      component={RouterLink}
+                      to="/company"
+                      sx={{
+                        color: textColor,
+                        fontWeight: 600,
+                        border: "1px solid",
+                        borderColor: "secondary.main",
+                        borderRadius: 2,
+                        px: 2,
+                        "&:hover": { bgcolor: "secondary.main", color: "#fff" },
+                      }}
+                    >
+                      Firma Paneli
+                    </Button>
+                  )}
                   <IconButton
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     sx={{ ml: 1 }}
@@ -162,7 +179,11 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        navigate(`/${user?.id}/profile`);
+                        if (user?.role === "company") {
+                          navigate("/company/profile");
+                        } else {
+                          navigate("/profile");
+                        }
                       }}
                     >
                       Profilim
@@ -243,10 +264,26 @@ export default function Navbar() {
           >
             {isAuthenticated ? (
               <>
+                {user?.role === "company" && (
+                  <Button
+                    component={RouterLink}
+                    to="/company"
+                    variant="contained"
+                    color="secondary"
+                    fullWidth
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    Firma Paneli
+                  </Button>
+                )}
                 <Button
                   component={RouterLink}
-                  to={`/${user?.id}/profile`}
-                  variant="contained"
+                  to={
+                    user?.role === "company"
+                      ? "/company/profile"
+                      : "/profile"
+                  }
+                  variant="outlined"
                   color="secondary"
                   fullWidth
                   onClick={() => setDrawerOpen(false)}

@@ -132,17 +132,7 @@ export default function CompanyProfilePage() {
     }
   };
 
-  // Guard: only company users
-  if (!user || user.role !== "company") {
-    return (
-      <Container maxWidth="md" sx={{ py: 10, textAlign: "center" }}>
-        <Alert severity="warning" sx={{ maxWidth: 480, mx: "auto" }}>
-          Bu sayfaya yalnızca tur firması hesapları erişebilir.
-        </Alert>
-      </Container>
-    );
-  }
-
+  // Loading state
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>

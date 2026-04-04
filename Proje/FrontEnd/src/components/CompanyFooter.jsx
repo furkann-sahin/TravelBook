@@ -1,6 +1,4 @@
 import { Link as RouterLink } from "react-router-dom";
-
-// Material-UI components and icons
 import {
   Box,
   Container,
@@ -13,21 +11,18 @@ import {
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
-import { useAuth } from "../hooks/useAuth";
+const companyLinks = [
+  { label: "Panel", path: "/company" },
+  { label: "Turlarım", path: "/company/tours" },
+  { label: "Profilim", path: "/company/profile" },
+];
 
-export default function Footer() {
-  const { isAuthenticated } = useAuth();
+const publicLinks = [
+  { label: "Ana Sayfa", path: "/" },
+  { label: "Hakkımızda", path: "/about" },
+];
 
-  const quickLinks = [
-    { label: "Ana Sayfa", path: "/" },
-    { label: "Hakkımızda", path: "/about" },
-    ...(!isAuthenticated
-      ? [
-          { label: "Giriş Yap", path: "/login" },
-          { label: "Kayıt Ol", path: "/register" },
-        ]
-      : []),
-  ];
+export default function CompanyFooter() {
   return (
     <Box
       component="footer"
@@ -51,7 +46,6 @@ export default function Footer() {
               </Typography>
             </Box>
 
-            {/* Social Media Icons */}
             <Box sx={{ display: "flex", gap: 0.5 }}>
               <IconButton
                 size="small"
@@ -65,7 +59,33 @@ export default function Footer() {
             </Box>
           </Grid>
 
-          {/* Quick Links */}
+          {/* Company Links */}
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Typography
+              variant="h6"
+              color="#fff"
+              gutterBottom
+              fontWeight={600}
+              fontSize="1rem"
+            >
+              Firma Paneli
+            </Typography>
+            {companyLinks.map((item) => (
+              <Link
+                key={item.path}
+                component={RouterLink}
+                to={item.path}
+                underline="hover"
+                color="inherit"
+                display="block"
+                sx={{ mb: 0.8, fontSize: "0.9rem" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </Grid>
+
+          {/* Public Links */}
           <Grid size={{ xs: 6, md: 2 }}>
             <Typography
               variant="h6"
@@ -76,7 +96,7 @@ export default function Footer() {
             >
               Keşfet
             </Typography>
-            {quickLinks.map((item) => (
+            {publicLinks.map((item) => (
               <Link
                 key={item.path}
                 component={RouterLink}
