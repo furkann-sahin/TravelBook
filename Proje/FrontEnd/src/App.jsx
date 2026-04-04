@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CompanyProfilePage from "./pages/CompanyProfilePage";
 import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/profile" element={<UserProfilePage />} />
           </Route>
 
           {/* Company panel – protected by CompanyLayout */}

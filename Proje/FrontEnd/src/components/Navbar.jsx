@@ -179,13 +179,11 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        navigate(
-                          user?.role === "company"
-                            ? "/company/profile"
-                            : user?.role === "user"
-                            ? "/user/profile"
-                            : "/"
-                        );
+                        if (user?.role === "company") {
+                          navigate("/company/profile");
+                        } else {
+                          navigate("/profile");
+                        }
                       }}
                     >
                       Profilim
@@ -283,9 +281,7 @@ export default function Navbar() {
                   to={
                     user?.role === "company"
                       ? "/company/profile"
-                      : user?.role === "user"
-                      ? "/user/profile"
-                      : "/"
+                      : "/profile"
                   }
                   variant="outlined"
                   color="secondary"

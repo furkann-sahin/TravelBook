@@ -153,7 +153,6 @@ export default function RegisterPage() {
       <TextField
         label="Telefon"
         type="tel"
-        required
         fullWidth
         value={form.phone}
         onChange={(e) => updateField("phone", e.target.value)}

@@ -29,21 +29,6 @@ async function request(endpoint, options = {}) {
   return res.json();
 }
 
-// Authentication related API calls for users
-export const userAuth = {
-  login: (email, password) =>
-    request("/users/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
-
-  register: (data) =>
-    request("/users/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-};
-
 // Authentication related API calls for companies
 export const companyAuth = {
   login: (email, password) =>
@@ -59,18 +44,19 @@ export const companyAuth = {
     }),
 };
 
-// User profile API calls
-export const userApi = {
-  getProfile: (userId) => request(`/users/${userId}`),
-
-  updateProfile: (userId, data) =>
-    request(`/users/${userId}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
+// Authentication related API calls for users
+export const userAuth = {
+  login: (email, password) =>
+    request("/users/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     }),
 
-  deleteAccount: (userId) =>
-    request(`/users/${userId}`, { method: "DELETE" }),
+  register: (data) =>
+    request("/users/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Company profile API calls
@@ -90,4 +76,18 @@ export const companyApi = {
 // Company tour API calls
 export const companyTourApi = {
   listTours: (companyId) => request(`/companies/${companyId}/tours`),
+};
+
+// User profile API calls
+export const userApi = {
+  getProfile: (userId) => request(`/users/${userId}`),
+
+  updateProfile: (userId, data) =>
+    request(`/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteAccount: (userId) =>
+    request(`/users/${userId}`, { method: "DELETE" }),
 };
