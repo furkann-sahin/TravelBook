@@ -43,3 +43,45 @@ export const companyAuth = {
       body: JSON.stringify(data),
     }),
 };
+
+// Authentication related API calls for guides
+export const guideAuth = {
+  login: (email, password) =>
+    request("/guides/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  register: (data) =>
+    request("/guides/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// Guide related API calls for dashboard operations
+export const guideApi = {
+  getDetail: (guideId) => request(`/guides/${guideId}`),
+
+  updateProfile: (guideId, data) =>
+    request(`/guides/${guideId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteAccount: (guideId) =>
+    request(`/guides/${guideId}`, { method: "DELETE" }),
+
+  listCompanies: () => request("/companies"),
+
+  listTours: (guideId) => request(`/guides/${guideId}/tours`),
+
+  assignTour: (guideId, tourId) =>
+    request(`/guides/${guideId}/tours`, {
+      method: "POST",
+      body: JSON.stringify({ tourId }),
+    }),
+
+  removeTour: (guideId, tourId) =>
+    request(`/guides/${guideId}/tours/${tourId}`, { method: "DELETE" }),
+};

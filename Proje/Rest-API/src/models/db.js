@@ -25,3 +25,5 @@ process.on("SIGINT", () => {
 });
 
 require("./company");
+require("./guide");
+require("./tour");

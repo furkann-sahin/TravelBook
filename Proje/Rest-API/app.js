@@ -13,6 +13,10 @@ require("./src/configs/passport"); // Register passport strategies
 
 const companyAuthRoutes = require("./src/routes/company-auth-routes");
 
+const guideAuthRoutes = require("./src/routes/guide-auth-routes");
+const guideRoutes = require("./src/routes/guide-routes");
+const guideTourRoutes = require("./src/routes/guide-tour-routes");
+
 var app = express();
 
 // Middleware to allow CORS
@@ -32,6 +36,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
 apiRouter.use("/companies", companyAuthRoutes);
+
+// Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
+const guideController = require("./src/controllers/guide-controller");
+apiRouter.get("/companies", guideController.listCompanies);
+
+// Rehber Rotaları (Senin Rotaların)
+apiRouter.use("/guides", guideAuthRoutes);
+apiRouter.use("/guides", guideRoutes);
+apiRouter.use("/guides", guideTourRoutes);
 
 app.use("/api", apiRouter);
 

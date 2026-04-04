@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 //const User = mongoose.model("User");
 const Company = mongoose.model("Company");
-//const Guide = mongoose.model("Guide");
+const Guide = mongoose.model("Guide");
 
 /*
 passport.use(
@@ -54,7 +54,7 @@ passport.use(
   ),
 );
 
-/*
+
 passport.use(
   "guide-local",
   new LocalStrategy(
@@ -66,9 +66,9 @@ passport.use(
       try {
         const guide = await Guide.findOne({
           email: email.trim().toLowerCase(),
-        });
+        }).select("+passwordHash +salt");
         if (!guide || !guide.validatePassword(password)) {
-          return done(null, false, { message: "Invalid email or password" });
+          return done(null, false, { message: "Geçersiz e-posta veya şifre" });
         }
         return done(null, guide); // Success
       } catch (err) {
@@ -77,4 +77,3 @@ passport.use(
     },
   ),
 );
-*/

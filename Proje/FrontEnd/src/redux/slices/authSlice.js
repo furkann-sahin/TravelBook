@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { companyAuth } from "../../services/api";
+import { companyAuth, guideAuth } from "../../services/api";
 
 // Helper function to decode JWT token
 function decodeToken(token) {
@@ -31,7 +31,7 @@ function loadSession() {
     token,
     user: {
       id: payload.id,
-      name: payload.name,
+      name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
       email: payload.email,
       role: payload.role,
     },
@@ -40,6 +40,7 @@ function loadSession() {
 
 const authEndpoints = {
   company: companyAuth,
+  guide: guideAuth,
 };
 
 // Async thunks for login and registration
@@ -80,7 +81,7 @@ function setSessionFromToken(state, token, fallbackRole) {
   state.token = token;
   state.user = {
     id: payload.id,
-    name: payload.name,
+    name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
     email: payload.email,
     role: payload.role || fallbackRole,
   };

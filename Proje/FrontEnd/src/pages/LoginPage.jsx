@@ -19,6 +19,7 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
+import CardTravelIcon from "@mui/icons-material/CardTravel";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
@@ -26,6 +27,7 @@ import { useAuth } from "../hooks/useAuth";
 // Define user roles for login
 const roles = [
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
+  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> },
 ];
 
 export default function LoginPage() {
@@ -46,7 +48,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(selectedRole, email, password);
-      navigate("/");
+      navigate(selectedRole === "guide" ? "/guide/dashboard" : "/");
     } catch (err) {
       setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
     } finally {

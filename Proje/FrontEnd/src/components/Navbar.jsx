@@ -162,7 +162,7 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        navigate(`/${user?.id}/profile`);
+                        navigate(user?.role === "guide" ? "/guide/dashboard" : `/${user?.id}/profile`);
                       }}
                     >
                       Profilim
