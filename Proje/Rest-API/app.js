@@ -17,15 +17,24 @@ const companyTourRoutes = require("./src/routes/company-tour-routes");
 const reviewRoutes = require("./src/routes/review-routes");
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
-const tourRoutes = require("./src/routes/tour-routes");
+const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
+const guideRoutes = require("./src/routes/user-guides-routes");
+// const tourRoutes = require("./src/routes/tour-routes"); // Moved to user-routes
+
+const guideAuthRoutes = require("./src/routes/guide-auth-routes");
+const guideRoutes = require("./src/routes/guide-routes");
+const guideTourRoutes = require("./src/routes/guide-tour-routes");
 
 var app = express();
 
 // Middleware to allow CORS
-const allowCrossDomain = (_, res, next) => {
+const allowCrossDomain = (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 };
 
@@ -37,13 +46,21 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
+apiRouter.use("/users", userAuthRoutes);
+apiRouter.use("/users", userRoutes);
+apiRouter.use("/users", userFavoriteRoutes);
 apiRouter.use("/companies", companyAuthRoutes);
 apiRouter.use("/companies", companyRoutes);
 apiRouter.use("/companies", companyTourRoutes);
-apiRouter.use("/users", userAuthRoutes);
-apiRouter.use("/users", userRoutes);
+apiRouter.use("/guides", guideAuthRoutes);
+apiRouter.use("/guides", guideRoutes);
+apiRouter.use("/guides", guideTourRoutes);
 apiRouter.use("/tours", tourRoutes);
 apiRouter.use("/reviews", reviewRoutes);
+
+// Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
+const guideController = require("./src/controllers/guide-controller");
+apiRouter.get("/companies", guideController.listCompanies);
 
 app.use("/api", apiRouter);
 

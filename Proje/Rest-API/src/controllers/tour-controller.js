@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const Tour = mongoose.model("Tour");
 const Review = mongoose.model("Review");
+const Purchase = mongoose.model("Purchase");
 const { createResponse } = require("../utils/create-response");
 
+// Helper functions
 const startOfDay = (value) => {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
@@ -24,7 +26,10 @@ const mapTourListItem = (tour) => ({
   startDate: tour.date || tour.startDate,
   endDate: tour.endDate || tour.date || tour.startDate,
   date: tour.date || tour.startDate,
-  imageUrl: Array.isArray(tour.images) && tour.images.length > 0 ? tour.images[0] : null,
+  imageUrl:
+    Array.isArray(tour.images) && tour.images.length > 0
+      ? tour.images[0]
+      : null,
   companyName: tour.companyName || null,
   rating: tour.rating || 0,
 });
@@ -54,6 +59,7 @@ const mapTourDetail = (tour, reviews = []) => ({
   reviews: reviews.map(mapReview),
 });
 
+// GET TOURS
 const getTours = async (req, res) => {
   try {
     const { title, price, location, date, minPrice, maxPrice } = req.query;
@@ -65,71 +71,48 @@ const getTours = async (req, res) => {
     }
 
     const priceFilter = {};
-    if (price !== undefined && `${price}`.trim() !== "") {
-      const parsedPrice = Number(price);
-      if (Number.isNaN(parsedPrice)) {
-        return createResponse(res, 400, {
-          status: "error",
-          message: "Geçerli bir price değeri gönderin",
-        });
-      }
-      priceFilter.$eq = parsedPrice;
-    }
-    if (minPrice !== undefined && `${minPrice}`.trim() !== "") {
-      const parsedMinPrice = Number(minPrice);
-      if (Number.isNaN(parsedMinPrice)) {
-        return createResponse(res, 400, {
-          status: "error",
-          message: "Geçerli bir minPrice değeri gönderin",
-        });
-      }
-      priceFilter.$gte = parsedMinPrice;
-    }
-    if (maxPrice !== undefined && `${maxPrice}`.trim() !== "") {
-      const parsedMaxPrice = Number(maxPrice);
-      if (Number.isNaN(parsedMaxPrice)) {
-        return createResponse(res, 400, {
-          status: "error",
-          message: "Geçerli bir maxPrice değeri gönderin",
-        });
-      }
-      priceFilter.$lte = parsedMaxPrice;
-    }
+    if (price) priceFilter.$eq = Number(price);
+    if (minPrice) priceFilter.$gte = Number(minPrice);
+    if (maxPrice) priceFilter.$lte = Number(maxPrice);
     if (Object.keys(priceFilter).length > 0) {
       andFilters.push({ price: priceFilter });
     }
 
     if (title) {
-      const titleRegex = new RegExp(title, "i");
-      andFilters.push({
-        $or: [{ title: titleRegex }, { name: titleRegex }],
-      });
+      const regex = new RegExp(title, "i");
+      andFilters.push({ $or: [{ title: regex }, { name: regex }] });
     }
 
     if (date) {
       const queryDate = new Date(date);
-      if (Number.isNaN(queryDate.getTime())) {
-        return createResponse(res, 400, {
-          status: "error",
-          message: "Geçerli bir date değeri gönderin",
-        });
-      }
       andFilters.push({
         $or: [
-          { date: { $gte: startOfDay(queryDate), $lte: endOfDay(queryDate) } },
-          { startDate: { $gte: startOfDay(queryDate), $lte: endOfDay(queryDate) } },
+          {
+            date: {
+              $gte: startOfDay(queryDate),
+              $lte: endOfDay(queryDate),
+            },
+          },
+          {
+            startDate: {
+              $gte: startOfDay(queryDate),
+              $lte: endOfDay(queryDate),
+            },
+          },
         ],
       });
     }
 
-    const query = andFilters.length > 0 ? { $and: andFilters } : {};
+    const query = andFilters.length ? { $and: andFilters } : {};
 
     const tours = await Tour.find(query)
-      .select("title name location price date startDate endDate images rating companyId")
+      .select(
+        "title name location price date startDate endDate images rating companyId",
+      )
       .sort({ date: 1, startDate: 1 })
       .populate("companyId", "name");
 
-    const tourList = tours.map((tour) =>
+    const data = tours.map((tour) =>
       mapTourListItem({
         ...tour.toObject(),
         companyName: tour.companyId?.name || null,
@@ -138,18 +121,16 @@ const getTours = async (req, res) => {
 
     createResponse(res, 200, {
       status: "success",
-      results: tourList.length,
-      data: tourList,
+      results: data.length,
+      data,
     });
   } catch (error) {
-    console.error("Turlar listelenirken hata oluştu:", error);
-    createResponse(res, 500, {
-      status: "error",
-      message: "Sunucu hatası oluştu",
-    });
+    console.error(error);
+    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
   }
 };
 
+// GET TOUR DETAIL
 const getTourDetail = async (req, res) => {
   try {
     const { tourId } = req.params;
@@ -162,12 +143,8 @@ const getTourDetail = async (req, res) => {
     }
 
     const [tour, reviews] = await Promise.all([
-      Tour.findById(tourId).select(
-        "title name description price location date startDate duration included places images",
-      ),
-      Review.find({ tourId })
-        .select("tourId userId userName comment rating createdAt updatedAt")
-        .sort({ createdAt: -1 }),
+      Tour.findById(tourId),
+      Review.find({ tourId }).sort({ createdAt: -1 }),
     ]);
 
     if (!tour) {
@@ -182,12 +159,81 @@ const getTourDetail = async (req, res) => {
       data: mapTourDetail(tour, reviews),
     });
   } catch (error) {
-    console.error("Tur detayları alınırken hata oluştu:", error);
-    createResponse(res, 500, {
-      status: "error",
-      message: "Sunucu hatası oluştu",
-    });
+    console.error(error);
+    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
   }
 };
 
-module.exports = { getTours, getTourDetail };
+// PURCHASE TOUR
+const purchaseTour = async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const userId = req.payload?.id || req.body?.userId;
+
+    if (!userId) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Kullanıcı gerekli",
+      });
+    }
+
+    const tour = await Tour.findById(tourId);
+    if (!tour) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Tur bulunamadı",
+      });
+    }
+
+    const purchase = await Purchase.create({ userId, tourId });
+
+    createResponse(res, 201, {
+      status: "success",
+      message: "Satın alma başarılı",
+      data: purchase,
+    });
+  } catch (error) {
+    console.error(error);
+    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+  }
+};
+
+// CANCEL PURCHASE
+const cancelPurchase = async (req, res) => {
+  try {
+    const { purchaseId } = req.params;
+    const userId = req.payload?.id;
+
+    const purchase = await Purchase.findById(purchaseId);
+    if (!purchase) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Kayıt bulunamadı",
+      });
+    }
+
+    if (purchase.userId.toString() !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yetkisiz işlem",
+      });
+    }
+
+    await purchase.deleteOne();
+
+    createResponse(res, 200, {
+      status: "success",
+      message: "Satın alma iptal edildi",
+    });
+  } catch (error) {
+    console.error(error);
+    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+  }
+};
+
+module.exports = {
+  getTours,
+  getTourDetail,
+  purchaseTour,
+  cancelPurchase,
+};

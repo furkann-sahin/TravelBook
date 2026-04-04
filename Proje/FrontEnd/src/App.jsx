@@ -3,6 +3,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./theme/theme";
 import MainLayout from "./layouts/MainLayout";
 import CompanyLayout from "./layouts/CompanyLayout";
+import GuideLayout from "./layouts/GuideLayout";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
@@ -10,10 +11,16 @@ import RegisterPage from "./pages/RegisterPage";
 import CompanyProfilePage from "./pages/CompanyProfilePage";
 import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
+import GuideDashboardPage from "./pages/GuideDashboardPage";
+import GuideToursPage from "./pages/GuideToursPage";
+import GuideProfilePage from "./pages/GuideProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UserPurchasesPage from "./pages/UserPurchasesPage";
 import ToursPage from "./pages/ToursPage";
 import TourDetailPage from "./pages/TourDetailPage";
+import UserTours from "./pages/UserTours";
+import FavoritesList from "./pages/FavoritesList";
+import GuideList from "./pages/GuideList";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -26,10 +33,13 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/tours" element={<ToursPage />} />
             <Route path="/tours/:tourId" element={<TourDetailPage />} />
             <Route path="/user/profile" element={<UserProfilePage />} />
             <Route path="/users/:userId/purchases" element={<UserPurchasesPage />} />
+            <Route path="/user/tours" element={<ToursPage />} />
+            <Route path="/user/tours/mock" element={<UserTours />} />
+            <Route path="/user/favorites" element={<FavoritesList />} />
+            <Route path="/guides" element={<GuideList />} />
           </Route>
 
           {/* Company panel – protected by CompanyLayout */}
@@ -37,6 +47,13 @@ export default function App() {
             <Route index element={<CompanyDashboardPage />} />
             <Route path="tours" element={<CompanyToursPage />} />
             <Route path="profile" element={<CompanyProfilePage />} />
+          </Route>
+
+          {/* Guide panel – protected by GuideLayout */}
+          <Route path="/guide" element={<GuideLayout />}>
+            <Route index element={<GuideDashboardPage />} />
+            <Route path="tours" element={<GuideToursPage />} />
+            <Route path="profile" element={<GuideProfilePage />} />
           </Route>
 
           {/* Auth pages */}

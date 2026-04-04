@@ -30,7 +30,9 @@ import { useAuth } from "../hooks/useAuth";
 // Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
 const navLinks = [
   { label: "Ana Sayfa", path: "/" },
-  { label: "Turlar", path: "/tours" },
+  { label: "Turlar", path: "/user/tours" },
+  { label: "Rehberler", path: "/guides" },
+  { label: "Favorilerim", path: "/user/favorites" },
   { label: "Hakkımızda", path: "/about" },
 ];
 
@@ -212,11 +214,15 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        if (user?.role === "company") {
-                          navigate("/company/profile");
-                        } else {
-                          navigate("/user/profile");
-                        }
+                        navigate(
+                          user?.role === "user" ? 
+                          `/user/profile` 
+                          : user?.role === "guide" ?
+                          `/guide/profile`
+                          : user?.role === "company" ?
+                          `/company/profile`
+                          : `/`
+                        );
                       }}
                     >
                       Profilim
