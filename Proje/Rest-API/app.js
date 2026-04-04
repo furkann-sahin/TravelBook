@@ -14,6 +14,7 @@ require("./src/configs/passport"); // Register passport strategies
 const companyAuthRoutes = require("./src/routes/company-auth-routes");
 const companyRoutes = require("./src/routes/company-routes");
 const companyTourRoutes = require("./src/routes/company-tour-routes");
+const reviewRoutes = require("./src/routes/review-routes");
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
 const tourRoutes = require("./src/routes/tour-routes");
@@ -42,6 +43,7 @@ apiRouter.use("/companies", companyTourRoutes);
 apiRouter.use("/users", userAuthRoutes);
 apiRouter.use("/users", userRoutes);
 apiRouter.use("/tours", tourRoutes);
+apiRouter.use("/reviews", reviewRoutes);
 
 app.use("/api", apiRouter);
 
