@@ -1,5 +1,14 @@
 const API_BASE = import.meta.env.VITE_API_URL;
 
+// Derive backend origin from the API URL (strip /api suffix) for static assets
+const BACKEND_ORIGIN = (API_BASE || "").replace(/\/api\/?$/, "");
+
+export function getImageUrl(path) {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `${BACKEND_ORIGIN}${path}`;
+}
+
 // Helper function
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
@@ -115,6 +124,30 @@ export const companyApi = {
 
 export const companyTourApi = {
   listTours: (companyId) => request(`/companies/${companyId}/tours`),
+
+  listGuides: (companyId) => request(`/companies/${companyId}/guides`),
+
+  createTour: (companyId, formData) => {
+    const url = `${API_BASE}/companies/${companyId}/tours`;
+    const token = localStorage.getItem("tb_token");
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    return fetch(url, {
+      method: "POST",
+      headers,
+      body: formData, // FormData – browser sets Content-Type with boundary
+    }).then(async (res) => {
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const error = new Error(body.message || `Request failed (${res.status})`);
+        error.status = res.status;
+        error.data = body;
+        throw error;
+      }
+      return body;
+    });
+  },
 };
 
 // TOURS

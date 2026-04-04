@@ -216,12 +216,12 @@ export default function Navbar() {
                         setAnchorEl(null);
                         navigate(
                           user?.role === "user" ? 
-                          `/user/profile` 
+                          "/user/profile" 
                           : user?.role === "guide" ?
-                          `/guide/profile`
+                          "/guide/profile"
                           : user?.role === "company" ?
-                          `/company/profile`
-                          : `/`
+                          "/company/profile"
+                          : "/"
                         );
                       }}
                     >
@@ -333,9 +333,13 @@ export default function Navbar() {
                 <Button
                   component={RouterLink}
                   to={
-                    user?.role === "company"
+                    user?.role === "user"
+                      ? "/user/profile"
+                      : user?.role === "company"
                       ? "/company/profile"
-                      : "/user/profile"
+                      : user?.role === "guide"
+                      ? "/guide/profile"
+                      : "/"
                   }
                   variant="outlined"
                   color="secondary"

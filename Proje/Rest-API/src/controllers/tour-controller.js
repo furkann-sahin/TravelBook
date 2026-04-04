@@ -105,28 +105,35 @@ const getTours = async (req, res) => {
 
     const query = andFilters.length ? { $and: andFilters } : {};
 
-    const tours = await Tour.find(query)
-      .select(
-        "title name location price date startDate endDate images rating companyId",
-      )
-      .sort({ date: 1, startDate: 1 })
+    const tours = await Tour.find(filter)
+      .select("name location price startDate endDate images services rating companyId")
+      .sort({ startDate: 1 })
       .populate("companyId", "name");
-
-    const data = tours.map((tour) =>
-      mapTourListItem({
-        ...tour.toObject(),
-        companyName: tour.companyId?.name || null,
-      }),
-    );
+    
+    const tourList = tours.map((tour) => ({
+      id: tour._id,
+      name: tour.name,
+      location: tour.location,
+      price: tour.price,
+      startDate: tour.startDate,
+      endDate: tour.endDate,
+      imageUrl: tour.images.length > 0 ? tour.images[0] : null,
+      services: tour.services,
+      companyName: tour.companyId?.name || null,
+      rating: tour.rating,
+    }));
 
     createResponse(res, 200, {
       status: "success",
-      results: data.length,
-      data,
+      results: tourList.length,
+      data: tourList,
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    console.error("Turlar listelenirken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
   }
 };
 
