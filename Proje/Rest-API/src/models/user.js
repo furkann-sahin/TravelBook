@@ -29,13 +29,20 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      required: true,
       default: "",
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tour",
+      },
+    ],
   },
   {
     timestamps: true,
+    versionKey: false,
   },
-  { versionKey: false },
 );
 
 userSchema.methods.setPassword = function (password) {

@@ -9,7 +9,7 @@ export function getImageUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
-// Helper function to make API requests with proper headers and error handling
+// Helper function
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem("tb_token");
@@ -38,7 +38,7 @@ async function request(endpoint, options = {}) {
   return res.json();
 }
 
-// Authentication related API calls for users
+// AUTHENTICATION
 export const userAuth = {
   login: (email, password) =>
     request("/users/auth/login", {
@@ -53,7 +53,6 @@ export const userAuth = {
     }),
 };
 
-// Authentication related API calls for companies
 export const companyAuth = {
   login: (email, password) =>
     request("/companies/auth/login", {
@@ -68,7 +67,6 @@ export const companyAuth = {
     }),
 };
 
-// Authentication related API calls for guides
 export const guideAuth = {
   login: (email, password) =>
     request("/guides/auth/login", {
@@ -83,9 +81,16 @@ export const guideAuth = {
     }),
 };
 
-// User profile API calls
+// USERS
 export const userApi = {
   getProfile: (userId) => request(`/users/${userId}`),
+
+  getPurchases: (userId, status) =>
+    request(
+      `/users/${userId}/purchases${
+        status ? `?status=${encodeURIComponent(status)}` : ""
+      }`,
+    ),
 
   updateProfile: (userId, data) =>
     request(`/users/${userId}`, {
@@ -103,7 +108,7 @@ export const userApi = {
     request(`/users/${userId}`, { method: "DELETE" }),
 };
 
-// Company profile API calls
+// COMPANIES
 export const companyApi = {
   getProfile: (companyId) => request(`/companies/${companyId}`),
 
@@ -117,7 +122,6 @@ export const companyApi = {
     request(`/companies/${companyId}`, { method: "DELETE" }),
 };
 
-// Company tour API calls
 export const companyTourApi = {
   listTours: (companyId) => request(`/companies/${companyId}/tours`),
 
@@ -146,21 +150,61 @@ export const companyTourApi = {
   },
 };
 
-// Public tour API calls
+// TOURS
 export const tourApi = {
   getTours: (filters = {}) => {
     const params = new URLSearchParams();
+
+    if (filters.title) params.append("title", filters.title);
     if (filters.location) params.append("location", filters.location);
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
     if (filters.date) params.append("date", filters.date);
+
     const query = params.toString();
     return request(`/tours${query ? `?${query}` : ""}`);
   },
+
+  getTourDetail: (tourId) => request(`/tours/${tourId}`),
 };
 
-// Guide related API calls for dashboard operations
+// PURCHASES
+export const purchaseApi = {
+  purchaseTour: (tourId) =>
+    request(`/users/tours/${tourId}/purchases`, {
+      method: "POST",
+    }),
+
+  cancelPurchase: (purchaseId) =>
+    request(`/users/purchases/${purchaseId}`, {
+      method: "DELETE",
+    }),
+};
+
+// REVIEWS
+export const reviewApi = {
+  createReview: (tourId, data) =>
+    request(`/tours/${tourId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateReview: (reviewId, data) =>
+    request(`/reviews/${reviewId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteReview: (reviewId) =>
+    request(`/reviews/${reviewId}`, {
+      method: "DELETE",
+    }),
+};
+
+// GUIDES
 export const guideApi = {
+  getAllGuides: () => request("/guides"),
+
   getDetail: (guideId) => request(`/guides/${guideId}`),
 
   updateProfile: (guideId, data) =>
@@ -183,5 +227,23 @@ export const guideApi = {
     }),
 
   removeTour: (guideId, tourId) =>
-    request(`/guides/${guideId}/tours/${tourId}`, { method: "DELETE" }),
+    request(`/guides/${guideId}/tours/${tourId}`, {
+      method: "DELETE",
+    }),
+};
+
+// FAVORITES
+export const favoriteApi = {
+  getFavorites: (userId) => request(`/users/${userId}/favorites`),
+
+  addFavorite: (userId, tourId) =>
+    request(`/users/${userId}/favorites`, {
+      method: "POST",
+      body: JSON.stringify({ tourId }),
+    }),
+
+  removeFavorite: (userId, tourId) =>
+    request(`/users/${userId}/favorites/${tourId}`, {
+      method: "DELETE",
+    }),
 };

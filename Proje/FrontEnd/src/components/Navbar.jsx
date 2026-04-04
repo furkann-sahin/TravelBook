@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 
 // Material-UI components and icons
@@ -30,7 +30,9 @@ import { useAuth } from "../hooks/useAuth";
 // Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
 const navLinks = [
   { label: "Ana Sayfa", path: "/" },
-  { label: "Turlar", path: "/tours" },
+  { label: "Turlar", path: "/user/tours" },
+  { label: "Rehberler", path: "/guides" },
+  { label: "Favorilerim", path: "/user/favorites" },
   { label: "Hakkımızda", path: "/about" },
 ];
 
@@ -48,8 +50,12 @@ export default function Navbar() {
   });
 
   const isHome = location.pathname === "/";
+  const isPurchasesPage = location.pathname.includes("/purchases");
   const textColor = trigger || !isHome ? "text.primary" : "#fff";
   const brandColor = trigger || !isHome ? "primary.main" : "#fff";
+  const purchasesPath = user?.id
+    ? `/users/${user.id}/purchases?status=past`
+    : "/login";
 
   const handleLogout = () => {
     setAnchorEl(null);
@@ -103,31 +109,59 @@ export default function Navbar() {
               }}
             >
               {navLinks.map((link) => (
-                <Button
-                  key={link.path}
-                  component={RouterLink}
-                  to={link.path}
-                  sx={{
-                    color: textColor,
-                    fontWeight: location.pathname === link.path ? 700 : 500,
-                    position: "relative",
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      bottom: 4,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: location.pathname === link.path ? "60%" : 0,
-                      height: 2,
-                      bgcolor: "secondary.main",
-                      borderRadius: 1,
-                      transition: "width 0.25s",
-                    },
-                    "&:hover::after": { width: "60%" },
-                  }}
-                >
-                  {link.label}
-                </Button>
+                <Fragment key={link.path}>
+                  <Button
+                    component={RouterLink}
+                    to={link.path}
+                    sx={{
+                      color: textColor,
+                      fontWeight: location.pathname === link.path ? 700 : 500,
+                      position: "relative",
+                      "&::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: 4,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: location.pathname === link.path ? "60%" : 0,
+                        height: 2,
+                        bgcolor: "secondary.main",
+                        borderRadius: 1,
+                        transition: "width 0.25s",
+                      },
+                      "&:hover::after": { width: "60%" },
+                    }}
+                  >
+                    {link.label}
+                  </Button>
+
+                  {link.path === "/tours" && isAuthenticated && user?.role === "user" && (
+                    <Button
+                      component={RouterLink}
+                      to={purchasesPath}
+                      sx={{
+                        color: textColor,
+                        fontWeight: isPurchasesPage ? 700 : 500,
+                        position: "relative",
+                        "&::after": {
+                          content: '""',
+                          position: "absolute",
+                          bottom: 4,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: isPurchasesPage ? "60%" : 0,
+                          height: 2,
+                          bgcolor: "secondary.main",
+                          borderRadius: 1,
+                          transition: "width 0.25s",
+                        },
+                        "&:hover::after": { width: "60%" },
+                      }}
+                    >
+                      Seyahatlerim
+                    </Button>
+                  )}
+                </Fragment>
               ))}
 
               {isAuthenticated ? (
@@ -246,16 +280,31 @@ export default function Navbar() {
           </Box>
           <List>
             {navLinks.map((link) => (
-              <ListItem key={link.path} disablePadding>
-                <ListItemButton
-                  component={RouterLink}
-                  to={link.path}
-                  onClick={() => setDrawerOpen(false)}
-                  selected={location.pathname === link.path}
-                >
-                  <ListItemText primary={link.label} />
-                </ListItemButton>
-              </ListItem>
+              <Fragment key={link.path}>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    component={RouterLink}
+                    to={link.path}
+                    onClick={() => setDrawerOpen(false)}
+                    selected={location.pathname === link.path}
+                  >
+                    <ListItemText primary={link.label} />
+                  </ListItemButton>
+                </ListItem>
+
+                {link.path === "/tours" && isAuthenticated && user?.role === "user" && (
+                  <ListItem disablePadding>
+                    <ListItemButton
+                      component={RouterLink}
+                      to={purchasesPath}
+                      onClick={() => setDrawerOpen(false)}
+                      selected={isPurchasesPage}
+                    >
+                      <ListItemText primary="Seyahatlerim" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+              </Fragment>
             ))}
           </List>
           <Box
@@ -284,10 +333,10 @@ export default function Navbar() {
                 <Button
                   component={RouterLink}
                   to={
-                    user?.role === "company"
-                      ? "/company/profile"
-                      : user?.role === "user"
+                    user?.role === "user"
                       ? "/user/profile"
+                      : user?.role === "company"
+                      ? "/company/profile"
                       : user?.role === "guide"
                       ? "/guide/profile"
                       : "/"

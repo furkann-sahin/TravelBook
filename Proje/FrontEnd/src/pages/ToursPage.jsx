@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -17,6 +18,12 @@ import {
   IconButton,
   Collapse,
   Rating,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -25,21 +32,41 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { tourApi, getImageUrl } from "../services/api";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import CancelIcon from "@mui/icons-material/Cancel";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import { tourApi, favoriteApi } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 export default function ToursPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState({
+    title: "",
     location: "",
     minPrice: "",
     maxPrice: "",
     date: "",
   });
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [purchaseLoading, setPurchaseLoading] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [purchasedTours, setPurchasedTours] = useState({});
+  const [cancelLoading, setCancelLoading] = useState(null);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelTour, setCancelTour] = useState(null);
+  const [favoriteTours, setFavoriteTours] = useState({});
+  const [favoriteLoading, setFavoriteLoading] = useState(null);
 
   const fetchTours = useCallback(async (queryFilters = {}) => {
     setLoading(true);
@@ -47,16 +74,13 @@ export default function ToursPage() {
     try {
       const res = await tourApi.getTours(queryFilters);
       setTours(res.data || []);
-    } catch (err) {
-      setError(err.message || "Turlar yüklenirken bir hata oluştu.");
+    } catch {
+      setError("Turlar yüklenirken bir hata oluştu.");
+      setTours([]);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchTours();
-  }, [fetchTours]);
 
   const handleFilterChange = (field) => (e) => {
     setFilters((prev) => ({ ...prev, [field]: e.target.value }));
@@ -64,19 +88,119 @@ export default function ToursPage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setError(null);
+
     const activeFilters = {};
+    if (filters.title.trim()) activeFilters.title = filters.title.trim();
     if (filters.location.trim()) activeFilters.location = filters.location.trim();
     if (filters.minPrice) activeFilters.minPrice = filters.minPrice;
     if (filters.maxPrice) activeFilters.maxPrice = filters.maxPrice;
     if (filters.date) activeFilters.date = filters.date;
+
     setAppliedFilters(activeFilters);
+    setHasSearched(true);
     fetchTours(activeFilters);
   };
 
   const handleClear = () => {
-    setFilters({ location: "", minPrice: "", maxPrice: "", date: "" });
+    setFilters({ title: "", location: "", minPrice: "", maxPrice: "", date: "" });
     setAppliedFilters({});
-    fetchTours();
+    setTours([]);
+    setHasSearched(false);
+    setError(null);
+    setLoading(false);
+  };
+
+  const handleOpenConfirm = (tour) => {
+    setSelectedTour(tour);
+    setConfirmOpen(true);
+  };
+
+  const handleCloseConfirm = () => {
+    setConfirmOpen(false);
+    setSelectedTour(null);
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedTour) return;
+    const tourId = selectedTour.id;
+    setConfirmOpen(false);
+    setPurchaseLoading(tourId);
+    try {
+      const res = await tourApi.purchaseTour(tourId);
+      const purchaseId = res?.data?.purchaseId;
+      setPurchasedTours((prev) => ({ ...prev, [tourId]: purchaseId }));
+      setSnackbar({ open: true, message: "Satın alma başarılı!", severity: "success" });
+    } catch {
+      setSnackbar({ open: true, message: "Satın alma sırasında bir hata oluştu.", severity: "error" });
+    } finally {
+      setPurchaseLoading(null);
+      setSelectedTour(null);
+    }
+  };
+
+  const handleOpenCancelConfirm = (tour) => {
+    setCancelTour(tour);
+    setCancelConfirmOpen(true);
+  };
+
+  const handleCloseCancelConfirm = () => {
+    setCancelConfirmOpen(false);
+    setCancelTour(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTour) return;
+    const tourId = cancelTour.id;
+    const purchaseId = purchasedTours[tourId];
+    setCancelConfirmOpen(false);
+    setCancelLoading(tourId);
+    try {
+      await tourApi.cancelPurchase(purchaseId);
+      setPurchasedTours((prev) => {
+        const updated = { ...prev };
+        delete updated[tourId];
+        return updated;
+      });
+      setSnackbar({ open: true, message: "Satın alma iptal edildi!", severity: "success" });
+    } catch {
+      setSnackbar({ open: true, message: "İptal sırasında bir hata oluştu.", severity: "error" });
+    } finally {
+      setCancelLoading(null);
+      setCancelTour(null);
+    }
+  };
+
+  const handleToggleFavorite = async (tour) => {
+    if (!user?.id) {
+      setSnackbar({ open: true, message: "Favorilere eklemek için giriş yapın.", severity: "warning" });
+      return;
+    }
+    const tourId = tour.id;
+    setFavoriteLoading(tourId);
+    if (favoriteTours[tourId]) {
+      // Favoriden kaldır
+      try {
+        await favoriteApi.removeFavorite(user.id, tourId);
+        setFavoriteTours((prev) => { const u = { ...prev }; delete u[tourId]; return u; });
+        setSnackbar({ open: true, message: "Favorilerden kaldırıldı!", severity: "success" });
+      } catch {
+        setSnackbar({ open: true, message: "Favori kaldırılırken bir hata oluştu.", severity: "error" });
+      } finally {
+        setFavoriteLoading(null);
+      }
+    } else {
+      // Favoriye ekle
+      try {
+        await favoriteApi.addFavorite(user.id, tourId);
+        setFavoriteTours((prev) => ({ ...prev, [tourId]: true }));
+        setSnackbar({ open: true, message: "Favorilere eklendi!", severity: "success" });
+      } catch {
+        setSnackbar({ open: true, message: "Favorilere eklenirken bir hata oluştu.", severity: "error" });
+      } finally {
+        setFavoriteLoading(null);
+      }
+    }
   };
 
   const hasActiveFilters = Object.keys(appliedFilters).length > 0;
@@ -138,6 +262,27 @@ export default function ToursPage() {
           <Collapse in={filtersOpen}>
             <Box component="form" onSubmit={handleSearch}>
               <Grid container spacing={2} alignItems="flex-end">
+                {/* Title */}
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Tur Adı"
+                    placeholder="Ör: Kapadokya"
+                    value={filters.title}
+                    onChange={handleFilterChange("title")}
+                    size="small"
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon fontSize="small" color="action" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Grid>
+
                 {/* Location */}
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <TextField
@@ -201,7 +346,7 @@ export default function ToursPage() {
                 </Grid>
 
                 {/* Date */}
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                   <TextField
                     fullWidth
                     label="Tarih"
@@ -253,7 +398,7 @@ export default function ToursPage() {
         </Paper>
 
         {/* Results Info */}
-        {!loading && !error && (
+        {!loading && !error && hasSearched && (
           <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Typography variant="body2" color="text.secondary">
               {tours.length > 0
@@ -275,6 +420,12 @@ export default function ToursPage() {
           </Box>
         )}
 
+        {!loading && !hasSearched && !error && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
+            Filtre eklemeden de Ara butonuna basarak tüm turları görüntüleyebilirsiniz.
+          </Alert>
+        )}
+
         {/* Error */}
         {error && (
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -283,10 +434,13 @@ export default function ToursPage() {
         )}
 
         {/* Tour Cards */}
-        {!loading && !error && (
+        {!loading && !error && hasSearched && (
           <Grid container spacing={3}>
             {tours.map((tour) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour.id}>
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4 }}
+                key={tour.id || `${tour.name}-${tour.startDate}`}
+              >
                 <Card
                   elevation={0}
                   sx={{
@@ -350,10 +504,63 @@ export default function ToursPage() {
                       <Typography variant="h5" fontWeight={800} color="secondary.main">
                         ₺{tour.price?.toLocaleString("tr-TR")}
                       </Typography>
-                      {tour.companyName && (
-                        <Chip label={tour.companyName} size="small" variant="outlined" />
-                      )}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {tour.companyName && (
+                          <Chip label={tour.companyName} size="small" variant="outlined" />
+                        )}
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() => navigate(`/tours/${tour.id}`)}
+                          disabled={!tour.id}
+                        >
+                          Detay
+                        </Button>
+                      </Box>
                     </Box>
+
+                    <Button
+                      variant={favoriteTours[tour.id] ? "contained" : "outlined"}
+                      color="error"
+                      fullWidth
+                      startIcon={favoriteTours[tour.id] ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                      onClick={() => handleToggleFavorite(tour)}
+                      disabled={favoriteLoading === tour.id}
+                      sx={{ mt: 2, borderRadius: 2, py: 1 }}
+                    >
+                      {favoriteLoading === tour.id
+                        ? "İşleniyor..."
+                        : favoriteTours[tour.id]
+                        ? "Favorilerde"
+                        : "Favorilere Ekle"}
+                    </Button>
+
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      fullWidth
+                      startIcon={<ShoppingCartIcon />}
+                      onClick={() => handleOpenConfirm(tour)}
+                      disabled={purchaseLoading === tour.id || !!purchasedTours[tour.id]}
+                      sx={{ mt: 1, borderRadius: 2, py: 1 }}
+                    >
+                      {purchaseLoading === tour.id ? "İşleniyor..." : purchasedTours[tour.id] ? "Satın Alındı" : "Satın Al"}
+                    </Button>
+
+                    {purchasedTours[tour.id] && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        fullWidth
+                        startIcon={<CancelIcon />}
+                        onClick={() => handleOpenCancelConfirm(tour)}
+                        disabled={cancelLoading === tour.id}
+                        sx={{ mt: 1, borderRadius: 2, py: 1 }}
+                      >
+                        {cancelLoading === tour.id ? "İptal ediliyor..." : "İptal Et"}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
@@ -381,6 +588,136 @@ export default function ToursPage() {
           </Grid>
         )}
       </Container>
+
+      {/* Purchase Confirm Dialog */}
+      <Dialog
+        open={confirmOpen}
+        onClose={handleCloseConfirm}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          Satın Alma Onayı
+        </DialogTitle>
+        <Divider />
+        {selectedTour && (
+          <DialogContent sx={{ pt: 2.5 }}>
+            <Typography variant="body1" gutterBottom>
+              Bu turu satın almak istediğinizden emin misiniz?
+            </Typography>
+            <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+              <Typography variant="subtitle1" fontWeight={700}>
+                {selectedTour.name}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
+                <LocationOnIcon sx={{ fontSize: 16, color: "secondary.main" }} />
+                <Typography variant="body2" color="text.secondary">
+                  {selectedTour.location}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+                <CalendarTodayIcon sx={{ fontSize: 16, color: "text.disabled" }} />
+                <Typography variant="body2" color="text.secondary">
+                  {formatDate(selectedTour.startDate)} – {formatDate(selectedTour.endDate)}
+                </Typography>
+              </Box>
+              <Typography variant="h5" fontWeight={800} color="secondary.main" sx={{ mt: 1.5 }}>
+                ₺{selectedTour.price?.toLocaleString("tr-TR")}
+              </Typography>
+              {selectedTour.companyName && (
+                <Chip label={selectedTour.companyName} size="small" variant="outlined" sx={{ mt: 1 }} />
+              )}
+            </Box>
+          </DialogContent>
+        )}
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={handleCloseConfirm} color="inherit" sx={{ borderRadius: 2 }}>
+            Vazgeç
+          </Button>
+          <Button
+            onClick={handleConfirmPurchase}
+            variant="contained"
+            color="secondary"
+            startIcon={<ShoppingCartIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Satın Al
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Cancel Confirm Dialog */}
+      <Dialog
+        open={cancelConfirmOpen}
+        onClose={handleCloseCancelConfirm}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1, color: "error.main" }}>
+          Satın Alma İptali
+        </DialogTitle>
+        <Divider />
+        {cancelTour && (
+          <DialogContent sx={{ pt: 2.5 }}>
+            <Typography variant="body1" gutterBottom>
+              Bu tur satın alımını iptal etmek istediğinizden emin misiniz?
+            </Typography>
+            <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+              <Typography variant="subtitle1" fontWeight={700}>
+                {cancelTour.name}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
+                <LocationOnIcon sx={{ fontSize: 16, color: "secondary.main" }} />
+                <Typography variant="body2" color="text.secondary">
+                  {cancelTour.location}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+                <CalendarTodayIcon sx={{ fontSize: 16, color: "text.disabled" }} />
+                <Typography variant="body2" color="text.secondary">
+                  {formatDate(cancelTour.startDate)} – {formatDate(cancelTour.endDate)}
+                </Typography>
+              </Box>
+              <Typography variant="h5" fontWeight={800} color="secondary.main" sx={{ mt: 1.5 }}>
+                ₺{cancelTour.price?.toLocaleString("tr-TR")}
+              </Typography>
+            </Box>
+          </DialogContent>
+        )}
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={handleCloseCancelConfirm} color="inherit" sx={{ borderRadius: 2 }}>
+            Vazgeç
+          </Button>
+          <Button
+            onClick={handleConfirmCancel}
+            variant="contained"
+            color="error"
+            startIcon={<CancelIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            İptal Et
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Purchase Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

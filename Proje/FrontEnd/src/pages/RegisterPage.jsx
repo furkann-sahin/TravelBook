@@ -29,7 +29,7 @@ import { useAuth } from "../hooks/useAuth";
 const roles = [
   { key: "user", label: "Kullanıcı", icon: <PersonIcon /> },
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
-  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> }
+  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> },
 ];
 
 const defaultForm = {
@@ -101,10 +101,16 @@ export default function RegisterPage() {
       // Convert comma-separated strings to arrays for guide role
       if (selectedRole === "guide") {
         data.languages = data.languages
-          ? data.languages.split(",").map((l) => l.trim()).filter(Boolean)
+          ? data.languages
+              .split(",")
+              .map((l) => l.trim())
+              .filter(Boolean)
           : [];
         data.expertRoutes = data.expertRoutes
-          ? data.expertRoutes.split(",").map((r) => r.trim()).filter(Boolean)
+          ? data.expertRoutes
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
           : [];
       }
 
@@ -185,6 +191,7 @@ export default function RegisterPage() {
       <TextField
         label="Telefon"
         type="tel"
+        required
         fullWidth
         value={form.phone}
         onChange={(e) => updateField("phone", e.target.value)}
