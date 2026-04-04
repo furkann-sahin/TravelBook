@@ -5,7 +5,9 @@ import {
   Box,
   Grid,
   Avatar,
+  Button,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 // Team members with name, role, and avatar (placeholder for now)
 const team = [
@@ -52,6 +54,18 @@ export default function AboutPage() {
               </Grid>
             ))}
           </Grid>
+
+          <Box sx={{ textAlign: "center", mt: 6 }}>
+            <Button
+              component={RouterLink}
+              to="/"
+              variant="contained"
+              color="secondary"
+              size="large"
+            >
+              Ana Sayfayı Keşfet
+            </Button>
+          </Box>
         </Container>
       </Box>
     </Box>
