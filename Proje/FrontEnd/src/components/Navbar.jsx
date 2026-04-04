@@ -182,7 +182,9 @@ export default function Navbar() {
                         navigate(
                           user?.role === "company"
                             ? "/company/profile"
-                            : "/",
+                            : user?.role === "user"
+                            ? "/user/profile"
+                            : "/"
                         );
                       }}
                     >
@@ -281,6 +283,8 @@ export default function Navbar() {
                   to={
                     user?.role === "company"
                       ? "/company/profile"
+                      : user?.role === "user"
+                      ? "/user/profile"
                       : "/"
                   }
                   variant="outlined"

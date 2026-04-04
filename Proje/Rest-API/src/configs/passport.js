@@ -2,11 +2,10 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 
-//const User = mongoose.model("User");
+const User = mongoose.model("User");
 const Company = mongoose.model("Company");
 //const Guide = mongoose.model("Guide");
 
-/*
 passport.use(
   "user-local",
   new LocalStrategy(
@@ -16,11 +15,13 @@ passport.use(
     },
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ email: email.trim().toLowerCase() });
+        const user = await User.findOne({
+          email: email.trim().toLowerCase(),
+        }).select("+passwordHash +salt");
 
         if (!user || !user.validatePassword(password))
-          return done(null, false, { message: "Invalid email or password" });
-        
+          return done(null, false, { message: "Geçersiz e-posta veya şifre" });
+
         return done(null, user);
       } catch (err) {
         return done(err);
@@ -28,7 +29,6 @@ passport.use(
     },
   ),
 );
-*/
 
 passport.use(
   "company-local",
