@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tour",
+      },
+    ],
   },
   {
     timestamps: true,

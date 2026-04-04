@@ -16,7 +16,9 @@ const companyRoutes = require("./src/routes/company-routes");
 const companyTourRoutes = require("./src/routes/company-tour-routes");
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
-const tourRoutes = require("./src/routes/tour-routes");
+const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
+const guideRoutes = require("./src/routes/user-guides-routes");
+// const tourRoutes = require("./src/routes/tour-routes"); // Moved to user-routes
 
 var app = express();
 
@@ -41,7 +43,9 @@ apiRouter.use("/companies", companyRoutes);
 apiRouter.use("/companies", companyTourRoutes);
 apiRouter.use("/users", userAuthRoutes);
 apiRouter.use("/users", userRoutes);
-apiRouter.use("/tours", tourRoutes);
+apiRouter.use("/users", userFavoriteRoutes);
+apiRouter.use("/guides", guideRoutes);
+// apiRouter.use("/tours", tourRoutes); // Moved to /api/users/tours
 
 app.use("/api", apiRouter);
 

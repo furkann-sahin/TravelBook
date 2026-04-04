@@ -78,7 +78,7 @@ export const companyTourApi = {
   listTours: (companyId) => request(`/companies/${companyId}/tours`),
 };
 
-// Public tour API calls
+// User tour API calls
 export const tourApi = {
   getTours: (filters = {}) => {
     const params = new URLSearchParams();
@@ -87,8 +87,18 @@ export const tourApi = {
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
     if (filters.date) params.append("date", filters.date);
     const query = params.toString();
-    return request(`/tours${query ? `?${query}` : ""}`);
+    return request(`/users/tours${query ? `?${query}` : ""}`);
   },
+
+  purchaseTour: (tourId) =>
+    request(`/users/tours/${tourId}/purchases`, {
+      method: "POST",
+    }),
+
+  cancelPurchase: (purchaseId) =>
+    request(`/users/purchases/${purchaseId}`, {
+      method: "DELETE",
+    }),
 };
 
 // User profile API calls
@@ -109,4 +119,25 @@ export const userApi = {
 
   deleteAccount: (userId) =>
     request(`/users/${userId}`, { method: "DELETE" }),
+};
+
+// User favorite API calls
+export const favoriteApi = {
+  getFavorites: (userId) => request(`/users/${userId}/favorites`),
+
+  addFavorite: (userId, tourId) =>
+    request(`/users/${userId}/favorites`, {
+      method: "POST",
+      body: JSON.stringify({ tourId }),
+    }),
+
+  removeFavorite: (userId, tourId) =>
+    request(`/users/${userId}/favorites/${tourId}`, {
+      method: "DELETE",
+    }),
+};
+
+// Guide API calls
+export const guideApi = {
+  getAllGuides: () => request("/guides"),
 };

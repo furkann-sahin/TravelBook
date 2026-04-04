@@ -27,3 +27,5 @@ process.on("SIGINT", () => {
 require("./company");
 require("./tour");
 require("./user");
+require("./purchase");
+require("./guide");
