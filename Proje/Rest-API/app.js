@@ -11,10 +11,9 @@ dotenv.config();
 require("./src/models/db"); // Database connection and model registration
 require("./src/configs/passport"); // Register passport strategies
 
+const userAuthRoutes = require("./src/routes/user-auth-routes");
 const companyAuthRoutes = require("./src/routes/company-auth-routes");
 const companyRoutes = require("./src/routes/company-routes");
-const companyTourRoutes = require("./src/routes/company-tour-routes");
-const userAuthRoutes = require("./src/routes/user-auth-routes");
 
 var app = express();
 
@@ -34,10 +33,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
+apiRouter.use("/users", userAuthRoutes);
 apiRouter.use("/companies", companyAuthRoutes);
 apiRouter.use("/companies", companyRoutes);
-apiRouter.use("/companies", companyTourRoutes);
-apiRouter.use("/users", userAuthRoutes);
 
 app.use("/api", apiRouter);
 

@@ -8,9 +8,6 @@ import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import CompanyProfilePage from "./pages/CompanyProfilePage";
-import CompanyDashboardPage from "./pages/CompanyDashboardPage";
-import CompanyToursPage from "./pages/CompanyToursPage";
-import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -22,6 +19,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/:id/profile" element={<CompanyProfilePage />} />
           </Route>
 
           {/* Company panel – protected by CompanyLayout */}
