@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { companyAuth, userAuth } from "../../services/api";
+import { userAuth, companyAuth, guideAuth } from "../../services/api";
 
 // Helper function to decode JWT token
 function decodeToken(token) {
@@ -31,7 +31,7 @@ function loadSession() {
     token,
     user: {
       id: payload.id,
-      name: payload.name,
+      name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
       email: payload.email,
       role: payload.role,
     },
@@ -40,6 +40,7 @@ function loadSession() {
 
 const authEndpoints = {
   company: companyAuth,
+  guide: guideAuth,
   user: userAuth,
 };
 
@@ -53,7 +54,7 @@ export const loginThunk = createAsyncThunk(
       const data = await endpoint.login(email, password);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(err.message || "Giriş başarısız");
     }
   },
 );
@@ -68,7 +69,7 @@ export const registerThunk = createAsyncThunk(
       const data = await endpoint.register(formData);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(err.message || "Kayıt başarısız");
     }
   },
 );
@@ -81,7 +82,7 @@ function setSessionFromToken(state, token, fallbackRole) {
   state.token = token;
   state.user = {
     id: payload.id,
-    name: payload.name,
+    name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
     email: payload.email,
     role: payload.role || fallbackRole,
   };

@@ -19,6 +19,7 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
+import CardTravelIcon from "@mui/icons-material/CardTravel";
 import PersonIcon from "@mui/icons-material/Person";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
@@ -28,6 +29,7 @@ import { useAuth } from "../hooks/useAuth";
 const roles = [
   { key: "user", label: "Kullanıcı", icon: <PersonIcon /> },
   { key: "company", label: "Firma", icon: <BusinessIcon /> },
+  { key: "guide", label: "Rehber", icon: <CardTravelIcon /> },
 ];
 
 const defaultForm = {
@@ -46,6 +48,17 @@ const defaultForm = {
     phone: "",
     address: "",
     description: "",
+  },
+  guide: {
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    biography: "",
+    languages: "",
+    expertRoutes: "",
   },
 };
 
@@ -84,8 +97,35 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { confirmPassword, ...data } = form;
+
+      // Convert comma-separated strings to arrays for guide role
+      if (selectedRole === "guide") {
+        data.languages = data.languages
+          ? data.languages
+              .split(",")
+              .map((l) => l.trim())
+              .filter(Boolean)
+          : [];
+        data.expertRoutes = data.expertRoutes
+          ? data.expertRoutes
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
+          : [];
+      }
+
       await register(selectedRole, data);
-      navigate(selectedRole === "company" ? "/company" : "/");
+      navigate(
+        selectedRole === "user"
+          ? "/user"
+          : selectedRole === "company"
+            ? "/company"
+              ? selectedRole === "guide"
+                ? "/guide"
+                : "/"
+              : "/"
+            : "/",
+      );
     } catch (err) {
       setError(err.message || "Kayıt başarısız oldu.");
     } finally {
@@ -153,6 +193,7 @@ export default function RegisterPage() {
       <TextField
         label="Telefon"
         type="tel"
+        required
         fullWidth
         value={form.phone}
         onChange={(e) => updateField("phone", e.target.value)}
@@ -205,6 +246,68 @@ export default function RegisterPage() {
         value={form.description}
         onChange={(e) => updateField("description", e.target.value)}
         placeholder="Firmanız hakkında bilgi verin…"
+      />
+    </>
+  );
+
+  const renderGuideForm = () => (
+    <>
+      <TextField
+        label="Ad"
+        required
+        fullWidth
+        value={form.firstName}
+        onChange={(e) => updateField("firstName", e.target.value)}
+      />
+      <TextField
+        label="Soyad"
+        required
+        fullWidth
+        value={form.lastName}
+        onChange={(e) => updateField("lastName", e.target.value)}
+      />
+      <TextField
+        label="E-posta Adresi"
+        type="email"
+        required
+        fullWidth
+        value={form.email}
+        onChange={(e) => updateField("email", e.target.value)}
+        autoComplete="email"
+      />
+      {passwordFields}
+      <TextField
+        label="Telefon"
+        type="tel"
+        fullWidth
+        value={form.phone}
+        onChange={(e) => updateField("phone", e.target.value)}
+        placeholder="+90 555 123 4567"
+      />
+      <TextField
+        label="Biyografi"
+        fullWidth
+        multiline
+        minRows={3}
+        value={form.biography}
+        onChange={(e) => updateField("biography", e.target.value)}
+        placeholder="Kendiniz hakkında bilgi verin…"
+      />
+      <TextField
+        label="Diller"
+        fullWidth
+        value={form.languages}
+        onChange={(e) => updateField("languages", e.target.value)}
+        placeholder="Türkçe, İngilizce, Almanca"
+        helperText="Virgülle ayırarak yazın"
+      />
+      <TextField
+        label="Uzman Rotalar"
+        fullWidth
+        value={form.expertRoutes}
+        onChange={(e) => updateField("expertRoutes", e.target.value)}
+        placeholder="Kapadokya, Efes, Pamukkale"
+        helperText="Virgülle ayırarak yazın"
       />
     </>
   );
@@ -294,6 +397,7 @@ export default function RegisterPage() {
           >
             {selectedRole === "user" && renderUserForm()}
             {selectedRole === "company" && renderCompanyForm()}
+            {selectedRole === "guide" && renderGuideForm()}
 
             <Button
               type="submit"

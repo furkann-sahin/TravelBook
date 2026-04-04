@@ -88,8 +88,8 @@ const tourSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    versionKey: false,
   },
-  { versionKey: false },
 );
 
 tourSchema.pre("validate", function (next) {

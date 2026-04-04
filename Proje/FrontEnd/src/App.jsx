@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import GuideDashboard from "./pages/GuideDashboard";
 import CompanyProfilePage from "./pages/CompanyProfilePage";
 import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
@@ -42,6 +43,7 @@ export default function App() {
           {/* Auth pages */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/guide/dashboard" element={<GuideDashboard />} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

@@ -2,10 +2,15 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
-// Company Schema
-const companySchema = new mongoose.Schema(
+// YAML Sözleşmesine Uygun Guide Şeması
+const guideSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: { // name yerine firstName oldu
+      type: String,
+      trim: true,
+      required: true,
+    },
+    lastName: { // surname yerine lastName oldu
       type: String,
       trim: true,
       required: true,
@@ -30,17 +35,23 @@ const companySchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      required: true,
     },
-    address: {
-      type: String,
-      trim: true,
-      required: true,
-    },
-    description: {
+    biography: { // bio yerine biography oldu
       type: String,
       trim: true,
       default: "",
+    },
+    languages: [{
+      type: String,
+      trim: true,
+    }],
+    expertRoutes: [{ // specialties yerine expertRoutes oldu
+      type: String,
+      trim: true,
+    }],
+    experienceYears: { // Yeni eklendi
+      type: Number,
+      default: 0,
     },
     rating: {
       type: Number,
@@ -48,46 +59,51 @@ const companySchema = new mongoose.Schema(
       max: 5,
       default: 0,
     },
-    tourCount: {
+    reviewCount: { // Yeni eklendi
       type: Number,
-      min: 0,
       default: 0,
     },
+    profileImageUrl: { // Yeni eklendi
+      type: String,
+      default: null,
+    },
+    registeredTours: [{ // Tura katılma gereksinimi için
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tour'
+    }]
   },
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
-// Method to set password
-companySchema.methods.setPassword = function (password) {
+guideSchema.methods.setPassword = function (password) {
   this.salt = crypto.randomBytes(16).toString("hex");
   this.passwordHash = crypto
     .pbkdf2Sync(password, this.salt, 600000, 64, "sha512")
     .toString("hex");
 };
 
-// Method to validate password
-companySchema.methods.validatePassword = function (password) {
+guideSchema.methods.validatePassword = function (password) {
   const hash = crypto
     .pbkdf2Sync(password, this.salt, 600000, 64, "sha512")
     .toString("hex");
   return this.passwordHash === hash;
 };
 
-// Method to generate JWT token
-companySchema.methods.generateJWT = function () {
+guideSchema.methods.generateJWT = function () {
   return jwt.sign(
     {
       id: this._id,
-      name: this.name,
+      firstName: this.firstName,
+      lastName: this.lastName,
       email: this.email,
-      role: "company",
+      role: "guide",
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" },
   );
 };
 
-module.exports = mongoose.model("Company", companySchema, "companies");
+module.exports = mongoose.model("Guide", guideSchema, "guides");
