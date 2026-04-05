@@ -28,8 +28,8 @@
 
 ## Proje Linkleri
 
-- **REST API Adresi:**
-- **Web Frontend Adresi:** 
+- **REST API Adresi:** [https://travel-book-eosin.vercel.app/api](https://travel-book-eosin.vercel.app/api)
+- **Web Frontend Adresi:** [https://travel-book-8ssh.vercel.app](https://travel-book-8ssh.vercel.app)
 
 ---
 

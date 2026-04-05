@@ -1,6 +1,6 @@
 # Recep Arslan'ın REST API Metotları
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)
+**API Test Videosu:** [https://youtu.be/k0UZrfX1HDE](https://youtu.be/k0UZrfX1HDE)
 
 ## 1. Tur Firması Kayıt Olma
 - **Endpoint:** `POST /api/companies/auth/register`

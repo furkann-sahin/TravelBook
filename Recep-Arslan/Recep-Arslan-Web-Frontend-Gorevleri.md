@@ -1,6 +1,6 @@
 # Recep Arslan'ın Web Frontend Görevleri
 
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** [https://youtu.be/_vxmzO4gnRo](https://youtu.be/_vxmzO4gnRo)
 
 ## 1. Firma Giriş Yapma (LoginPage - Firma Sekmesi)
 - **API Endpoint:** `POST /api/companies/auth/login`
