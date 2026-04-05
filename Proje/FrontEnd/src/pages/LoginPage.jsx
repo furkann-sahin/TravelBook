@@ -51,11 +51,13 @@ export default function LoginPage() {
     try {
       await login(selectedRole, email, password);
       navigate(
-        selectedRole === "company"
-          ? "/company"
-          : selectedRole === "guide"
-            ? "/guide"
-            : "/",
+        selectedRole === "user" ? 
+        "/user" 
+        : selectedRole === "guide" ?
+        "/guide"
+        : selectedRole === "company" ?
+        "/company"
+        : "/"
       );
     } catch (err) {
       setError(

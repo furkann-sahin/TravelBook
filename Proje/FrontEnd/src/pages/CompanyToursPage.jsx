@@ -23,11 +23,12 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AddIcon from "@mui/icons-material/Add";
 
 import { Link as RouterLink } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import { companyTourApi } from "../services/api";
+import { companyTourApi, getImageUrl } from "../services/api";
 
 export default function CompanyToursPage() {
   const { user } = useAuth();
@@ -151,15 +152,26 @@ export default function CompanyToursPage() {
                 : "Henüz tur eklenmemiş"}
             </Typography>
           </Box>
-          <Button
-            component={RouterLink}
-            to="/company"
-            startIcon={<ArrowBackIcon />}
-            variant="outlined"
-            color="primary"
-          >
-            Panele Dön
-          </Button>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              component={RouterLink}
+              to="/company/tours/create"
+              startIcon={<AddIcon />}
+              variant="contained"
+              color="secondary"
+            >
+              Yeni Tur
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/company"
+              startIcon={<ArrowBackIcon />}
+              variant="outlined"
+              color="primary"
+            >
+              Panele Dön
+            </Button>
+          </Box>
         </Box>
 
         {/* Empty state */}
@@ -181,6 +193,16 @@ export default function CompanyToursPage() {
             <Typography variant="body2" color="text.secondary">
               Turlar oluşturulduktan sonra burada listelenecektir.
             </Typography>
+            <Button
+              component={RouterLink}
+              to="/company/tours/create"
+              startIcon={<AddIcon />}
+              variant="contained"
+              color="secondary"
+              sx={{ mt: 2 }}
+            >
+              İlk Turunu Oluştur
+            </Button>
           </Paper>
         )}
 
@@ -239,7 +261,7 @@ function TourCard({ tour, formatDate, formatPrice }) {
         <CardMedia
           component="img"
           height={180}
-          image={tour.imageUrl}
+          image={getImageUrl(tour.imageUrl)}
           alt={tour.name}
           sx={{ objectFit: "cover" }}
         />
@@ -291,6 +313,14 @@ function TourCard({ tour, formatDate, formatPrice }) {
             <Typography variant="body2" color="text.secondary">
               {tour.rating.toFixed(1)}
             </Typography>
+          </Box>
+        )}
+
+        {tour.services?.length > 0 && (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
+            {tour.services.map((service) => (
+              <Chip key={service} label={service} size="small" variant="outlined" color="secondary" />
+            ))}
           </Box>
         )}
 

@@ -116,15 +116,13 @@ export default function RegisterPage() {
 
       await register(selectedRole, data);
       navigate(
-        selectedRole === "user"
-          ? "/user"
-          : selectedRole === "company"
-            ? "/company"
-              ? selectedRole === "guide"
-                ? "/guide"
-                : "/"
-              : "/"
-            : "/",
+        selectedRole === "user" ? 
+        "/user" 
+        : selectedRole === "guide" ?
+        "/guide"
+        : selectedRole === "company" ?
+        "/company"
+        : "/"
       );
     } catch (err) {
       setError(err.message || "Kayıt başarısız oldu.");

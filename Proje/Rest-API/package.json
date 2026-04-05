@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node ./bin/www",
+    "seed:tour": "node ./scripts/seed-tour.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

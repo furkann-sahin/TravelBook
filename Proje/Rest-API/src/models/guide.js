@@ -2,15 +2,14 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
-// YAML Sözleşmesine Uygun Guide Şeması
 const guideSchema = new mongoose.Schema(
   {
-    firstName: { // name yerine firstName oldu
+    firstName: {
       type: String,
       trim: true,
       required: true,
     },
-    lastName: { // surname yerine lastName oldu
+    lastName: {
       type: String,
       trim: true,
       required: true,
@@ -35,23 +34,29 @@ const guideSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      default: "",
     },
-    biography: { // bio yerine biography oldu
+    biography: {
       type: String,
       trim: true,
       default: "",
     },
-    languages: [{
-      type: String,
-      trim: true,
-    }],
-    expertRoutes: [{ // specialties yerine expertRoutes oldu
-      type: String,
-      trim: true,
-    }],
-    experienceYears: { // Yeni eklendi
+    languages: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    expertRoutes: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    experienceYears: {
       type: Number,
       default: 0,
+      min: 0,
     },
     rating: {
       type: Number,
@@ -59,11 +64,11 @@ const guideSchema = new mongoose.Schema(
       max: 5,
       default: 0,
     },
-    reviewCount: { // Yeni eklendi
+    reviewCount: {
       type: Number,
       default: 0,
     },
-    profileImageUrl: { // Yeni eklendi
+    profileImageUrl: {
       type: String,
       default: null,
     },
@@ -82,6 +87,7 @@ const guideSchema = new mongoose.Schema(
   }
 );
 
+// 🔐 Password işlemleri
 guideSchema.methods.setPassword = function (password) {
   this.salt = crypto.randomBytes(16).toString("hex");
   this.passwordHash = crypto
@@ -96,6 +102,7 @@ guideSchema.methods.validatePassword = function (password) {
   return this.passwordHash === hash;
 };
 
+// 🎟 JWT oluşturma
 guideSchema.methods.generateJWT = function () {
   return jwt.sign(
     {
@@ -106,7 +113,7 @@ guideSchema.methods.generateJWT = function () {
       role: "guide",
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" },
+    { expiresIn: "1h" }
   );
 };
 

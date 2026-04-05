@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const tourSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      trim: true,
+    },
     name: {
       type: String,
       trim: true,
@@ -16,6 +20,9 @@ const tourSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: true,
+    },
+    date: {
+      type: Date,
     },
     price: {
       type: Number,
@@ -44,7 +51,20 @@ const tourSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    duration: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    included: {
+      type: [String],
+      default: [],
+    },
     images: {
+      type: [String],
+      default: [],
+    },
+    services: {
       type: [String],
       default: [],
     },
@@ -75,5 +95,16 @@ const tourSchema = new mongoose.Schema(
     versionKey: false,
   },
 );
+
+tourSchema.pre("validate", function (next) {
+  if (!this.name && this.title) this.name = this.title;
+  if (!this.title && this.name) this.title = this.name;
+
+  if (!this.startDate && this.date) this.startDate = this.date;
+  if (!this.date && this.startDate) this.date = this.startDate;
+  if (!this.endDate && this.startDate) this.endDate = this.startDate;
+
+  next();
+});
 
 module.exports = mongoose.model("Tour", tourSchema, "tours");

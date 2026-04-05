@@ -38,9 +38,11 @@ export default function CompanyNavbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
-    { label: "Panel", path: "/company", icon: <DashboardIcon /> },
-    { label: "Turlarım", path: "/company/tours", icon: <MapIcon /> },
-    { label: "Profilim", path: "/company/profile", icon: <PersonIcon /> },
+    { label: "Ana Sayfa", path: "/", icon: <HomeIcon />, key: "home" },
+    { label: "Panel", path: "/company", icon: <DashboardIcon />, key: "dashboard" },
+    { label: "Turlarım", path: "/company/tours", icon: <MapIcon />, key: "tours" },
+    { label: "Profilim", path: "/company/profile", icon: <PersonIcon />, key: "profile" },
+    { label: "Hakkımızda", path: "/about", icon: <InfoIcon />, key: "about" },
   ];
 
   const handleLogout = () => {
@@ -49,7 +51,17 @@ export default function CompanyNavbar() {
     navigate("/");
   };
 
-  const isActive = (path) => location.pathname === path;
+  const getActiveKey = (pathname) => {
+    if (pathname === "/") return "home";
+    if (pathname === "/about") return "about";
+    if (pathname.startsWith("/company/tours")) return "tours";
+    if (pathname.startsWith("/company/profile")) return "profile";
+    if (pathname.startsWith("/company")) return "dashboard";
+    return null;
+  };
+
+  const activeKey = getActiveKey(location.pathname);
+  const isActive = (key) => activeKey === key;
 
   return (
     <>
@@ -114,31 +126,17 @@ export default function CompanyNavbar() {
                 gap: 0.5,
               }}
             >
-              {/* Public site links */}
-              <Button
-                component={RouterLink}
-                to="/"
-                startIcon={<HomeIcon />}
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 500,
-                  "&:hover": { color: "secondary.main" },
-                }}
-              >
-                Ana Sayfa
-              </Button>
-
               {navLinks.map((link) => (
                 <Button
-                  key={link.path}
+                  key={link.key}
                   component={RouterLink}
                   to={link.path}
                   startIcon={link.icon}
                   sx={{
-                    color: isActive(link.path)
+                    color: isActive(link.key)
                       ? "secondary.main"
                       : "text.primary",
-                    fontWeight: isActive(link.path) ? 700 : 500,
+                    fontWeight: isActive(link.key) ? 700 : 500,
                     position: "relative",
                     "&::after": {
                       content: '""',
@@ -146,7 +144,7 @@ export default function CompanyNavbar() {
                       bottom: 4,
                       left: "50%",
                       transform: "translateX(-50%)",
-                      width: isActive(link.path) ? "60%" : 0,
+                      width: isActive(link.key) ? "60%" : 0,
                       height: 2,
                       bgcolor: "secondary.main",
                       borderRadius: 1,
@@ -158,19 +156,6 @@ export default function CompanyNavbar() {
                   {link.label}
                 </Button>
               ))}
-
-              <Button
-                component={RouterLink}
-                to="/about"
-                startIcon={<InfoIcon />}
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 500,
-                  "&:hover": { color: "secondary.main" },
-                }}
-              >
-                Hakkımızda
-              </Button>
 
               {/* User menu */}
               <IconButton
@@ -259,45 +244,18 @@ export default function CompanyNavbar() {
           <Divider />
           <List>
             {navLinks.map((link) => (
-              <ListItem key={link.path} disablePadding>
+              <ListItem key={link.key} disablePadding>
                 <ListItemButton
                   component={RouterLink}
                   to={link.path}
                   onClick={() => setDrawerOpen(false)}
-                  selected={isActive(link.path)}
+                  selected={isActive(link.key)}
                 >
                   <ListItemIcon>{link.icon}</ListItemIcon>
                   <ListItemText primary={link.label} />
                 </ListItemButton>
               </ListItem>
             ))}
-          </List>
-          <Divider />
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={RouterLink}
-                to="/"
-                onClick={() => setDrawerOpen(false)}
-              >
-                <ListItemIcon>
-                  <HomeIcon />
-                </ListItemIcon>
-                <ListItemText primary="Ana Sayfa" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                component={RouterLink}
-                to="/about"
-                onClick={() => setDrawerOpen(false)}
-              >
-                <ListItemIcon>
-                  <InfoIcon />
-                </ListItemIcon>
-                <ListItemText primary="Hakkımızda" />
-              </ListItemButton>
-            </ListItem>
           </List>
           <Divider />
           <Box

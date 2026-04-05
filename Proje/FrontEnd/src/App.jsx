@@ -11,13 +11,26 @@ import RegisterPage from "./pages/RegisterPage";
 import CompanyProfilePage from "./pages/CompanyProfilePage";
 import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
+import CreateTourPage from "./pages/CreateTourPage";
 import GuideDashboardPage from "./pages/GuideDashboardPage";
 import GuideCompaniesPage from "./pages/GuideCompaniesPage";
 import GuideToursPage from "./pages/GuideToursPage";
 import GuideProfilePage from "./pages/GuideProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
+import UserPurchasesPage from "./pages/UserPurchasesPage";
 import ToursPage from "./pages/ToursPage";
+import TourDetailPage from "./pages/TourDetailPage";
+import UserTours from "./pages/UserTours";
+import FavoritesList from "./pages/FavoritesList";
+import GuideList from "./pages/GuideList";
 import NotFoundPage from "./pages/NotFoundPage";
+import { useAuth } from "./hooks/useAuth";
+
+/* Picks CompanyLayout for company users, MainLayout for everyone else */
+function AdaptiveLayout() {
+  const { isAuthenticated, user } = useAuth();
+  return isAuthenticated && user?.role === "company" ? <CompanyLayout /> : <MainLayout />;
+}
 
 export default function App() {
   return (
@@ -25,18 +38,24 @@ export default function App() {
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-          {/* Public pages */}
-          <Route element={<MainLayout />}>
+          {/* Public pages – layout adapts to user role */}
+          <Route element={<AdaptiveLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/tours" element={<ToursPage />} />
-            <Route path="/profile" element={<UserProfilePage />} />
+            <Route path="/tours/:tourId" element={<TourDetailPage />} />
+            <Route path="/user/profile" element={<UserProfilePage />} />
+            <Route path="/users/:userId/purchases" element={<UserPurchasesPage />} />
+            <Route path="/user/tours" element={<ToursPage />} />
+            <Route path="/user/tours/mock" element={<UserTours />} />
+            <Route path="/user/favorites" element={<FavoritesList />} />
+            <Route path="/guides" element={<GuideList />} />
           </Route>
 
           {/* Company panel – protected by CompanyLayout */}
           <Route path="/company" element={<CompanyLayout />}>
             <Route index element={<CompanyDashboardPage />} />
             <Route path="tours" element={<CompanyToursPage />} />
+            <Route path="tours/create" element={<CreateTourPage />} />
             <Route path="profile" element={<CompanyProfilePage />} />
           </Route>
 
