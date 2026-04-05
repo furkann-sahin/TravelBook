@@ -1,6 +1,6 @@
 # Furkan Fatih Şahin'in Web Frontend Görevleri (Rehber)
 
-**Front-end Test Videosu:** [web frontend kontrol](https://youtu.be/_BGcmf8Ip6U)
+**Front-end Test Videosu:** [WEB FRONTEND KONTROL VİDEOSU](https://youtu.be/_BGcmf8Ip6U)
 
 ---
 
