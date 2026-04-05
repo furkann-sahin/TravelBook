@@ -1,6 +1,6 @@
 # Furkan Fatih Şahin'in REST API Metotları (Rehber)
 
-**API Test Videosu:** [Link buraya eklenecek](https://youtu.be/5SBC5iKUXH0)
+**API Test Videosu:** [POSTMAN TEST VİDEOSU](https://youtu.be/5SBC5iKUXH0)
 
 ---
 
