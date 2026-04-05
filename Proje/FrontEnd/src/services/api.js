@@ -132,6 +132,20 @@ export const companyTourApi = {
 
   listGuides: (companyId) => request(`/companies/${companyId}/guides`),
 
+  getTourDetail: (companyId, tourId) =>
+    request(`/companies/${companyId}/tours/${tourId}`),
+
+  updateTour: (companyId, tourId, data) =>
+    request(`/companies/${companyId}/tours/${tourId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteTour: (companyId, tourId) =>
+    request(`/companies/${companyId}/tours/${tourId}`, {
+      method: "DELETE",
+    }),
+
   createTour: (companyId, formData) => {
     const url = `${API_BASE}/companies/${companyId}/tours`;
     const token = localStorage.getItem("tb_token");

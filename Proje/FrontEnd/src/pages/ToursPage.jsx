@@ -31,7 +31,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
-import { tourApi, purchaseApi, favoriteApi } from "../services/api";
+import { tourApi, purchaseApi, favoriteApi, userApi } from "../services/api";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useAuth } from "../hooks/useAuth";
@@ -87,6 +87,33 @@ export default function ToursPage() {
   useEffect(() => {
     fetchTours();
   }, [fetchTours]);
+
+  // Load existing favorites and purchases for logged-in users
+  useEffect(() => {
+    if (!user?.id || user?.role !== "user") return;
+
+    favoriteApi
+      .getFavorites(user.id)
+      .then((res) => {
+        const favMap = {};
+        (res.data || []).forEach((fav) => {
+          favMap[fav.id] = true;
+        });
+        setFavoriteTours(favMap);
+      })
+      .catch(() => {});
+
+    userApi
+      .getPurchases(user.id)
+      .then((res) => {
+        const purchMap = {};
+        (res.data || []).forEach((p) => {
+          if (p.tour?.id) purchMap[p.tour.id] = p.id;
+        });
+        setPurchasedTours(purchMap);
+      })
+      .catch(() => {});
+  }, [user?.id, user?.role]);
 
   const handleFilterChange = (field) => (e) => {
     setFilters((prev) => ({ ...prev, [field]: e.target.value }));

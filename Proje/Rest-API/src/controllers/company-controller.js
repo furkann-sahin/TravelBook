@@ -76,7 +76,7 @@ const updateCompany = async (req, res) => {
       });
     }
 
-    const allowedFields = ["name", "phone", "address", "description"];
+    const allowedFields = ["name", "phone", "address", "description", "instagram", "linkedin"];
     const updates = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
@@ -121,4 +121,88 @@ module.exports = {
   getCompanyDetail,
   deleteCompany,
   updateCompany,
+  uploadProfileImage,
+  uploadBannerImage,
 };
+
+// Upload company profile image
+async function uploadProfileImage(req, res) {
+  try {
+    const { companyId } = req.params;
+    if (req.payload.id !== companyId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi resminizi yükleyebilirsiniz",
+      });
+    }
+    if (!req.file) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Dosya yüklenemedi",
+      });
+    }
+    const imageUrl = `/uploads/companies/${req.file.filename}`;
+    const company = await Company.findByIdAndUpdate(
+      companyId,
+      { profileImageUrl: imageUrl },
+      { new: true },
+    );
+    if (!company) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Firma bulunamadı",
+      });
+    }
+    createResponse(res, 200, {
+      status: "success",
+      data: { profileImageUrl: imageUrl },
+    });
+  } catch (error) {
+    console.error("Firma profil resmi yükleme hatası:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Resim yüklenirken hata oluştu",
+    });
+  }
+}
+
+// Upload company banner image
+async function uploadBannerImage(req, res) {
+  try {
+    const { companyId } = req.params;
+    if (req.payload.id !== companyId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi kapak fotoğrafınızı yükleyebilirsiniz",
+      });
+    }
+    if (!req.file) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Dosya yüklenemedi",
+      });
+    }
+    const imageUrl = `/uploads/companies/${req.file.filename}`;
+    const company = await Company.findByIdAndUpdate(
+      companyId,
+      { bannerImageUrl: imageUrl },
+      { new: true },
+    );
+    if (!company) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Firma bulunamadı",
+      });
+    }
+    createResponse(res, 200, {
+      status: "success",
+      data: { bannerImageUrl: imageUrl },
+    });
+  } catch (error) {
+    console.error("Firma kapak resmi yükleme hatası:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Resim yüklenirken hata oluştu",
+    });
+  }
+}

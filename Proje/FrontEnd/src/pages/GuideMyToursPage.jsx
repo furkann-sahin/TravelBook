@@ -22,7 +22,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
 import { useAuth } from "../hooks/useAuth";
-import { guideApi } from "../services/api";
+import { guideApi, getImageUrl } from "../services/api";
 
 export default function GuideMyToursPage() {
     const { user } = useAuth();
@@ -206,11 +206,11 @@ export default function GuideMyToursPage() {
                                         },
                                     }}
                                 >
-                                    {tour.imageUrl ? (
+                                    {(tour.imageUrl || (Array.isArray(tour.images) && tour.images.length > 0)) ? (
                                         <CardMedia
                                             component="img"
                                             height={180}
-                                            image={tour.imageUrl}
+                                            image={getImageUrl(tour.imageUrl || tour.images?.[0])}
                                             alt={tour.name}
                                             sx={{ objectFit: "cover" }}
                                         />

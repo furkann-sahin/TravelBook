@@ -37,6 +37,9 @@ const assignGuideToTour = async (req, res) => {
     const guide = await Guide.findById(req.params.guideId);
 
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+    if (!guide.registeredCompanies.some(id => id.equals(tour.companyId))) {
+      return createResponse(res, 403, { status: "error", message: "Bu tura atanabilmek için turun sahibi firmaya kayıtlı olmalısınız" });
+    }
     if (guide.registeredTours.includes(tourId)) {
       return createResponse(res, 409, { status: "error", message: "Rehber zaten bu tura kayıtlı" });
     }

@@ -17,7 +17,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import WorkIcon from "@mui/icons-material/Work";
 import TranslateIcon from "@mui/icons-material/Translate";
-import { guideApi } from "../services/api";
+import { guideApi, getImageUrl } from "../services/api";
 
 export default function GuideList() {
   const [guides, setGuides] = useState([]);
@@ -94,7 +94,7 @@ export default function GuideList() {
                     {/* Avatar & Name */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
                       <Avatar
-                        src={guide.profileImage || undefined}
+                        src={getImageUrl(guide.profileImage) || undefined}
                         sx={{ width: 56, height: 56, bgcolor: "secondary.main" }}
                       >
                         <PersonIcon fontSize="large" />

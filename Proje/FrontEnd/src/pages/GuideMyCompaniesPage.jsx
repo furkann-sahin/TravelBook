@@ -34,7 +34,7 @@ export default function GuideMyCompaniesPage() {
             setLoading(true);
             setError(null);
             const res = await guideApi.listMyCompanies(user.id);
-            setMyCompanies(res ?? []);
+            setMyCompanies(res?.data ?? res ?? []);
         } catch (err) {
             setError(err.message || "Veriler yüklenirken bir hata oluştu.");
         } finally {

@@ -12,6 +12,9 @@ import CompanyProfilePage from "./pages/CompanyProfilePage";
 import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
 import CreateTourPage from "./pages/CreateTourPage";
+import CompanyTourDetailPage from "./pages/CompanyTourDetailPage";
+import CompanyGuidesPage from "./pages/CompanyGuidesPage";
+import CompanyGuideDetailPage from "./pages/CompanyGuideDetailPage";
 import GuideDashboardPage from "./pages/GuideDashboardPage";
 import GuideCompaniesPage from "./pages/GuideCompaniesPage";
 import GuideToursPage from "./pages/GuideToursPage";
@@ -58,6 +61,9 @@ export default function App() {
             <Route index element={<CompanyDashboardPage />} />
             <Route path="tours" element={<CompanyToursPage />} />
             <Route path="tours/create" element={<CreateTourPage />} />
+            <Route path="tours/:tourId" element={<CompanyTourDetailPage />} />
+            <Route path="guides" element={<CompanyGuidesPage />} />
+            <Route path="guides/:guideId" element={<CompanyGuideDetailPage />} />
             <Route path="profile" element={<CompanyProfilePage />} />
           </Route>
 

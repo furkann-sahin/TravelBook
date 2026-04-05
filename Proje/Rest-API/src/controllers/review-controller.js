@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Tour = mongoose.model("Tour");
 const Review = mongoose.model("Review");
+const Purchase = mongoose.model("Purchase");
 const { createResponse } = require("../utils/create-response");
 
 const normalizeRating = (rating) => Number(rating);
@@ -80,6 +81,14 @@ const createTourReview = async (req, res) => {
       return createResponse(res, 404, {
         status: "error",
         message: "Tur bulunamadı",
+      });
+    }
+
+    const hasPurchased = await Purchase.findOne({ userId: req.payload.id, tourId });
+    if (!hasPurchased) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yorum yapabilmek için bu turu satın almış olmanız gerekir",
       });
     }
 
