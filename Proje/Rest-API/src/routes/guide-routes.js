@@ -27,8 +27,8 @@ const upload = multer({
     },
 });
 
-router.get("/companies", guideController.listCompanies);
 router.get("/", guideController.getAllGuides);
+router.get("/companies", guideController.listCompanies);
 router.get("/:guideId", guideController.getGuideDetail);
 router.put("/:guideId", requireAuth, guideController.updateGuideProfile);
 router.delete("/:guideId", requireAuth, guideController.deleteGuide);

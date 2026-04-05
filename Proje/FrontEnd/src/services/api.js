@@ -93,8 +93,7 @@ export const userApi = {
 
   getPurchases: (userId, status) =>
     request(
-      `/users/${userId}/purchases${
-        status ? `?status=${encodeURIComponent(status)}` : ""
+      `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""
       }`,
     ),
 

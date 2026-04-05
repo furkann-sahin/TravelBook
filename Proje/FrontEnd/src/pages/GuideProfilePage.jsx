@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 // MUI Components
@@ -21,6 +21,13 @@ import {
     DialogActions,
     TextField,
     IconButton,
+    Switch,
+    LinearProgress,
+    Tooltip,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
 } from "@mui/material";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
 import EmailIcon from "@mui/icons-material/Email";
@@ -36,6 +43,11 @@ import LanguageIcon from "@mui/icons-material/Language";
 import ExploreIcon from "@mui/icons-material/Explore";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import LinkIcon from "@mui/icons-material/Link";
+import GroupsIcon from "@mui/icons-material/Groups";
 import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -67,13 +79,31 @@ export default function GuideProfilePage() {
     const fileInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
 
+    // NEW — Banner (cover) image
+    const bannerInputRef = useRef(null);
+    const [bannerUrl, setBannerUrl] = useState(null);
+    const [uploadingBanner, setUploadingBanner] = useState(false);
+
+    // NEW — Availability status
+    const [available, setAvailable] = useState(true);
+
+    // NEW — Gallery
+    const galleryInputRef = useRef(null);
+    const [galleryImages, setGalleryImages] = useState([
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop",
+    ]);
+
+
+
     const fetchProfile = useCallback(async () => {
         if (!user?.id) return;
         try {
             setLoading(true);
             setError(null);
             const res = await guideApi.getDetail(user.id);
-            setGuide(res.data);
+            setGuide(res.data ?? res);
         } catch (err) {
             setError(err.message || "Profil bilgileri yüklenirken bir hata oluştu.");
         } finally {
@@ -88,6 +118,25 @@ export default function GuideProfilePage() {
     const fullName = guide
         ? `${guide.firstName || ""} ${guide.lastName || ""}`.trim()
         : "";
+
+    // Profile completion percentage
+    const profileCompletion = useMemo(() => {
+        if (!guide) return 0;
+        const fields = [
+            guide.firstName,
+            guide.lastName,
+            guide.email,
+            guide.phone,
+            guide.biography,
+            guide.profileImageUrl,
+            Array.isArray(guide.languages) && guide.languages.length > 0,
+            Array.isArray(guide.expertRoutes) && guide.expertRoutes.length > 0,
+            guide.experienceYears > 0,
+            galleryImages.length > 0,
+        ];
+        const filled = fields.filter(Boolean).length;
+        return Math.round((filled / fields.length) * 100);
+    }, [guide, galleryImages]);
 
     const handleEdit = () => {
         setEditing(true);
@@ -104,6 +153,8 @@ export default function GuideProfilePage() {
                 ? guide.expertRoutes.join(", ")
                 : guide.expertRoutes || "",
             experienceYears: guide.experienceYears ?? "",
+            instagram: guide.instagram || "",
+            linkedin: guide.linkedin || "",
         });
     };
 
@@ -136,7 +187,7 @@ export default function GuideProfilePage() {
                     : undefined,
             };
             const res = await guideApi.updateProfile(user.id, payload);
-            setGuide(res.data);
+            setGuide(res.data ?? res);
             setEditing(false);
             setSnackbar({ open: true, message: "Profil başarıyla güncellendi" });
         } catch (err) {
@@ -180,20 +231,60 @@ export default function GuideProfilePage() {
         }
     };
 
+    // Banner upload (local only)
+    const handleBannerUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingBanner(true);
+        const reader = new FileReader();
+        reader.onload = () => {
+            setBannerUrl(reader.result);
+            setUploadingBanner(false);
+            setSnackbar({ open: true, message: "Kapak fotoğrafı güncellendi" });
+        };
+        reader.readAsDataURL(file);
+        if (bannerInputRef.current) bannerInputRef.current.value = "";
+    };
+
+    // Gallery add (local only)
+    const handleGalleryAdd = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            setGalleryImages((prev) => [...prev, reader.result]);
+            setSnackbar({ open: true, message: "Fotoğraf galeriye eklendi" });
+        };
+        reader.readAsDataURL(file);
+        if (galleryInputRef.current) galleryInputRef.current.value = "";
+    };
+
+    const handleGalleryRemove = (index) => {
+        setGalleryImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const getImageSrc = (url) => {
+        if (!url) return undefined;
+        if (url.startsWith("http") || url.startsWith("data:")) return url;
+        const base = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/, "");
+        return `${base}${url}`;
+    };
+
     // Loading state
     if (loading) {
         return (
             <Container maxWidth="md" sx={{ py: 6 }}>
-                <Paper sx={{ p: 4, borderRadius: 4 }}>
-                    <Box sx={{ display: "flex", gap: 3, alignItems: "center", mb: 4 }}>
-                        <Skeleton variant="circular" width={80} height={80} />
+                <Paper sx={{ borderRadius: 4, overflow: "hidden" }}>
+                    <Skeleton variant="rectangular" height={200} />
+                    <Box sx={{ p: 4, display: "flex", gap: 3, alignItems: "center" }}>
+                        <Skeleton variant="circular" width={96} height={96} />
                         <Box sx={{ flex: 1 }}>
                             <Skeleton variant="text" width="60%" height={40} />
                             <Skeleton variant="text" width="40%" />
                         </Box>
                     </Box>
                     {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} variant="text" sx={{ mb: 1 }} />
+                        <Skeleton key={i} variant="text" sx={{ mx: 4, mb: 1 }} />
                     ))}
                 </Paper>
             </Container>
@@ -226,10 +317,12 @@ export default function GuideProfilePage() {
         day: "numeric",
     });
 
+    const totalTours = guide.registeredTours?.length ?? 0;
+
     return (
         <Box sx={{ bgcolor: "background.default", minHeight: "80vh", py: 6 }}>
             <Container maxWidth="md">
-                {/* Profile Header Card */}
+                {/* ════════════ PROFILE HEADER CARD ════════════ */}
                 <Paper
                     elevation={0}
                     sx={{
@@ -238,19 +331,50 @@ export default function GuideProfilePage() {
                         border: "1px solid",
                         borderColor: "divider",
                         mb: 3,
+                        boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
                     }}
                 >
-                    {/* Gradient Banner */}
+                    {/* ── Banner / Cover Photo ── */}
                     <Box
                         sx={{
-                            height: 140,
-                            background:
-                                "linear-gradient(135deg, #2D3436 0%, #636e72 60%, #D35400 100%)",
+                            height: { xs: 160, md: 220 },
+                            background: bannerUrl
+                                ? `url(${bannerUrl}) center/cover no-repeat`
+                                : "linear-gradient(135deg, #2D3436 0%, #636e72 40%, #D35400 100%)",
                             position: "relative",
                         }}
-                    />
+                    >
+                        <Tooltip title="Uzman rotalarınızı yansıtan bir fotoğraf yükleyin" arrow>
+                            <IconButton
+                                onClick={() => bannerInputRef.current?.click()}
+                                disabled={uploadingBanner}
+                                sx={{
+                                    position: "absolute",
+                                    bottom: 12,
+                                    right: 12,
+                                    bgcolor: "rgba(0,0,0,0.5)",
+                                    color: "#fff",
+                                    backdropFilter: "blur(4px)",
+                                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                                }}
+                            >
+                                {uploadingBanner ? (
+                                    <CircularProgress size={20} color="inherit" />
+                                ) : (
+                                    <AddPhotoAlternateIcon />
+                                )}
+                            </IconButton>
+                        </Tooltip>
+                        <input
+                            ref={bannerInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            hidden
+                            onChange={handleBannerUpload}
+                        />
+                    </Box>
 
-                    {/* Avatar + Name */}
+                    {/* ── Avatar + Name + Status ── */}
                     <Box sx={{ px: { xs: 3, md: 5 }, pb: 4 }}>
                         <Box
                             sx={{
@@ -258,27 +382,22 @@ export default function GuideProfilePage() {
                                 flexDirection: { xs: "column", sm: "row" },
                                 alignItems: { xs: "center", sm: "flex-end" },
                                 gap: 2,
-                                mt: -4,
+                                mt: -6,
                             }}
                         >
+                            {/* Avatar */}
                             <Box sx={{ position: "relative", display: "inline-flex" }}>
                                 <Avatar
-                                    src={
-                                        guide.profileImageUrl
-                                            ? guide.profileImageUrl.startsWith("http")
-                                                ? guide.profileImageUrl
-                                                : `${import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3000"}${guide.profileImageUrl}`
-                                            : undefined
-                                    }
+                                    src={getImageSrc(guide.profileImageUrl)}
                                     sx={{
-                                        width: 96,
-                                        height: 96,
+                                        width: 110,
+                                        height: 110,
                                         bgcolor: "secondary.main",
-                                        fontSize: 36,
+                                        fontSize: 40,
                                         fontWeight: 800,
                                         border: "4px solid",
                                         borderColor: "background.paper",
-                                        boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                                        boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
                                     }}
                                 >
                                     {guide.firstName?.charAt(0)?.toUpperCase()}
@@ -289,8 +408,8 @@ export default function GuideProfilePage() {
                                     onClick={() => fileInputRef.current?.click()}
                                     sx={{
                                         position: "absolute",
-                                        bottom: 0,
-                                        right: 0,
+                                        bottom: 2,
+                                        right: 2,
                                         bgcolor: "secondary.main",
                                         color: "#fff",
                                         width: 32,
@@ -315,6 +434,7 @@ export default function GuideProfilePage() {
                                 />
                             </Box>
 
+                            {/* Name + chips */}
                             <Box
                                 sx={{
                                     flex: 1,
@@ -349,6 +469,7 @@ export default function GuideProfilePage() {
                                         display: "flex",
                                         alignItems: "center",
                                         gap: 1,
+                                        flexWrap: "wrap",
                                         justifyContent: { xs: "center", sm: "flex-start" },
                                         mt: 0.5,
                                     }}
@@ -359,6 +480,25 @@ export default function GuideProfilePage() {
                                         size="small"
                                         color="secondary"
                                         variant="outlined"
+                                    />
+                                    {/* Availability Status */}
+                                    <Chip
+                                        icon={
+                                            <FiberManualRecordIcon
+                                                sx={{
+                                                    fontSize: 12,
+                                                    color: available ? "#4caf50" : "#f44336",
+                                                }}
+                                            />
+                                        }
+                                        label={available ? "Müsait" : "Turda / Meşgul"}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                            borderColor: available ? "#4caf50" : "#f44336",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={() => setAvailable((p) => !p)}
                                     />
                                     {guide.rating > 0 && (
                                         <Box
@@ -421,6 +561,48 @@ export default function GuideProfilePage() {
                     </Box>
                 </Paper>
 
+                {/* ════════════ PROFILE COMPLETION BAR ════════════ */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: { xs: 2.5, md: 3 },
+                        borderRadius: 4,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        mb: 3,
+                        boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+                    }}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                            Profil Tamamlanma Oranı
+                        </Typography>
+                        <Typography variant="subtitle2" fontWeight={800} color="secondary.main">
+                            %{profileCompletion}
+                        </Typography>
+                    </Box>
+                    <LinearProgress
+                        variant="determinate"
+                        value={profileCompletion}
+                        sx={{
+                            height: 10,
+                            borderRadius: 5,
+                            bgcolor: "grey.100",
+                            "& .MuiLinearProgress-bar": {
+                                borderRadius: 5,
+                                background: profileCompletion === 100
+                                    ? "linear-gradient(90deg, #4caf50, #81c784)"
+                                    : "linear-gradient(90deg, #D35400, #F39C12)",
+                            },
+                        }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: "block" }}>
+                        {profileCompletion < 100
+                            ? `Profiliniz %${profileCompletion} tamamlandı. Eksik alanları doldurarak ve galeri ekleyerek %100 yapabilirsiniz!`
+                            : "Tebrikler! Profiliniz %100 tamamlandı."}
+                    </Typography>
+                </Paper>
+
                 {/* Save error alert */}
                 {saveError && (
                     <Alert
@@ -432,50 +614,10 @@ export default function GuideProfilePage() {
                     </Alert>
                 )}
 
-                {/* Info Cards */}
+                {/* ════════════ INFO CARDS ════════════ */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    {/* Biography */}
-                    {(guide.biography || editing) && (
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                p: { xs: 3, md: 4 },
-                                borderRadius: 4,
-                                border: "1px solid",
-                                borderColor: "divider",
-                            }}
-                        >
-                            <Typography
-                                variant="h6"
-                                fontWeight={700}
-                                gutterBottom
-                                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                            >
-                                <CardTravelIcon color="secondary" />
-                                Hakkımda
-                            </Typography>
-                            {editing ? (
-                                <TextField
-                                    value={formData.biography}
-                                    onChange={handleFormChange("biography")}
-                                    multiline
-                                    minRows={3}
-                                    fullWidth
-                                    label="Biyografi"
-                                />
-                            ) : (
-                                <Typography
-                                    variant="body1"
-                                    color="text.secondary"
-                                    sx={{ lineHeight: 1.8 }}
-                                >
-                                    {guide.biography}
-                                </Typography>
-                            )}
-                        </Paper>
-                    )}
 
-                    {/* Languages & Expertise */}
+                    {/* ── Biography ── */}
                     <Paper
                         elevation={0}
                         sx={{
@@ -483,6 +625,47 @@ export default function GuideProfilePage() {
                             borderRadius: 4,
                             border: "1px solid",
                             borderColor: "divider",
+                            boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+                        }}
+                    >
+                        <Typography
+                            variant="h6"
+                            fontWeight={700}
+                            gutterBottom
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                            <CardTravelIcon color="secondary" />
+                            Hakkımda
+                        </Typography>
+                        {editing ? (
+                            <TextField
+                                value={formData.biography}
+                                onChange={handleFormChange("biography")}
+                                multiline
+                                minRows={3}
+                                fullWidth
+                                label="Biyografi"
+                            />
+                        ) : (
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ lineHeight: 1.8 }}
+                            >
+                                {guide.biography || "Henüz bir biyografi eklenmedi. Düzenle butonuna tıklayarak kendinizi tanıtabilirsiniz."}
+                            </Typography>
+                        )}
+                    </Paper>
+
+                    {/* ── Languages & Expertise ── */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 3, md: 4 },
+                            borderRadius: 4,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
                         }}
                     >
                         <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -552,7 +735,7 @@ export default function GuideProfilePage() {
                                 >
                                     <WorkHistoryIcon color="action" sx={{ mt: 1 }} />
                                     <TextField
-                                        value={formData.experienceYears}
+                                        value={formData.experienceYears ?? ""}
                                         onChange={handleFormChange("experienceYears")}
                                         size="small"
                                         fullWidth
@@ -574,7 +757,7 @@ export default function GuideProfilePage() {
                         </Box>
                     </Paper>
 
-                    {/* Contact Info */}
+                    {/* ── Contact Info + Social Media ── */}
                     <Paper
                         elevation={0}
                         sx={{
@@ -582,6 +765,7 @@ export default function GuideProfilePage() {
                             borderRadius: 4,
                             border: "1px solid",
                             borderColor: "divider",
+                            boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
                         }}
                     >
                         <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -627,9 +811,57 @@ export default function GuideProfilePage() {
                                 value={memberSince}
                             />
                         </Box>
+
+                        {/* Social Media */}
+                        <Divider sx={{ my: 3 }} />
+                        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                            <LinkIcon color="secondary" />
+                            Sosyal Medya
+                        </Typography>
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                                gap: 2,
+                            }}
+                        >
+                            {editing ? (
+                                <>
+                                    <TextField
+                                        value={formData.instagram || ""}
+                                        onChange={handleFormChange("instagram")}
+                                        size="small"
+                                        fullWidth
+                                        label="Instagram"
+                                        placeholder="https://instagram.com/kullaniciadi"
+                                    />
+                                    <TextField
+                                        value={formData.linkedin || ""}
+                                        onChange={handleFormChange("linkedin")}
+                                        size="small"
+                                        fullWidth
+                                        label="LinkedIn"
+                                        placeholder="https://linkedin.com/in/kullaniciadi"
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <SocialRow
+                                        iconSrc="https://cdn-icons-png.flaticon.com/24/2111/2111463.png"
+                                        label="Instagram"
+                                        value={guide.instagram}
+                                    />
+                                    <SocialRow
+                                        iconSrc="https://cdn-icons-png.flaticon.com/24/3536/3536505.png"
+                                        label="LinkedIn"
+                                        value={guide.linkedin}
+                                    />
+                                </>
+                            )}
+                        </Box>
                     </Paper>
 
-                    {/* Statistics */}
+                    {/* ── Statistics ── */}
                     <Paper
                         elevation={0}
                         sx={{
@@ -637,6 +869,7 @@ export default function GuideProfilePage() {
                             borderRadius: 4,
                             border: "1px solid",
                             borderColor: "divider",
+                            boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
                         }}
                     >
                         <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -646,38 +879,180 @@ export default function GuideProfilePage() {
                         <Box
                             sx={{
                                 display: "grid",
-                                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+                                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
                                 gap: 3,
                                 mt: 2,
                             }}
                         >
                             <StatCard
-                                icon={
-                                    <MapIcon sx={{ fontSize: 32, color: "secondary.main" }} />
-                                }
-                                value={guide.registeredTours?.length ?? 0}
-                                label="Kayıtlı Tur"
+                                icon={<MapIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={totalTours}
+                                label="Toplam Tur"
                             />
                             <StatCard
-                                icon={
-                                    <StarIcon sx={{ fontSize: 32, color: "secondary.main" }} />
-                                }
-                                value={guide.rating ? guide.rating.toFixed(1) : "—"}
-                                label="Ortalama Puan"
-                            />
-                            <StatCard
-                                icon={
-                                    <WorkHistoryIcon
-                                        sx={{ fontSize: 32, color: "secondary.main" }}
-                                    />
-                                }
+                                icon={<WorkHistoryIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
                                 value={guide.experienceYears ?? "—"}
                                 label="Deneyim (Yıl)"
+                            />
+                            <StatCard
+                                icon={<CalendarMonthIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={memberSince}
+                                label="Üyelik Tarihi"
+                                small
                             />
                         </Box>
                     </Paper>
 
-                    {/* Danger Zone */}
+                    {/* ════════════ GALLERY / PORTFOLIO ════════════ */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 3, md: 4 },
+                            borderRadius: 4,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+                        }}
+                    >
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                            <Typography variant="h6" fontWeight={700} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <CollectionsIcon color="secondary" />
+                                Öne Çıkan Kareler
+                            </Typography>
+                            <Tooltip title="Galeri fotoğrafı ekle">
+                                <IconButton
+                                    color="secondary"
+                                    onClick={() => galleryInputRef.current?.click()}
+                                >
+                                    <AddPhotoAlternateIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <input
+                                ref={galleryInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                hidden
+                                onChange={handleGalleryAdd}
+                            />
+                        </Box>
+
+                        {galleryImages.length === 0 ? (
+                            <Box
+                                sx={{
+                                    py: 6,
+                                    textAlign: "center",
+                                    border: "2px dashed",
+                                    borderColor: "divider",
+                                    borderRadius: 3,
+                                    cursor: "pointer",
+                                }}
+                                onClick={() => galleryInputRef.current?.click()}
+                            >
+                                <AddPhotoAlternateIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
+                                <Typography variant="body2" color="text.secondary">
+                                    Turlarınızdan fotoğraflar ekleyin
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: {
+                                        xs: "1fr 1fr",
+                                        sm: "1fr 1fr 1fr",
+                                        md: "1fr 1fr 1fr 1fr",
+                                    },
+                                    gap: 2,
+                                }}
+                            >
+                                {galleryImages.map((img, idx) => (
+                                    <Box
+                                        key={idx}
+                                        sx={{
+                                            position: "relative",
+                                            paddingTop: "75%",
+                                            borderRadius: 3,
+                                            overflow: "hidden",
+                                            "&:hover .gallery-overlay": { opacity: 1 },
+                                        }}
+                                    >
+                                        <Box
+                                            component="img"
+                                            src={img}
+                                            alt={`Galeri ${idx + 1}`}
+                                            sx={{
+                                                position: "absolute",
+                                                top: 0,
+                                                left: 0,
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                        <Box
+                                            className="gallery-overlay"
+                                            sx={{
+                                                position: "absolute",
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                bgcolor: "rgba(0,0,0,0.45)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                opacity: 0,
+                                                transition: "opacity 0.2s",
+                                            }}
+                                        >
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleGalleryRemove(idx)}
+                                                sx={{ color: "#fff", bgcolor: "rgba(244,67,54,0.8)", "&:hover": { bgcolor: "error.main" } }}
+                                            >
+                                                <CloseIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        </Box>
+                                    </Box>
+                                ))}
+                                {/* Add more button */}
+                                <Box
+                                    sx={{
+                                        paddingTop: "75%",
+                                        position: "relative",
+                                        borderRadius: 3,
+                                        border: "2px dashed",
+                                        borderColor: "divider",
+                                        cursor: "pointer",
+                                        transition: "border-color 0.2s",
+                                        "&:hover": { borderColor: "secondary.main" },
+                                    }}
+                                    onClick={() => galleryInputRef.current?.click()}
+                                >
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <AddPhotoAlternateIcon sx={{ fontSize: 32, color: "text.disabled" }} />
+                                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                            Ekle
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        )}
+                    </Paper>
+
+                    {/* ── Danger Zone ── */}
                     <Paper
                         elevation={0}
                         sx={{
@@ -812,7 +1187,37 @@ function InfoRow({ icon, label, value }) {
     );
 }
 
-function StatCard({ icon, value, label }) {
+function SocialRow({ iconSrc, label, value }) {
+    return (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <img src={iconSrc} alt={label} width={20} height={20} style={{ opacity: 0.7 }} />
+            <Box>
+                <Typography variant="caption" color="text.secondary">
+                    {label}
+                </Typography>
+                {value ? (
+                    <Typography
+                        variant="body2"
+                        fontWeight={500}
+                        component="a"
+                        href={value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ display: "block", color: "secondary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                    >
+                        {value}
+                    </Typography>
+                ) : (
+                    <Typography variant="body2" color="text.disabled">
+                        Henüz eklenmedi
+                    </Typography>
+                )}
+            </Box>
+        </Box>
+    );
+}
+
+function StatCard({ icon, value, label, small }) {
     return (
         <Box
             sx={{
@@ -823,7 +1228,7 @@ function StatCard({ icon, value, label }) {
             }}
         >
             {icon}
-            <Typography variant="h4" fontWeight={800} sx={{ mt: 1 }}>
+            <Typography variant={small ? "body1" : "h4"} fontWeight={800} sx={{ mt: 1 }}>
                 {value}
             </Typography>
             <Typography variant="body2" color="text.secondary">

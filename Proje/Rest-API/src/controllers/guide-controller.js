@@ -31,15 +31,15 @@ const getGuideDetail = async (req, res) => {
 // Rehber Profil Güncelleme
 const updateGuideProfile = async (req, res) => {
     try {
+        const { firstName, lastName, phone, biography, languages, expertRoutes, experienceYears, profileImageUrl, instagram, linkedin } = req.body;
+      
         if (req.payload.id !== req.params.guideId) {
             return createResponse(res, 403, { status: "error", message: "Yalnızca kendi profilinizi güncelleyebilirsiniz" });
         }
 
-        const { firstName, lastName, phone, biography, languages, expertRoutes, profileImageUrl } = req.body;
-
         const updatedGuide = await Guide.findByIdAndUpdate(
             req.params.guideId,
-            { firstName, lastName, phone, biography, languages, expertRoutes, profileImageUrl },
+            { firstName, lastName, phone, biography, languages, expertRoutes, experienceYears, profileImageUrl, instagram, linkedin },
             { new: true, runValidators: true }
         );
 
@@ -108,18 +108,18 @@ const getAllGuides = async (_req, res) => {
       profileImage: guide.profileImageUrl || null,
     }));
 
-    createResponse(res, 200, {
-      status: "success",
-      results: guideList.length,
-      data: guideList,
-    });
-  } catch (error) {
-    console.error("Rehberler listelenirken hata oluştu:", error);
-    createResponse(res, 500, {
-      status: "error",
-      message: "Sunucu hatası oluştu",
-    });
-  }
+        createResponse(res, 200, {
+            status: "success",
+            results: guideList.length,
+            data: guideList,
+        });
+    } catch (error) {
+        console.error("Rehberler listelenirken hata oluştu:", error);
+        createResponse(res, 500, {
+            status: "error",
+            message: "Sunucu hatası oluştu",
+        });
+    }
 };
 
-module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, getAllGuides, uploadProfileImage};
+module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, getAllGuides, uploadProfileImage };
