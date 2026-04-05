@@ -1,0 +1,997 @@
+{
+	"info": {
+		"_postman_id": "recep-arslan-travelbook-api-tests",
+		"name": "Recep Arslan - TravelBook API Testleri",
+		"description": "Recep Arslan'a ait REST API endpoint testleri.\n\nTur Firması (Company) Auth, Profil, Tur Yönetimi ve Platform İstatistikleri endpointlerini kapsar.\n\n**Kullanım Sırası:**\n1. Firma Kayıt → token ve companyId otomatik set edilir\n2. Firma Giriş → token güncellenir\n3. Diğer endpointler sırasıyla çalıştırılabilir\n4. Tur Ekleme → tourId otomatik set edilir\n5. Silme işlemleri en sonda yapılmalıdır",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://travel-book-eosin.vercel.app/api",
+			"type": "string"
+		},
+		{
+			"key": "companyToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "companyId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tourId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Company Auth",
+			"description": "Tur Firması Kayıt ve Giriş İşlemleri",
+			"item": [
+				{
+					"name": "1 - Tur Firması Kayıt Olma",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 201 döner', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('message alanı mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message).to.include('başarıyla kayıt oldu');",
+									"});",
+									"",
+									"pm.test('token alanı mevcut ve string', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.be.a('string');",
+									"    pm.expect(jsonData.token.length).to.be.greaterThan(10);",
+									"});",
+									"",
+									"// Token ve companyId kaydet",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('companyToken', jsonData.token);",
+									"    // JWT decode ile companyId çıkar",
+									"    try {",
+									"        var payload = JSON.parse(atob(jsonData.token.split('.')[1]));",
+									"        if (payload.id) {",
+									"            pm.collectionVariables.set('companyId', payload.id);",
+									"        }",
+									"    } catch(e) {",
+									"        console.log('Token decode edilemedi, companyId manuel girilmeli');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Gezgin Turizm\",\n    \"email\": \"info@gezgin.com\",\n    \"password\": \"Sifre123!\",\n    \"phone\": \"02121234567\",\n    \"address\": \"İstanbul, Kadıköy\",\n    \"description\": \"Türkiye'nin en köklü tur firması\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "auth", "register"]
+						},
+						"description": "Yeni tur firması kaydı oluşturur. Başarılı olursa JWT token ve firma bilgileri döner."
+					},
+					"response": []
+				},
+				{
+					"name": "2 - Tur Firması Giriş Yapma",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('message Giriş başarılı olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('Giriş başarılı');",
+									"});",
+									"",
+									"pm.test('token alanı mevcut ve string', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.be.a('string');",
+									"    pm.expect(jsonData.token.length).to.be.greaterThan(10);",
+									"});",
+									"",
+									"// Token güncelle",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('companyToken', jsonData.token);",
+									"    try {",
+									"        var payload = JSON.parse(atob(jsonData.token.split('.')[1]));",
+									"        if (payload.id) {",
+									"            pm.collectionVariables.set('companyId', payload.id);",
+									"        }",
+									"    } catch(e) {",
+									"        console.log('Token decode edilemedi');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"info@gezgin.com\",\n    \"password\": \"Sifre123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "auth", "login"]
+						},
+						"description": "Firma e-posta ve şifre ile giriş yapar. JWT token döner."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Company Profile",
+			"description": "Tur Firması Profil İşlemleri (Detay, Güncelleme, Resim Yükleme, Silme)",
+			"item": [
+				{
+					"name": "3 - Tur Firması Detay Gösterme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('data objesi mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('Firma zorunlu alanları mevcut', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data).to.have.property('_id');",
+									"    pm.expect(data).to.have.property('name');",
+									"    pm.expect(data).to.have.property('email');",
+									"    pm.expect(data).to.have.property('phone');",
+									"    pm.expect(data).to.have.property('address');",
+									"});",
+									"",
+									"pm.test('name string olmalı', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.name).to.be.a('string');",
+									"});",
+									"",
+									"pm.test('email geçerli formatta', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.email).to.include('@');",
+									"});",
+									"",
+									"pm.test('rating sayısal değer', function () {",
+									"    var data = pm.response.json().data;",
+									"    if (data.rating !== undefined) {",
+									"        pm.expect(data.rating).to.be.a('number');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}"]
+						},
+						"description": "Belirtilen firma ID'sine göre firma detay bilgilerini getirir."
+					},
+					"response": []
+				},
+				{
+					"name": "4 - Tur Firması Profil Güncelleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('message alanı güncelleme mesajı içermeli', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"});",
+									"",
+									"pm.test('Güncellenen data objesi mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data) {",
+									"        pm.expect(jsonData.data).to.be.an('object');",
+									"        pm.expect(jsonData.data.name).to.eql('Yeni Firma Adı');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Yeni Firma Adı\",\n    \"phone\": \"02129876543\",\n    \"address\": \"İstanbul, Beşiktaş\",\n    \"description\": \"Güncellenmiş açıklama\",\n    \"instagram\": \"gezginturizm\",\n    \"linkedin\": \"gezgin-turizm\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}"]
+						},
+						"description": "Firma profilini günceller. Bearer Token gereklidir."
+					},
+					"response": []
+				},
+				{
+					"name": "6 - Tur Firması Profil Resmi Yükleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('profileImageUrl alanı mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"    pm.expect(jsonData.data.profileImageUrl).to.be.a('string');",
+									"    pm.expect(jsonData.data.profileImageUrl.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "",
+									"description": "Profil resmi dosyası (jpeg/jpg/png/webp, maks 5MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/profile-image",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "profile-image"]
+						},
+						"description": "Firma profil resmini yükler. multipart/form-data ile dosya gönderilir. Maks 5MB, desteklenen formatlar: jpeg, jpg, png, webp."
+					},
+					"response": []
+				},
+				{
+					"name": "7 - Tur Firması Kapak Resmi Yükleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('bannerImageUrl alanı mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"    pm.expect(jsonData.data.bannerImageUrl).to.be.a('string');",
+									"    pm.expect(jsonData.data.bannerImageUrl.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "",
+									"description": "Kapak resmi dosyası (jpeg/jpg/png/webp, maks 5MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/banner-image",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "banner-image"]
+						},
+						"description": "Firma kapak (banner) resmini yükler. multipart/form-data ile dosya gönderilir. Maks 5MB, desteklenen formatlar: jpeg, jpg, png, webp."
+					},
+					"response": []
+				},
+				{
+					"name": "5 - Tur Firması Hesap Silme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('Silme mesajı mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message).to.include('silindi');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}"]
+						},
+						"description": "Firma hesabını siler. Bu işlem geri alınamaz. Bearer Token gereklidir. DİKKAT: Bu isteği en son çalıştırın!"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Company Tours",
+			"description": "Tur Firması Tur Yönetimi (Listeleme, Ekleme, Detay, Güncelleme, Silme)",
+			"item": [
+				{
+					"name": "8 - Tur Firması Tur Listeleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('data alanı array olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Tur nesneleri doğru yapıda', function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        var tour = jsonData.data[0];",
+									"        pm.expect(tour).to.have.property('id');",
+									"        pm.expect(tour).to.have.property('name');",
+									"        pm.expect(tour).to.have.property('location');",
+									"        pm.expect(tour).to.have.property('price');",
+									"        pm.expect(tour.price).to.be.a('number');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/tours",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "tours"]
+						},
+						"description": "Firmaya ait tüm turları listeler. Bearer Token gereklidir."
+					},
+					"response": []
+				},
+				{
+					"name": "9 - Tur Ekleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 201 döner', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('message tur oluşturuldu mesajı içermeli', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message).to.include('oluşturuldu');",
+									"});",
+									"",
+									"pm.test('data objesi mevcut ve doğru yapıda', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"    var data = jsonData.data;",
+									"    pm.expect(data).to.have.property('name');",
+									"    pm.expect(data).to.have.property('description');",
+									"    pm.expect(data).to.have.property('location');",
+									"    pm.expect(data).to.have.property('price');",
+									"    pm.expect(data.price).to.be.a('number');",
+									"    pm.expect(data).to.have.property('totalCapacity');",
+									"    pm.expect(data.totalCapacity).to.be.a('number');",
+									"});",
+									"",
+									"pm.test('places ve services array olmalı', function () {",
+									"    var data = pm.response.json().data;",
+									"    if (data.places) pm.expect(data.places).to.be.an('array');",
+									"    if (data.services) pm.expect(data.services).to.be.an('array');",
+									"});",
+									"",
+									"// tourId kaydet",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    var tourId = jsonData.data.id || jsonData.data._id;",
+									"    if (tourId) {",
+									"        pm.collectionVariables.set('tourId', tourId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Kapadokya Turu",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "3 günlük Kapadokya gezisi",
+									"type": "text"
+								},
+								{
+									"key": "location",
+									"value": "Nevşehir",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "2500",
+									"type": "text"
+								},
+								{
+									"key": "startDate",
+									"value": "2026-06-01T08:00:00Z",
+									"type": "text"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-06-03T18:00:00Z",
+									"type": "text"
+								},
+								{
+									"key": "totalCapacity",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "places",
+									"value": "[\"Göreme\", \"Ürgüp\", \"Derinkuyu\"]",
+									"type": "text"
+								},
+								{
+									"key": "departureLocation",
+									"value": "İstanbul",
+									"type": "text"
+								},
+								{
+									"key": "arrivalLocation",
+									"value": "Nevşehir",
+									"type": "text"
+								},
+								{
+									"key": "services",
+									"value": "[\"Konaklama\", \"Ulaşım\", \"Yemek\"]",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "",
+									"description": "Tur kapak görseli (opsiyonel)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/tours",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "tours"]
+						},
+						"description": "Firma için yeni bir tur oluşturur. multipart/form-data formatında gönderilir. Bearer Token gereklidir."
+					},
+					"response": []
+				},
+				{
+					"name": "10 - Tur Firması Tur Detayı Görüntüleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('data objesi mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('Tur detay alanları mevcut', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data).to.have.property('name');",
+									"    pm.expect(data).to.have.property('description');",
+									"    pm.expect(data).to.have.property('location');",
+									"    pm.expect(data).to.have.property('price');",
+									"    pm.expect(data).to.have.property('startDate');",
+									"    pm.expect(data).to.have.property('endDate');",
+									"    pm.expect(data).to.have.property('totalCapacity');",
+									"});",
+									"",
+									"pm.test('price sayısal değer olmalı', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.price).to.be.a('number');",
+									"});",
+									"",
+									"pm.test('totalCapacity ve filledCapacity sayısal', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.totalCapacity).to.be.a('number');",
+									"    if (data.filledCapacity !== undefined) {",
+									"        pm.expect(data.filledCapacity).to.be.a('number');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/tours/{{tourId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "tours", "{{tourId}}"]
+						},
+						"description": "Firmanın belirli bir turunun detaylarını getirir. Rehber bilgisi de dahildir. Bearer Token gereklidir."
+					},
+					"response": []
+				},
+				{
+					"name": "11 - Tur Güncelleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('message güncelleme mesajı içermeli', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message).to.include('güncellendi');",
+									"});",
+									"",
+									"pm.test('Güncellenen veriler doğrulanır', function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data) {",
+									"        pm.expect(jsonData.data.name).to.eql('Kapadokya Turu v2');",
+									"        pm.expect(jsonData.data.price).to.eql(3000);",
+									"        pm.expect(jsonData.data.totalCapacity).to.eql(40);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Kapadokya Turu v2\",\n    \"price\": 3000,\n    \"totalCapacity\": 40,\n    \"places\": [\"Göreme\", \"Ürgüp\", \"Avanos\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/tours/{{tourId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "tours", "{{tourId}}"]
+						},
+						"description": "Firmanın mevcut turunu günceller. Bearer Token gereklidir."
+					},
+					"response": []
+				},
+				{
+					"name": "12 - Tur Silme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('Silme mesajı mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message).to.include('silindi');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/tours/{{tourId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "tours", "{{tourId}}"]
+						},
+						"description": "Firmanın belirli bir turunu siler. Bearer Token gereklidir. DİKKAT: Bu işlem geri alınamaz!"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Company Guides",
+			"description": "Firma Kayıtlı Rehber İşlemleri",
+			"item": [
+				{
+					"name": "13 - Firma Kayıtlı Rehberlerini Listeleme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('data alanı array olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Rehber nesneleri doğru yapıda', function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        var guide = jsonData.data[0];",
+									"        pm.expect(guide).to.have.property('id');",
+									"        pm.expect(guide).to.have.property('firstName');",
+									"        pm.expect(guide).to.have.property('lastName');",
+									"        pm.expect(guide).to.have.property('email');",
+									"        pm.expect(guide.email).to.include('@');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/{{companyId}}/guides",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "{{companyId}}", "guides"]
+						},
+						"description": "Firmaya kayıtlı rehberleri listeler. Bearer Token gereklidir."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Platform",
+			"description": "Platform Genel İşlemleri",
+			"item": [
+				{
+					"name": "14 - Platform İstatistikleri",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code 200 döner', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response JSON formatında', function () {",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test('status alanı success olmalı', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('success');",
+									"});",
+									"",
+									"pm.test('data objesi mevcut', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('İstatistik alanları mevcut ve sayısal', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data).to.have.property('userCount');",
+									"    pm.expect(data).to.have.property('tourCount');",
+									"    pm.expect(data).to.have.property('companyCount');",
+									"    pm.expect(data).to.have.property('guideCount');",
+									"    pm.expect(data.userCount).to.be.a('number');",
+									"    pm.expect(data.tourCount).to.be.a('number');",
+									"    pm.expect(data.companyCount).to.be.a('number');",
+									"    pm.expect(data.guideCount).to.be.a('number');",
+									"});",
+									"",
+									"pm.test('Tüm sayaçlar 0 veya üzeri', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.userCount).to.be.at.least(0);",
+									"    pm.expect(data.tourCount).to.be.at.least(0);",
+									"    pm.expect(data.companyCount).to.be.at.least(0);",
+									"    pm.expect(data.guideCount).to.be.at.least(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tours/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["tours", "stats"]
+						},
+						"description": "Platformdaki toplam kullanıcı, tur, firma ve rehber sayılarını döner. Authentication gerektirmez."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
