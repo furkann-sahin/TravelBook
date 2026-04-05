@@ -26,10 +26,11 @@ const upload = multer({
     },
 });
 
+router.get("/", guideController.getAllGuides);
+router.get("/companies", guideController.listCompanies);
 router.get("/:guideId", guideController.getGuideDetail);
 router.put("/:guideId", guideController.updateGuideProfile);
 router.delete("/:guideId", guideController.deleteGuide);
-router.get("/companies", guideController.listCompanies);
 router.post("/:guideId/profile-image", upload.single("image"), guideController.uploadProfileImage);
 
 module.exports = router;

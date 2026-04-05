@@ -59,6 +59,9 @@ const defaultForm = {
     biography: "",
     languages: "",
     expertRoutes: "",
+    experienceYears: "",
+    instagram: "",
+    linkedin: "",
   },
 };
 
@@ -102,27 +105,30 @@ export default function RegisterPage() {
       if (selectedRole === "guide") {
         data.languages = data.languages
           ? data.languages
-              .split(",")
-              .map((l) => l.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((l) => l.trim())
+            .filter(Boolean)
           : [];
         data.expertRoutes = data.expertRoutes
           ? data.expertRoutes
-              .split(",")
-              .map((r) => r.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((r) => r.trim())
+            .filter(Boolean)
           : [];
+        data.experienceYears = data.experienceYears
+          ? Number(data.experienceYears)
+          : 0;
       }
 
       await register(selectedRole, data);
       navigate(
-        selectedRole === "user" ? 
-        "/user" 
-        : selectedRole === "guide" ?
-        "/guide"
-        : selectedRole === "company" ?
-        "/company"
-        : "/"
+        selectedRole === "user" ?
+          "/user"
+          : selectedRole === "guide" ?
+            "/guide"
+            : selectedRole === "company" ?
+              "/company"
+              : "/"
       );
     } catch (err) {
       setError(err.message || "Kayıt başarısız oldu.");
@@ -306,6 +312,33 @@ export default function RegisterPage() {
         onChange={(e) => updateField("expertRoutes", e.target.value)}
         placeholder="Kapadokya, Efes, Pamukkale"
         helperText="Virgülle ayırarak yazın"
+      />
+      <TextField
+        label="Deneyim (Yıl)"
+        fullWidth
+        type="number"
+        value={form.experienceYears}
+        onChange={(e) => updateField("experienceYears", e.target.value)}
+        placeholder="5"
+      />
+
+      {/* Sosyal Medya */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
+        Sosyal Medya (isteğe bağlı)
+      </Typography>
+      <TextField
+        label="Instagram"
+        fullWidth
+        value={form.instagram}
+        onChange={(e) => updateField("instagram", e.target.value)}
+        placeholder="https://instagram.com/kullaniciadi"
+      />
+      <TextField
+        label="LinkedIn"
+        fullWidth
+        value={form.linkedin}
+        onChange={(e) => updateField("linkedin", e.target.value)}
+        placeholder="https://linkedin.com/in/kullaniciadi"
       />
     </>
   );

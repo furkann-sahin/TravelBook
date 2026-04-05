@@ -9,6 +9,7 @@ import {
 import BusinessIcon from "@mui/icons-material/Business";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PersonIcon from "@mui/icons-material/Person";
+import MapIcon from "@mui/icons-material/Map";
 import { useAuth } from "../hooks/useAuth";
 
 export default function GuideDashboardPage() {
@@ -23,16 +24,22 @@ export default function GuideDashboardPage() {
             path: "/guide/companies",
         },
         {
-            label: "Kayıtlı Firmalarım",
-            description: "Kayıt olduğunuz firmalar ve atanan turlarınız",
-            icon: <CheckCircleIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
-            path: "/guide/tours",
-        },
-        {
             label: "Profilim",
-            description: "Rehber bilgilerinizi düzenleyin",
+            description: "Rehber bilgilerinizi görüntüleyin ve düzenleyin",
             icon: <PersonIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
             path: "/guide/profile",
+        },
+        {
+            label: "Kayıtlı Tur Firmalarım",
+            description: "Kayıt olduğunuz tur firmalarını yönetin",
+            icon: <CheckCircleIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+            path: "/guide/my-companies",
+        },
+        {
+            label: "Kayıtlı Turlarım",
+            description: "Şirket tarafından atanılan turlarınızı görüntüleyin",
+            icon: <MapIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+            path: "/guide/my-tours",
         },
     ];
 
@@ -57,7 +64,7 @@ export default function GuideDashboardPage() {
                 <Box
                     sx={{
                         display: "grid",
-                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
                         gap: 3,
                     }}
                 >

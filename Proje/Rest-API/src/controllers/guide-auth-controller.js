@@ -7,7 +7,7 @@ const passport = require("passport");
 const register = async (req, res) => {
     try {
         // YAML dosyasıyla birebir aynı parametreler
-        const { firstName, lastName, email, password, biography, languages, expertRoutes, phone } = req.body;
+        const { firstName, lastName, email, password, biography, languages, expertRoutes, phone, experienceYears, instagram, linkedin } = req.body;
 
         // Sadece YAML'da required olanları zorunlu tutuyoruz
         if (!firstName || !lastName || !email || !password) {
@@ -34,7 +34,10 @@ const register = async (req, res) => {
             phone,
             biography,
             languages,
-            expertRoutes
+            expertRoutes,
+            experienceYears: experienceYears ? Number(experienceYears) : 0,
+            instagram: instagram || "",
+            linkedin: linkedin || "",
         });
 
         guide.setPassword(password);

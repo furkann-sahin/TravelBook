@@ -27,11 +27,11 @@ const getGuideDetail = async (req, res) => {
 // Rehber Profil Güncelleme
 const updateGuideProfile = async (req, res) => {
     try {
-        const { firstName, lastName, phone, biography, languages, expertRoutes, profileImageUrl } = req.body;
+        const { firstName, lastName, phone, biography, languages, expertRoutes, experienceYears, profileImageUrl, instagram, linkedin } = req.body;
 
         const updatedGuide = await Guide.findByIdAndUpdate(
             req.params.guideId,
-            { firstName, lastName, phone, biography, languages, expertRoutes, profileImageUrl },
+            { firstName, lastName, phone, biography, languages, expertRoutes, experienceYears, profileImageUrl, instagram, linkedin },
             { new: true, runValidators: true }
         );
 
@@ -75,35 +75,35 @@ const uploadProfileImage = async (req, res) => {
 
 // GET /api/guides
 const getAllGuides = async (_req, res) => {
-  try {
-    const guides = await Guide.find()
-      .select("name email phone experience languages bio rating profileImage")
-      .sort({ rating: -1 });
+    try {
+        const guides = await Guide.find()
+            .select("name email phone experience languages bio rating profileImage")
+            .sort({ rating: -1 });
 
-    const guideList = guides.map((guide) => ({
-      id: guide._id,
-      name: guide.name,
-      email: guide.email,
-      phone: guide.phone,
-      experience: guide.experience,
-      languages: guide.languages,
-      bio: guide.bio,
-      rating: guide.rating,
-      profileImage: guide.profileImage || null,
-    }));
+        const guideList = guides.map((guide) => ({
+            id: guide._id,
+            name: guide.name,
+            email: guide.email,
+            phone: guide.phone,
+            experience: guide.experience,
+            languages: guide.languages,
+            bio: guide.bio,
+            rating: guide.rating,
+            profileImage: guide.profileImage || null,
+        }));
 
-    createResponse(res, 200, {
-      status: "success",
-      results: guideList.length,
-      data: guideList,
-    });
-  } catch (error) {
-    console.error("Rehberler listelenirken hata oluştu:", error);
-    createResponse(res, 500, {
-      status: "error",
-      message: "Sunucu hatası oluştu",
-    });
-  }
+        createResponse(res, 200, {
+            status: "success",
+            results: guideList.length,
+            data: guideList,
+        });
+    } catch (error) {
+        console.error("Rehberler listelenirken hata oluştu:", error);
+        createResponse(res, 500, {
+            status: "error",
+            message: "Sunucu hatası oluştu",
+        });
+    }
 };
 
-module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, getAllGuides, uploadProfileImage};
+module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, getAllGuides, uploadProfileImage };

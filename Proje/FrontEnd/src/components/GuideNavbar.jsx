@@ -27,8 +27,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
-import BusinessIcon from "@mui/icons-material/Business";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -41,8 +40,6 @@ export default function GuideNavbar() {
 
     const navLinks = [
         { label: "Panel", path: "/guide", icon: <DashboardIcon /> },
-        { label: "Tur Firmaları", path: "/guide/companies", icon: <BusinessIcon /> },
-        { label: "Kayıtlı Firmalarım", path: "/guide/tours", icon: <CheckCircleIcon /> },
         { label: "Profilim", path: "/guide/profile", icon: <PersonIcon /> },
     ];
 
@@ -120,11 +117,13 @@ export default function GuideNavbar() {
                             {/* Public site links */}
                             <Button
                                 component={RouterLink}
-                                to="/"
+                                to="/guide/home"
                                 startIcon={<HomeIcon />}
                                 sx={{
-                                    color: "text.secondary",
-                                    fontWeight: 500,
+                                    color: isActive("/guide/home")
+                                        ? "secondary.main"
+                                        : "text.secondary",
+                                    fontWeight: isActive("/guide/home") ? 700 : 500,
                                     "&:hover": { color: "secondary.main" },
                                 }}
                             >
@@ -164,11 +163,13 @@ export default function GuideNavbar() {
 
                             <Button
                                 component={RouterLink}
-                                to="/about"
+                                to="/guide/about"
                                 startIcon={<InfoIcon />}
                                 sx={{
-                                    color: "text.secondary",
-                                    fontWeight: 500,
+                                    color: isActive("/guide/about")
+                                        ? "secondary.main"
+                                        : "text.secondary",
+                                    fontWeight: isActive("/guide/about") ? 700 : 500,
                                     "&:hover": { color: "secondary.main" },
                                 }}
                             >
@@ -280,7 +281,7 @@ export default function GuideNavbar() {
                         <ListItem disablePadding>
                             <ListItemButton
                                 component={RouterLink}
-                                to="/"
+                                to="/guide/home"
                                 onClick={() => setDrawerOpen(false)}
                             >
                                 <ListItemIcon>
@@ -292,7 +293,7 @@ export default function GuideNavbar() {
                         <ListItem disablePadding>
                             <ListItemButton
                                 component={RouterLink}
-                                to="/about"
+                                to="/guide/about"
                                 onClick={() => setDrawerOpen(false)}
                             >
                                 <ListItemIcon>

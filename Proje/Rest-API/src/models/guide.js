@@ -72,6 +72,16 @@ const guideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    instagram: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    linkedin: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     registeredTours: [{ // Tura katılma gereksinimi için
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tour'

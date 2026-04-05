@@ -15,6 +15,8 @@ import CreateTourPage from "./pages/CreateTourPage";
 import GuideDashboardPage from "./pages/GuideDashboardPage";
 import GuideCompaniesPage from "./pages/GuideCompaniesPage";
 import GuideToursPage from "./pages/GuideToursPage";
+import GuideMyCompaniesPage from "./pages/GuideMyCompaniesPage";
+import GuideMyToursPage from "./pages/GuideMyToursPage";
 import GuideProfilePage from "./pages/GuideProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UserPurchasesPage from "./pages/UserPurchasesPage";
@@ -62,9 +64,13 @@ export default function App() {
           {/* Guide panel – protected by GuideLayout */}
           <Route path="/guide" element={<GuideLayout />}>
             <Route index element={<GuideDashboardPage />} />
+            <Route path="home" element={<HomePage />} />
             <Route path="companies" element={<GuideCompaniesPage />} />
             <Route path="tours" element={<GuideToursPage />} />
+            <Route path="my-companies" element={<GuideMyCompaniesPage />} />
+            <Route path="my-tours" element={<GuideMyToursPage />} />
             <Route path="profile" element={<GuideProfilePage />} />
+            <Route path="about" element={<AboutPage />} />
           </Route>
 
           {/* Auth pages */}

@@ -96,15 +96,13 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
-tourSchema.pre("validate", function (next) {
+tourSchema.pre("validate", function () {
   if (!this.name && this.title) this.name = this.title;
   if (!this.title && this.name) this.title = this.name;
 
   if (!this.startDate && this.date) this.startDate = this.date;
   if (!this.date && this.startDate) this.date = this.startDate;
   if (!this.endDate && this.startDate) this.endDate = this.startDate;
-
-  next();
 });
 
 module.exports = mongoose.model("Tour", tourSchema, "tours");
