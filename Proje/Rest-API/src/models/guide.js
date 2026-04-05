@@ -72,12 +72,14 @@ const guideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    registeredTours: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Tour",
-      },
-    ],
+    registeredTours: [{ // Tura katılma gereksinimi için
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tour'
+    }],
+    registeredCompanies: [{ // Rehberin kayıt olduğu tur firmaları
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company'
+    }]
   },
   {
     timestamps: true,

@@ -13,6 +13,7 @@ import CompanyDashboardPage from "./pages/CompanyDashboardPage";
 import CompanyToursPage from "./pages/CompanyToursPage";
 import CreateTourPage from "./pages/CreateTourPage";
 import GuideDashboardPage from "./pages/GuideDashboardPage";
+import GuideCompaniesPage from "./pages/GuideCompaniesPage";
 import GuideToursPage from "./pages/GuideToursPage";
 import GuideProfilePage from "./pages/GuideProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
@@ -61,6 +62,7 @@ export default function App() {
           {/* Guide panel – protected by GuideLayout */}
           <Route path="/guide" element={<GuideLayout />}>
             <Route index element={<GuideDashboardPage />} />
+            <Route path="companies" element={<GuideCompaniesPage />} />
             <Route path="tours" element={<GuideToursPage />} />
             <Route path="profile" element={<GuideProfilePage />} />
           </Route>

@@ -6,9 +6,9 @@ import {
     Paper,
     Button,
 } from "@mui/material";
-import MapIcon from "@mui/icons-material/Map";
-import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PersonIcon from "@mui/icons-material/Person";
 import { useAuth } from "../hooks/useAuth";
 
 export default function GuideDashboardPage() {
@@ -17,9 +17,15 @@ export default function GuideDashboardPage() {
 
     const quickActions = [
         {
-            label: "Turlarım",
-            description: "Kayıtlı olduğunuz turları görüntüleyin ve yönetin",
-            icon: <MapIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+            label: "Tur Firmaları",
+            description: "Tüm tur firmalarını görüntüleyin ve kayıt olun",
+            icon: <BusinessIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+            path: "/guide/companies",
+        },
+        {
+            label: "Kayıtlı Firmalarım",
+            description: "Kayıt olduğunuz firmalar ve atanan turlarınız",
+            icon: <CheckCircleIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
             path: "/guide/tours",
         },
         {
@@ -39,8 +45,8 @@ export default function GuideDashboardPage() {
                         Hoş geldiniz, {user?.name}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Rehber panelinizden turlarınızı yönetebilir ve profilinizi
-                        güncelleyebilirsiniz.
+                        Rehber panelinizden tur firmalarına kayıt olabilir, turlarınızı
+                        yönetebilir ve profilinizi güncelleyebilirsiniz.
                     </Typography>
                 </Box>
 
@@ -51,7 +57,7 @@ export default function GuideDashboardPage() {
                 <Box
                     sx={{
                         display: "grid",
-                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
                         gap: 3,
                     }}
                 >
@@ -74,7 +80,9 @@ export default function GuideDashboardPage() {
                             }}
                             onClick={() => navigate(action.path)}
                         >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                            <Box
+                                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
+                            >
                                 {action.icon}
                                 <Typography variant="h6" fontWeight={700}>
                                     {action.label}

@@ -24,6 +24,7 @@ const guideRoutes = require("./src/routes/user-guides-routes");
 const guideAuthRoutes = require("./src/routes/guide-auth-routes");
 const guideRoutes = require("./src/routes/guide-routes");
 const guideTourRoutes = require("./src/routes/guide-tour-routes");
+const guideCompanyRoutes = require("./src/routes/guide-company-routes");
 
 var app = express();
 
@@ -49,18 +50,18 @@ app.use(express.static(path.join(__dirname, "public")));
 apiRouter.use("/users", userAuthRoutes);
 apiRouter.use("/users", userRoutes);
 apiRouter.use("/users", userFavoriteRoutes);
+
 apiRouter.use("/companies", companyAuthRoutes);
 apiRouter.use("/companies", companyRoutes);
 apiRouter.use("/companies", companyTourRoutes);
+
 apiRouter.use("/guides", guideAuthRoutes);
 apiRouter.use("/guides", guideRoutes);
 apiRouter.use("/guides", guideTourRoutes);
+apiRouter.use("/guides", guideCompanyRoutes);
+
 apiRouter.use("/tours", tourRoutes);
 apiRouter.use("/reviews", reviewRoutes);
-
-// Rehber -> Tüm Tur Firmalarını Listeleme (GET /api/companies)
-const guideController = require("./src/controllers/guide-controller");
-apiRouter.get("/companies", guideController.listCompanies);
 
 app.use("/api", apiRouter);
 

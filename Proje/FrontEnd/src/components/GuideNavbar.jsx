@@ -27,6 +27,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
+import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -39,7 +41,8 @@ export default function GuideNavbar() {
 
     const navLinks = [
         { label: "Panel", path: "/guide", icon: <DashboardIcon /> },
-        { label: "Turlarım", path: "/guide/tours", icon: <MapIcon /> },
+        { label: "Tur Firmaları", path: "/guide/companies", icon: <BusinessIcon /> },
+        { label: "Kayıtlı Firmalarım", path: "/guide/tours", icon: <CheckCircleIcon /> },
         { label: "Profilim", path: "/guide/profile", icon: <PersonIcon /> },
     ];
 

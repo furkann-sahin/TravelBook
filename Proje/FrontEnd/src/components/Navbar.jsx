@@ -183,6 +183,23 @@ export default function Navbar() {
                       Firma Paneli
                     </Button>
                   )}
+                  {user?.role === "guide" && (
+                    <Button
+                      component={RouterLink}
+                      to="/guide"
+                      sx={{
+                        color: textColor,
+                        fontWeight: 600,
+                        border: "1px solid",
+                        borderColor: "secondary.main",
+                        borderRadius: 2,
+                        px: 2,
+                        "&:hover": { bgcolor: "secondary.main", color: "#fff" },
+                      }}
+                    >
+                      Rehber Paneli
+                    </Button>
+                  )}
                   <IconButton
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     sx={{ ml: 1 }}
@@ -328,6 +345,18 @@ export default function Navbar() {
                     onClick={() => setDrawerOpen(false)}
                   >
                     Firma Paneli
+                  </Button>
+                )}
+                {user?.role === "guide" && (
+                  <Button
+                    component={RouterLink}
+                    to="/guide"
+                    variant="contained"
+                    color="secondary"
+                    fullWidth
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    Rehber Paneli
                   </Button>
                 )}
                 <Button

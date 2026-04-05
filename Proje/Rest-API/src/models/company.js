@@ -53,6 +53,10 @@ const companySchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    registeredGuides: [{ // Firmaya kayıt olan rehberler
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Guide'
+    }],
   },
   {
     timestamps: true,

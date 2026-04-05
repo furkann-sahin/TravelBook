@@ -15,42 +15,49 @@ import {
     Card,
     CardContent,
     CardMedia,
+    Divider,
 } from "@mui/material";
 import MapIcon from "@mui/icons-material/Map";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PhoneIcon from "@mui/icons-material/Phone";
 
 import { useAuth } from "../hooks/useAuth";
 import { guideApi } from "../services/api";
 
 export default function GuideToursPage() {
     const { user } = useAuth();
+    const [myCompanies, setMyCompanies] = useState([]);
     const [tours, setTours] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchTours = useCallback(async () => {
+    const fetchData = useCallback(async () => {
         if (!user?.id) return;
         try {
             setLoading(true);
             setError(null);
-            const res = await guideApi.listTours(user.id);
-            setTours(res.data ?? []);
+            const [companiesRes, toursRes] = await Promise.all([
+                guideApi.listMyCompanies(user.id),
+                guideApi.listTours(user.id),
+            ]);
+            setMyCompanies(companiesRes ?? []);
+            setTours(toursRes.data ?? toursRes ?? []);
         } catch (err) {
-            setError(err.message || "Turlar yüklenirken bir hata oluştu.");
+            setError(err.message || "Veriler yüklenirken bir hata oluştu.");
         } finally {
             setLoading(false);
         }
     }, [user?.id]);
 
     useEffect(() => {
-        fetchTours();
-    }, [fetchTours]);
+        fetchData();
+    }, [fetchData]);
 
     const handleRemoveTour = async (tourId) => {
         if (!user?.id) return;
@@ -85,22 +92,24 @@ export default function GuideToursPage() {
         return (
             <Box sx={{ bgcolor: "background.default", minHeight: "80vh", py: 6 }}>
                 <Container maxWidth="lg">
-                    <Skeleton variant="text" width={240} height={48} sx={{ mb: 1 }} />
-                    <Skeleton variant="text" width={360} height={24} sx={{ mb: 4 }} />
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
-                            gap: 3,
-                        }}
-                    >
-                        {[...Array(6)].map((_, i) => (
+                    <Skeleton variant="text" width={300} height={48} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width={400} height={24} sx={{ mb: 4 }} />
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mb: 4 }}>
+                        {[...Array(2)].map((_, i) => (
+                            <Paper key={i} sx={{ p: 3, borderRadius: 4 }}>
+                                <Skeleton variant="text" width="60%" height={32} />
+                                <Skeleton variant="text" width="80%" />
+                            </Paper>
+                        ))}
+                    </Box>
+                    <Skeleton variant="text" width={200} height={40} sx={{ mb: 2 }} />
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: 3 }}>
+                        {[...Array(3)].map((_, i) => (
                             <Paper key={i} sx={{ borderRadius: 4, overflow: "hidden" }}>
                                 <Skeleton variant="rectangular" height={180} />
                                 <Box sx={{ p: 2.5 }}>
                                     <Skeleton variant="text" width="70%" height={28} />
                                     <Skeleton variant="text" width="50%" />
-                                    <Skeleton variant="text" width="40%" />
                                 </Box>
                             </Paper>
                         ))}
@@ -119,7 +128,7 @@ export default function GuideToursPage() {
                         severity="error"
                         sx={{ maxWidth: 520, mx: "auto", mb: 3 }}
                         action={
-                            <Button color="inherit" size="small" onClick={fetchTours}>
+                            <Button color="inherit" size="small" onClick={fetchData}>
                                 Tekrar Dene
                             </Button>
                         }
@@ -151,13 +160,11 @@ export default function GuideToursPage() {
                             fontWeight={800}
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                            <MapIcon color="secondary" />
-                            Turlarım
+                            <CheckCircleIcon color="secondary" />
+                            Kayıtlı Firmalarım
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            {tours.length > 0
-                                ? `Toplam ${tours.length} tur listeleniyor`
-                                : "Henüz kayıtlı tur yok"}
+                            Kayıtlı olduğunuz firmalar ve size atanan turlar
                         </Typography>
                     </Box>
                     <Button
@@ -165,35 +172,164 @@ export default function GuideToursPage() {
                         to="/guide"
                         startIcon={<ArrowBackIcon />}
                         variant="outlined"
-                        color="primary"
+                        color="secondary"
                     >
                         Panele Dön
                     </Button>
                 </Box>
 
-                {/* Empty state */}
+                {/* Registered Companies Section */}
+                <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+                >
+                    <BusinessIcon color="secondary" />
+                    Firmalar
+                </Typography>
+
+                {myCompanies.length === 0 ? (
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 5,
+                            borderRadius: 4,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            textAlign: "center",
+                            mb: 5,
+                        }}
+                    >
+                        <BusinessIcon sx={{ fontSize: 56, color: "text.disabled", mb: 2 }} />
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                            Henüz bir firmaya kayıt olmadınız
+                        </Typography>
+                        <Button
+                            component={RouterLink}
+                            to="/guide/companies"
+                            variant="contained"
+                            color="secondary"
+                            sx={{ mt: 1 }}
+                        >
+                            Tur Firmalarına Göz At
+                        </Button>
+                    </Paper>
+                ) : (
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
+                            gap: 3,
+                            mb: 5,
+                        }}
+                    >
+                        {myCompanies.map((company) => {
+                            const cId = company._id || company.id;
+                            return (
+                                <Paper
+                                    key={cId}
+                                    elevation={0}
+                                    sx={{
+                                        p: 3,
+                                        borderRadius: 4,
+                                        border: "1px solid",
+                                        borderColor: "success.light",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            borderColor: "success.main",
+                                            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                        <BusinessIcon sx={{ color: "secondary.main", fontSize: 28 }} />
+                                        <Typography variant="h6" fontWeight={700} noWrap>
+                                            {company.name}
+                                        </Typography>
+                                    </Box>
+                                    {company.description && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                mb: 1,
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                            }}
+                                        >
+                                            {company.description}
+                                        </Typography>
+                                    )}
+                                    {company.phone && (
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+                                            <PhoneIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {company.phone}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    {company.address && (
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                            <LocationOnIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                                            <Typography variant="body2" color="text.secondary" noWrap>
+                                                {company.address}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    <Chip
+                                        icon={<CheckCircleIcon />}
+                                        label="Kayıtlı"
+                                        color="success"
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{ mt: 1.5 }}
+                                    />
+                                </Paper>
+                            );
+                        })}
+                    </Box>
+                )}
+
+                <Divider sx={{ mb: 4 }} />
+
+                {/* Tours Section */}
+                <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+                >
+                    <MapIcon color="secondary" />
+                    Turlarım
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    {tours.length > 0
+                        ? `Firmalar tarafından size atanan ${tours.length} tur listeleniyor`
+                        : "Henüz size atanmış tur bulunmuyor"}
+                </Typography>
+
                 {tours.length === 0 && (
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 6,
+                            p: 5,
                             borderRadius: 4,
                             border: "1px solid",
                             borderColor: "divider",
                             textAlign: "center",
                         }}
                     >
-                        <MapIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
-                            Henüz kayıtlı turunuz yok
+                        <MapIcon sx={{ fontSize: 56, color: "text.disabled", mb: 2 }} />
+                        <Typography variant="h6" color="text.secondary">
+                            Henüz atanmış turunuz yok
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Turlara kaydolduktan sonra burada listelenecektir.
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Kayıtlı olduğunuz firmalar sizi turlarına ekledikçe burada görüntülenecektir.
                         </Typography>
                     </Paper>
                 )}
 
-                {/* Tour cards grid */}
                 {tours.length > 0 && (
                     <Box
                         sx={{
