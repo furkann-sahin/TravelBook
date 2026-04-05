@@ -11,20 +11,21 @@ dotenv.config();
 require("./src/models/db"); // Database connection and model registration
 require("./src/configs/passport"); // Register passport strategies
 
-const companyAuthRoutes = require("./src/routes/company-auth-routes");
-const companyRoutes = require("./src/routes/company-routes");
-const companyTourRoutes = require("./src/routes/company-tour-routes");
-const reviewRoutes = require("./src/routes/review-routes");
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
 const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
-const guideRoutes = require("./src/routes/user-guides-routes");
-// const tourRoutes = require("./src/routes/tour-routes"); // Moved to user-routes
+
+const companyAuthRoutes = require("./src/routes/company-auth-routes");
+const companyRoutes = require("./src/routes/company-routes");
+const companyTourRoutes = require("./src/routes/company-tour-routes");
 
 const guideAuthRoutes = require("./src/routes/guide-auth-routes");
 const guideRoutes = require("./src/routes/guide-routes");
 const guideTourRoutes = require("./src/routes/guide-tour-routes");
 const guideCompanyRoutes = require("./src/routes/guide-company-routes");
+
+const tourRoutes = require("./src/routes/tour-routes");
+const reviewRoutes = require("./src/routes/review-routes");
 
 var app = express();
 

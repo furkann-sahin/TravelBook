@@ -4,7 +4,7 @@ const userController = require("../controllers/user-controller");
 const tourController = require("../controllers/tour-controller");
 
 // List tours with filtering (GET /api/users/tours)
-router.get("/tours", tourController.getUserTours);
+router.get("/tours", tourController.getTours);
 
 // Purchase a tour (POST /api/users/tours/:tourId/purchases)
 router.post("/tours/:tourId/purchases", requireAuth, tourController.purchaseTour);
