@@ -45,12 +45,12 @@
     - **Açıklama:** Belirli bir rehberin tüm profesyonel detaylarının (deneyim süresi, aldığı yorumlar, puanı, uzman olduğu rotalar) görüntülenmesini sağlar. Bu sayfa hem rehberin kendi bilgilerini kontrol etmesi hem de tur şirketlerinin uygun rehberi seçerken detaylı inceleme yapması için kullanılır.
 
 12. **Tur Satın Alma** (Ümmü Fidan)
-    - **API Metodu:** `POST /api/tours/{tourId}/purchases`
-    - **Açıklama:** Kullanıcının seçtiği bir turu satın almasını sağlar. Satın alma işlemi simülasyon olarak gerçekleştirilir ve sistemde kayıt altına alınır.
+    - **API Metodu:** `POST /api/users/tours/{tourId}/purchases`
+    - **Açıklama:** Kullanıcının seçtiği bir turu satın almasını sağlar. Kapasite kontrolü ve mükerrer satın alma kontrolü yapılır. Satın alma işlemi başarılı olduğunda turun dolu kontenjanı otomatik olarak artırılır ve sistemde kayıt altına alınır.
 
 13. **Tur Satın Alma İptali** (Ümmü Fidan)
-    - **API Metodu:** `DELETE /api/purchases/{purchasesId}`
-    - **Açıklama:** Kullanıcının daha önce satın aldığı bir turu iptal etmesini sağlar. İşlem başarılı olduğunda satın alma kaydı sistemden kaldırılır veya iptal durumuna getirilir ve sistem buna göre güncellenir.
+    - **API Metodu:** `DELETE /api/users/purchases/{purchaseId}`
+    - **Açıklama:** Kullanıcının daha önce satın aldığı bir turu iptal etmesini sağlar. İşlem başarılı olduğunda satın alma kaydı sistemden kaldırılır ve turun dolu kontenjanı otomatik olarak azaltılır. Kullanıcı yalnızca kendi satın almasını iptal edebilir.
 
 14. **Seyahatlerim** (Beyza Keklikoğlu)
     - **API Metodu:**  `GET /api/users/{userId}/purchases?status=past|future`
@@ -129,12 +129,12 @@
     - **Açıklama:** Tur rehberinin sistemdeki mevcut profil bilgilerini (biyografi, dil bilgisi, uzmanlık alanları, profil fotoğrafı vb.) güncel tutmasını sağlar. Rehberler deneyim kazandıkça veya iletişim bilgileri değiştikçe bu endpoint üzerinden bilgilerini revize edebilirler. Bu sayede tur şirketleri ve kullanıcılar en güncel verilere ulaşır.
  
 33. **Rehber Tüm Tur Firmaları Listeleme** (Furkan Fatih Şahin)
-    - **API Metodu:** `GET /api/companies`
+    - **API Metodu:** `GET /api/guides/companies`
     - **Açıklama:** Sistemde kayıtlı olan tüm tur şirketlerinin genel bilgilerinin listelenmesini sağlar. Rehberler, birlikte çalışabilecekleri veya anlaşma yapabilecekleri profesyonel tur firmalarını bu liste üzerinden inceleyebilirler. Bu işlem, rehberler ve şirketler arasındaki iş ağının (networking) kurulmasına yardımcı olur.
 
 34. **Rehber Kayıtlı Tur Firmaları Listeleme** (Furkan Fatih Şahin)
-    - **API Metodu:** `GET /api/guides/{guideId}/tours`
-    - **Açıklama:**  Tur rehberinin sistem üzerinde daha önce iş birliği yaptığı, rehberlik hizmeti için anlaşıp favorilerine ekleyerek takibe aldığı tur firmalarını görüntülemesini sağlar. Bu özellik, rehberin profesyonel iş ağını yönetmesine ve hangi kurumsal yapılarla aktif bir çalışma ilişkisi içinde olduğunu takip etmesine yardımcı olur. Rehber, bu liste aracılığıyla çalıştığı firmaların profillerine ve sundukları tur fırsatlarına hızlı erişim sağlar.
+    - **API Metodu:** `GET /api/guides/{guideId}/companies`
+    - **Açıklama:** Tur rehberinin sistem üzerinde kayıt olduğu tur firmalarını görüntülemesini sağlar. Bu özellik, rehberin profesyonel iş ağını yönetmesine ve hangi kurumsal yapılarla aktif bir çalışma ilişkisi içinde olduğunu takip etmesine yardımcı olur. Rehber, bu liste aracılığıyla çalıştığı firmaların profillerine ve sundukları tur fırsatlarına hızlı erişim sağlar.
 
 35. **Rehber Tur Kaydetme** (Furkan Fatih Şahin)
     - **API Metodu:** `POST /api/guides/{guideId}/tours`
@@ -143,6 +143,46 @@
 36. **Rehber Tur Silme** (Furkan Fatih Şahin)
     - **API Metodu:** `DELETE /api/guides/{guideId}/tours/{tourId}`
     - **Açıklama:**  Tur rehberinin  kayıt olduğu veya görevlendirildiği bir turdan kaydını silmesini sağlar. Rehberin çalışma programında değişiklik olması veya turun iptal edilmesi gibi durumlarda, rehber ile tur arasındaki ilişki bu işlemle sonlandırılır.
+
+37. **Kullanıcı Profil Güncelleme** (Beyza Keklikoğlu)
+    - **API Metodu:** `PUT /api/users/{userId}`
+    - **Açıklama:** Kullanıcının kendi profil bilgilerini (ad, telefon) güncellemesini sağlar. Güncellenecek en az bir alan gönderilmelidir. Sadece giriş yapmış kullanıcılar kendi profillerini güncelleyebilir.
+
+38. **Tur Firması Profil Güncelleme** (Recep Arslan)
+    - **API Metodu:** `PUT /api/companies/{companyId}`
+    - **Açıklama:** Tur firmasının kendi profil bilgilerini (firma adı, telefon, adres, açıklama, instagram, linkedin) güncellemesini sağlar. Firma yalnızca kendi profilini güncelleyebilir.
+
+39. **Tur Firması Profil Resmi Yükleme** (Recep Arslan)
+    - **API Metodu:** `POST /api/companies/{companyId}/profile-image`
+    - **Açıklama:** Tur firmasının profil resmini yüklemesini sağlar. Maksimum 5MB boyutunda jpeg, jpg, png veya webp formatında resim yüklenebilir. Firma yalnızca kendi profil resmini yükleyebilir.
+
+40. **Tur Firması Kapak Resmi Yükleme** (Recep Arslan)
+    - **API Metodu:** `POST /api/companies/{companyId}/banner-image`
+    - **Açıklama:** Tur firmasının kapak (banner) resmini yüklemesini sağlar. Maksimum 5MB boyutunda jpeg, jpg, png veya webp formatında resim yüklenebilir. Firma yalnızca kendi kapak resmini yükleyebilir.
+
+41. **Firma Kayıtlı Rehberlerini Listeleme** (Recep Arslan)
+    - **API Metodu:** `GET /api/companies/{companyId}/guides`
+    - **Açıklama:** Firmaya kayıtlı olan rehberleri listeler. Bu özellik firma tarafından tur oluşturulurken rehber ataması yapmak için kullanılır. Yalnızca firma sahibi kendi kayıtlı rehberlerini görüntüleyebilir.
+
+42. **Rehber Profil Resmi Yükleme** (Furkan Fatih Şahin)
+    - **API Metodu:** `POST /api/guides/{guideId}/profile-image`
+    - **Açıklama:** Tur rehberinin profil resmini yüklemesini sağlar. Maksimum 5MB boyutunda jpeg, jpg, png veya webp formatında resim yüklenebilir. Rehber yalnızca kendi profil resmini yükleyebilir.
+
+43. **Rehber Turlarını Listeleme** (Furkan Fatih Şahin)
+    - **API Metodu:** `GET /api/guides/{guideId}/tours`
+    - **Açıklama:** Tur rehberinin kayıtlı olduğu turları listelemesini sağlar. Rehber yalnızca kendi turlarını görüntüleyebilir. Bu özellik rehberin aktif ve gelecek tur görevlerini takip etmesine yardımcı olur.
+
+44. **Rehber Firmaya Kayıt Olma** (Furkan Fatih Şahin)
+    - **API Metodu:** `POST /api/guides/{guideId}/companies`
+    - **Açıklama:** Tur rehberinin belirtilen bir tur firmasına kayıt olmasını sağlar. Kayıt işlemi hem rehberin hem de firmanın kayıtlı listelerinde güncellenir. Rehber firmaya kayıt olduktan sonra o firmaya ait turlara atanabilir hale gelir. Zaten kayıtlı olunan firmaya tekrar kayıt yapılamaz.
+
+45. **Rehber Firmadan Ayrılma** (Furkan Fatih Şahin)
+    - **API Metodu:** `DELETE /api/guides/{guideId}/companies/{companyId}`
+    - **Açıklama:** Tur rehberinin kayıtlı olduğu bir firmadan ayrılmasını sağlar. Ayrılma işlemi hem rehberin hem de firmanın kayıtlı listelerinden güncellenir. Rehber yalnızca kendi firma kayıtlarını yönetebilir.
+
+46. **Platform İstatistikleri** (Recep Arslan)
+    - **API Metodu:** `GET /api/tours/stats`
+    - **Açıklama:** Platformdaki toplam kullanıcı sayısı, tur sayısı, firma sayısı ve rehber sayısını döner. Ana sayfada istatistik gösterimi için kullanılır. Public erişime açıktır.
 
 # Gereksinim Dağılımları
 

@@ -1,7 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 
 // Derive backend origin from the API URL (strip /api suffix) for static assets
-const BACKEND_ORIGIN = (API_BASE || "").replace(/\/api\/?$/, "");
+const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
 
 export function getImageUrl(path) {
   if (!path) return null;
