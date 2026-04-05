@@ -2,6 +2,7 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+var helmet = require("helmet");
 const apiRouter = express.Router();
 
 // Environment variables
@@ -29,11 +30,21 @@ const reviewRoutes = require("./src/routes/review-routes");
 
 var app = express();
 
+// Allowed origins for CORS
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "https://travel-book-8ssh.vercel.app",
+  "http://localhost:5173",
+];
+
 // Middleware to allow CORS
 const allowCrossDomain = (req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -41,6 +52,7 @@ const allowCrossDomain = (req, res, next) => {
 };
 
 app.use(allowCrossDomain);
+app.use(helmet());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
