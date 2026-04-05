@@ -112,7 +112,7 @@ export default function TourDetailPage() {
         );
         setReviewSuccess("Yorum başarıyla güncellendi.");
       } else {
-        const res = await tourApi.createReview(tourId, {
+        const res = await reviewApi.createReview(tourId, {
           comment: reviewForm.comment,
           rating: reviewForm.rating,
         });

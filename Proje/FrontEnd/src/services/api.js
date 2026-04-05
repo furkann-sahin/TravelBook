@@ -24,6 +24,12 @@ async function request(endpoint, options = {}) {
   const res = await fetch(url, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem("tb_token");
+      localStorage.removeItem("tb_user");
+      window.location.href = "/login";
+      return;
+    }
     const body = await res.json().catch(() => ({}));
     const error = new Error(
       body.message || body.error || `Request failed (${res.status})`,
@@ -220,7 +226,7 @@ export const guideApi = {
     const formData = new FormData();
     formData.append("image", file);
     const token = localStorage.getItem("tb_token");
-    const res = await fetch(`${BASE_URL}/guides/${guideId}/profile-image`, {
+    const res = await fetch(`${API_BASE}/guides/${guideId}/profile-image`, {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
@@ -230,7 +236,7 @@ export const guideApi = {
     return data;
   },
 
-  listCompanies: () => request("/companies"),
+  listCompanies: () => request("/guides/companies"),
 
   listMyCompanies: (guideId) => request(`/guides/${guideId}/companies`),
 

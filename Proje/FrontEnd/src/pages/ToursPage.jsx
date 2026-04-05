@@ -34,7 +34,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { tourApi, favoriteApi, getImageUrl } from "../services/api";
+import { tourApi, purchaseApi, favoriteApi, getImageUrl } from "../services/api";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -140,8 +140,8 @@ export default function ToursPage() {
     setConfirmOpen(false);
     setPurchaseLoading(tourId);
     try {
-      const res = await tourApi.purchaseTour(tourId);
-      const purchaseId = res?.data?.purchaseId;
+      const res = await purchaseApi.purchaseTour(tourId);
+      const purchaseId = res?.data?._id;
       setPurchasedTours((prev) => ({ ...prev, [tourId]: purchaseId }));
       setSnackbar({
         open: true,
@@ -177,7 +177,7 @@ export default function ToursPage() {
     setCancelConfirmOpen(false);
     setCancelLoading(tourId);
     try {
-      await tourApi.cancelPurchase(purchaseId);
+      await purchaseApi.cancelPurchase(purchaseId);
       setPurchasedTours((prev) => {
         const updated = { ...prev };
         delete updated[tourId];

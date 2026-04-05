@@ -117,7 +117,7 @@ export default function RegisterPage() {
       await register(selectedRole, data);
       navigate(
         selectedRole === "user" ? 
-        "/user" 
+        "/user/tours" 
         : selectedRole === "guide" ?
         "/guide"
         : selectedRole === "company" ?

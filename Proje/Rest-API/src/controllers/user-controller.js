@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const User = mongoose.model("User");
+const Purchase = mongoose.model("Purchase");
 const { createResponse } = require("../utils/create-response");
 
 // Get user detail
@@ -156,12 +157,46 @@ const getUserPurchases = async (req, res) => {
       });
     }
 
-    const filteredPurchases = [];
+    const purchases = await Purchase.find({ userId })
+      .populate("tourId")
+      .sort({ purchaseDate: -1 });
+
+    const now = new Date();
+    let filteredPurchases = purchases;
+
+    if (status === "past") {
+      filteredPurchases = purchases.filter(
+        (p) => p.tourId && new Date(p.tourId.endDate || p.tourId.startDate) < now
+      );
+    } else if (status === "future") {
+      filteredPurchases = purchases.filter(
+        (p) => p.tourId && new Date(p.tourId.startDate) >= now
+      );
+    }
+
+    const data = filteredPurchases.map((p) => ({
+      id: p._id,
+      purchaseDate: p.purchaseDate,
+      tour: p.tourId
+        ? {
+            id: p.tourId._id,
+            title: p.tourId.title || p.tourId.name,
+            location: p.tourId.location,
+            price: p.tourId.price,
+            startDate: p.tourId.startDate,
+            endDate: p.tourId.endDate,
+            imageUrl:
+              Array.isArray(p.tourId.images) && p.tourId.images.length > 0
+                ? p.tourId.images[0]
+                : null,
+          }
+        : null,
+    }));
 
     createResponse(res, 200, {
       status: "success",
-      results: filteredPurchases.length,
-      data: filteredPurchases,
+      results: data.length,
+      data,
     });
   } catch (error) {
     console.error("Seyahatler alınırken hata oluştu:", error);

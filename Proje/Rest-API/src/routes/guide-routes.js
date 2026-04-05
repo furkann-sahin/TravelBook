@@ -2,6 +2,7 @@ const router = require("express").Router();
 const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
+const requireAuth = require("../middlewares/auth");
 const guideController = require("../controllers/guide-controller");
 
 // Multer storage config for guide profile images
@@ -26,10 +27,11 @@ const upload = multer({
     },
 });
 
-router.get("/:guideId", guideController.getGuideDetail);
-router.put("/:guideId", guideController.updateGuideProfile);
-router.delete("/:guideId", guideController.deleteGuide);
 router.get("/companies", guideController.listCompanies);
-router.post("/:guideId/profile-image", upload.single("image"), guideController.uploadProfileImage);
+router.get("/", guideController.getAllGuides);
+router.get("/:guideId", guideController.getGuideDetail);
+router.put("/:guideId", requireAuth, guideController.updateGuideProfile);
+router.delete("/:guideId", requireAuth, guideController.deleteGuide);
+router.post("/:guideId/profile-image", requireAuth, upload.single("image"), guideController.uploadProfileImage);
 
 module.exports = router;

@@ -61,6 +61,14 @@ const addFavorite = async (req, res) => {
     const { userId } = req.params;
     const { tourId } = req.body;
 
+    // Sahiplik kontrolü
+    if (req.payload.id !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi favorilerinizi yönetebilirsiniz",
+      });
+    }
+
     if (!tourId) {
       return createResponse(res, 400, {
         status: "error",
@@ -113,6 +121,14 @@ const removeFavorite = async (req, res) => {
   try {
     const { userId, tourId } = req.params;
 
+    // Sahiplik kontrolü
+    if (req.payload.id !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi favorilerinizi yönetebilirsiniz",
+      });
+    }
+
     const user = await User.findById(userId);
     if (!user) {
       return createResponse(res, 404, {
@@ -121,7 +137,8 @@ const removeFavorite = async (req, res) => {
       });
     }
 
-    const index = user.favorites.indexOf(tourId);
+    const tourObjectId = new mongoose.Types.ObjectId(tourId);
+    const index = user.favorites.findIndex(fav => fav.equals(tourObjectId));
     if (index === -1) {
       return createResponse(res, 404, {
         status: "error",
