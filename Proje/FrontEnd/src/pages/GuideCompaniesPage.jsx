@@ -40,7 +40,8 @@ export default function GuideCompaniesPage() {
                 guideApi.listMyCompanies(user.id),
             ]);
             setCompanies(allRes?.data ?? []);
-            const ids = new Set((myRes ?? []).map((c) => c._id || c.id));
+            const myList = myRes?.data ?? myRes ?? [];
+            const ids = new Set(myList.map((c) => c._id || c.id));
             setMyCompanyIds(ids);
         } catch (err) {
             setError(err.message || "Veriler yüklenirken bir hata oluştu.");

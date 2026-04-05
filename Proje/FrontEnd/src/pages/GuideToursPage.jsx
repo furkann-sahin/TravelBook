@@ -46,8 +46,8 @@ export default function GuideToursPage() {
                 guideApi.listMyCompanies(user.id),
                 guideApi.listTours(user.id),
             ]);
-            setMyCompanies(companiesRes ?? []);
-            setTours(toursRes?.data ?? []);
+            setMyCompanies(companiesRes?.data ?? companiesRes ?? []);
+            setTours(toursRes?.data ?? toursRes ?? []);
         } catch (err) {
             setError(err.message || "Veriler yüklenirken bir hata oluştu.");
         } finally {

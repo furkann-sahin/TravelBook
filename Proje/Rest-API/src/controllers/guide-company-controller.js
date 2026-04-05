@@ -15,6 +15,7 @@ const listSavedGuideCompanies = async (req, res) => {
         createResponse(res, 200, { status: "success", data: guide.registeredCompanies });
     } catch (error) {
         createResponse(res, 500, {
+            status: "error",
             message: "Firmalar listelenirken hata oluştu",
         });
     }

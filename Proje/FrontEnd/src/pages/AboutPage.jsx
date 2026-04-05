@@ -349,53 +349,6 @@ export default function AboutPage() {
           </Grid>
         </Container>
       </Box>
-
-      {/* ── CTA ── */}
-      <Box
-        sx={{
-          py: { xs: 8, md: 10 },
-          background: "linear-gradient(135deg, #2D3436 0%, #4A5568 100%)",
-          textAlign: "center",
-          color: "#fff",
-        }}
-      >
-        <Container maxWidth="sm">
-          <Typography variant="h4" fontWeight={800} sx={{ mb: 2 }}>
-            Maceraya Hazır mısınız?
-          </Typography>
-          <Typography sx={{ opacity: 0.85, mb: 4, lineHeight: 1.7 }}>
-            Hemen üye olun, yüzlerce tur arasından size en uygun olanı bulun ve
-            unutulmaz bir seyahate çıkın.
-          </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button
-              component={RouterLink}
-              to="/tours"
-              variant="contained"
-              color="secondary"
-              size="large"
-              sx={{ px: 4, fontWeight: 700 }}
-            >
-              Turları Keşfet
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/register"
-              variant="outlined"
-              size="large"
-              sx={{
-                px: 4,
-                fontWeight: 700,
-                color: "#fff",
-                borderColor: "rgba(255,255,255,0.4)",
-                "&:hover": { borderColor: "#fff", bgcolor: "rgba(255,255,255,0.08)" },
-              }}
-            >
-              Kayıt Ol
-            </Button>
-          </Stack>
-        </Container>
-      </Box>
     </Box>
   );
 }

@@ -25,13 +25,14 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddIcon from "@mui/icons-material/Add";
 
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { companyTourApi, getImageUrl } from "../services/api";
 
 export default function CompanyToursPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -225,6 +226,7 @@ export default function CompanyToursPage() {
                 tour={tour}
                 formatDate={formatDate}
                 formatPrice={formatPrice}
+                onDetail={() => navigate(`/company/tours/${tour.id}`)}
               />
             ))}
           </Box>
@@ -236,7 +238,7 @@ export default function CompanyToursPage() {
 
 /* ── Tour Card Component ── */
 
-function TourCard({ tour, formatDate, formatPrice }) {
+function TourCard({ tour, formatDate, formatPrice, onDetail }) {
   const isPast = tour.endDate && new Date(tour.endDate) < new Date();
 
   return (
@@ -342,6 +344,7 @@ function TourCard({ tour, formatDate, formatPrice }) {
           <Button
             size="small"
             startIcon={<VisibilityIcon />}
+            onClick={onDetail}
             sx={{ color: "text.secondary", textTransform: "none", fontWeight: 600 }}
           >
             Detaylar
