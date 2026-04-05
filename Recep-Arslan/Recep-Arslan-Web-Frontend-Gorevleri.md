@@ -1,0 +1,357 @@
+# Recep Arslan'ın Web Frontend Görevleri
+
+**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+
+## 1. Firma Giriş Yapma (LoginPage - Firma Sekmesi)
+- **API Endpoint:** `POST /api/companies/auth/login`
+- **Görev:** 3 sekmeli giriş sayfasındaki firma giriş sekmesinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Responsive giriş formu (full-screen gradient arka plan)
+  - Tabs bileşeni (Kullanıcı / Firma / Rehber sekmeleri, BusinessIcon)
+  - E-posta input alanı (type="email")
+  - Şifre input alanı (type="password", Visibility/VisibilityOff toggle)
+  - "Giriş Yap" butonu (contained, fullWidth)
+  - TravelBook logo linki → Ana Sayfa
+  - "Hesap Oluştur" linki → `/register`
+  - "Ana Sayfaya Dön" linki → `/`
+  - Loading durumu ("Giriş Yapılıyor…" disabled buton)
+  - Error Alert bileşeni
+- **Form Validasyonu:**
+  - E-posta ve şifre boş olamaz kontrolü
+  - Server-side hata mesajları Alert ile gösterilmesi
+- **Kullanıcı Deneyimi:**
+  - Başarılı giriş sonrası `/company` paneline yönlendirme
+  - Hata durumunda kullanıcı dostu mesajlar (Alert severity="error")
+  - Şifre görünürlük toggle (IconButton ile Visibility/VisibilityOff)
+  - Loading state ile çift tıklama koruması
+- **Teknik Detaylar:**
+  - Framework: React + Material UI (MUI)
+  - Auth: `useAuth()` hook ile `login(role, email, password)` çağrısı
+  - State yönetimi: `roleIdx`, `email`, `password`, `showPassword`, `error`, `loading`
+  - JWT token yönetimi (useAuth hook üzerinden)
+
+## 2. Firma Kayıt Olma (RegisterPage - Firma Sekmesi)
+- **API Endpoint:** `POST /api/companies/auth/register`
+- **Görev:** 3 sekmeli kayıt sayfasındaki firma kayıt sekmesinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Responsive kayıt formu (full-screen gradient arka plan)
+  - Tabs bileşeni (Kullanıcı / Firma / Rehber sekmeleri)
+  - Firma Adı input alanı (text)
+  - E-posta Adresi input alanı (type="email")
+  - Şifre input alanı (type="password", toggle visibility)
+  - Şifreyi Onayla input alanı (type="password")
+  - Telefon input alanı (type="tel")
+  - Adres input alanı (text)
+  - Açıklama input alanı (multiline, minRows=3)
+  - "Kayıt Ol" butonu (contained, fullWidth)
+  - "Zaten hesabınız var mı? Giriş Yap" linki → `/login`
+  - Loading state ve Error Alert
+- **Form Validasyonu:**
+  - Şifre eşleşme kontrolü (`password !== confirmPassword` → "Şifreler eşleşmiyor.")
+  - Şifre minimum uzunluk kontrolü (`password.length < 6` → "Şifre en az 6 karakter olmalıdır.")
+  - Tüm alanlar required
+  - `confirmPassword` alanı API isteğinden hariç tutulur
+- **Kullanıcı Deneyimi:**
+  - Başarılı kayıt sonrası `/company` paneline yönlendirme
+  - Hata durumunda kullanıcı dostu mesajlar
+  - Şifre görünürlük toggle
+- **Teknik Detaylar:**
+  - Auth: `useAuth()` hook ile `register(role, data)` çağrısı
+  - State: `roleIdx`, `forms` (her rol için ayrı form state), `showPassword`, `error`, `loading`
+
+## 3. Firma Kontrol Paneli (CompanyDashboardPage)
+- **API Endpoint:** `GET /api/companies/{companyId}/tours` + `GET /api/companies/{companyId}/guides`
+- **Görev:** Firma ana kontrol paneli sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Hoş geldiniz başlığı ("Hoş geldiniz, {firma adı}")
+  - 4 İstatistik kartı (CSS Grid, Paper bileşeni):
+    - Toplam Tur (MapIcon)
+    - Ortalama Puan (StarIcon, `toFixed(1)` formatı)
+    - Toplam Değerlendirme (RateReviewIcon)
+    - Kayıtlı Rehber (GroupsIcon)
+  - 3 Hızlı Erişim kartı (hover efekti: translateY + boxShadow):
+    - Turlarım → `/company/tours`
+    - Rehberlerim → `/company/guides`
+    - Profilim → `/company/profile`
+  - Loading Skeleton bileşenleri (veri yüklenirken)
+- **Kullanıcı Deneyimi:**
+  - `Promise.all` ile paralel API çağrıları (turlar + rehberler)
+  - Skeleton loading state (her istatistik kartı için)
+  - Hover animasyonlu hızlı erişim kartları
+  - "Görüntüle →" butonları ile sayfa geçişleri
+- **Teknik Detaylar:**
+  - State: `stats` (object), `statsLoading` (boolean)
+  - İstatistikler turlardan hesaplanır (avgRating, totalReviews)
+  - Responsive grid: xs=2 sütun, sm=4 sütun (istatistikler); xs=1, sm=2 (hızlı erişim)
+
+## 4. Firma Tur Listeleme (CompanyToursPage)
+- **API Endpoint:** `GET /api/companies/{companyId}/tours`
+- **Görev:** Firmaya ait turların listelenmesi sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Sayfa başlığı ("Turlarım" + MapIcon + tur sayısı)
+  - "Yeni Tur" butonu (contained, secondary) → `/company/tours/create`
+  - "Panele Dön" butonu (outlined) → `/company`
+  - Tur kartları grid düzeni (Card + CardMedia + CardContent):
+    - Tur görseli (`getImageUrl()` veya fallback ImageNotSupportedIcon)
+    - Durum etiketi ("Tamamlandı" Chip, bitiş tarihi geçmişse opacity 0.7)
+    - Tur adı (h6, fontWeight 700, noWrap)
+    - Konum (LocationOnIcon + text)
+    - Tarih aralığı (CalendarMonthIcon + tr-TR formatı)
+    - Puan (MUI Rating, precision 0.1, readOnly)
+    - Hizmetler (Chip listesi, outlined, secondary)
+    - Fiyat (h6, TRY para birimi formatı: `Intl.NumberFormat`)
+    - "Detaylar" butonu (VisibilityIcon) → `/company/tours/{id}`
+  - Boş durum ekranı (MapIcon 64px + "İlk Turunu Oluştur" butonu)
+  - Loading Skeleton (6 kart, 180px dikdörtgen + metin skeleton)
+  - Error Alert (severity="error" + "Tekrar Dene" butonu)
+- **Kullanıcı Deneyimi:**
+  - Skeleton loading ekranı (6 placeholder kart)
+  - Boş liste durumunda yönlendirici mesaj ve buton
+  - Hata durumunda yeniden deneme butonu
+- **Teknik Detaylar:**
+  - State: `tours` (array), `loading` (boolean), `error` (string/null)
+  - Yardımcı fonksiyonlar: `formatDate()` (tr-TR locale), `formatPrice()` (TRY currency)
+  - Responsive grid: xs=1, sm=2, md=3 sütun
+
+## 5. Yeni Tur Oluşturma (CreateTourPage)
+- **API Endpoint:** `POST /api/companies/{companyId}/tours`
+- **Görev:** Yeni tur oluşturma formu tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Responsive form (Container maxWidth="md", Paper)
+  - "Turlarıma Dön" butonu (ArrowBackIcon) → `/company/tours`
+  - Form alanları:
+    - Tur Adı (text, required)
+    - Açıklama (multiline, minRows=3, required)
+    - Kalkış Yeri (text, required, Grid sm=6)
+    - Varış Yeri (text, required, Grid sm=6)
+    - Gezilecek Yerler (text input + Chip listesi, Enter veya + butonu ile ekleme, Chip onDelete ile silme)
+    - Fiyat (number, ₺ InputAdornment, min=0, step=0.01, Grid sm=6)
+    - Kapasite (number, min=1, step=1, Grid sm=6)
+    - Başlangıç Tarihi (date, required, Grid sm=6)
+    - Bitiş Tarihi (date, required, Grid sm=6)
+    - Tur Görseli (hidden file input, CloudUploadIcon butonu ile tetikleme)
+    - Dahil Hizmetler (text input + Chip listesi, Enter veya + butonu ile ekleme)
+    - Rehber Ata (Select dropdown, API'den yüklenen rehber listesi)
+  - "Turu Oluştur" butonu (contained, secondary, CircularProgress loading)
+  - Error Alert bileşeni
+- **Form Validasyonu:**
+  - Tur adı zorunludur
+  - Açıklama zorunludur
+  - Kalkış yeri zorunludur
+  - Varış yeri zorunludur
+  - Geçerli bir fiyat giriniz (>= 0, valid number)
+  - Başlangıç tarihi zorunludur
+  - Bitiş tarihi zorunludur
+  - Bitiş tarihi başlangıç tarihinden sonra olmalıdır
+  - Kapasite en az 1 olmalıdır (integer)
+- **Görsel Yükleme:**
+  - Desteklenen formatlar: JPEG, PNG, WebP, GIF
+  - Maksimum dosya boyutu: 5 MB
+  - `URL.createObjectURL()` ile anlık önizleme
+  - Silme butonu (DeleteIcon) ile görsel kaldırma
+  - FormData olarak `image` alanında gönderim
+- **Kullanıcı Deneyimi:**
+  - Chip tabanlı dinamik liste yönetimi (gezilecek yerler, hizmetler)
+  - Görsel önizleme (upload öncesi)
+  - Loading state (CircularProgress) form gönderimi sırasında
+  - Başarılı oluşturma sonrası `/company/tours` sayfasına yönlendirme
+  - Hata durumunda Error Alert
+- **Teknik Detaylar:**
+  - State: `form` (object), `services` (array), `destinations` (array), `selectedGuideId`, `guides`, `imageFile`, `imagePreview`, `error`, `loading`
+  - Ref: `fileInputRef` (hidden file input)
+  - FormData gönderimi: `services` ve `places` alanları `JSON.stringify` ile
+  - Rehber listesi mount'ta `companyTourApi.listGuides()` ile yüklenir
+
+## 6. Tur Detayı Görüntüleme, Düzenleme ve Silme (CompanyTourDetailPage)
+- **API Endpoint:** `GET /api/companies/{companyId}/tours/{tourId}` + `PUT /api/companies/{companyId}/tours/{tourId}` + `DELETE /api/companies/{companyId}/tours/{tourId}`
+- **Görev:** Tur detayı görüntüleme, düzenleme ve silme işlemleri sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - **Hero Bölümü:** Full-width görsel (xs=240, md=340 yükseklik), gradient overlay, geri butonu, tur adı (h3), puan
+  - **Aksiyon Butonları:** "Düzenle" (contained, secondary, EditIcon) + "Sil" (outlined, error, DeleteIcon)
+  - **Sol Kolon (md=8):**
+    - Anahtar Bilgiler (Paper): Güzergah, Tarih, Fiyat, Kapasite, Kalan Kontenjan (InfoItem bileşenleri)
+    - Açıklama (Paper, pre-line whitespace)
+    - Gezilecek Yerler (Chip listesi, PlaceIcon)
+    - Dahil Hizmetler (Chip listesi, MiscellaneousServicesIcon)
+  - **Sağ Kolon (md=4, sticky sidebar top=90):**
+    - Fiyat kartı (h4 fiyat + "kişi başı")
+    - SidebarRow bilgileri (konum, süre, kapasite, kalan)
+    - Rehber bilgileri (PersonIcon + ad, email, telefon)
+    - Düzenle/Sil butonları (duplikat)
+  - Loading Skeleton ekranı
+  - Error Alert (severity="error" + "Tekrar Dene" butonu)
+- **Düzenleme Dialog (Modal):**
+  - Dialog (maxWidth="md", fullWidth)
+  - Form alanları: tur adı, açıklama, kalkış/varış yeri, gezilecek yerler (Chip), fiyat (₺), kapasite, başlangıç/bitiş tarihi, hizmetler (Chip)
+  - CreateTourPage ile aynı validasyon kuralları
+  - JSON body gönderimi (FormData değil)
+  - Başarılı güncelleme: dialog kapanır, Snackbar gösterilir, tur yeniden fetch edilir
+- **Silme Dialog (Modal):**
+  - Onay mesajı: "Turu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+  - "İptal" ve "Evet, Sil" butonları
+  - Başarılı silme: Snackbar + 600ms sonra `/company/tours` yönlendirmesi
+- **Snackbar:**
+  - anchorOrigin: bottom-center, autoHideDuration: 4000
+  - variant="filled", dinamik severity (success/error)
+- **Teknik Detaylar:**
+  - URL Params: `tourId` (useParams)
+  - State: `tour`, `loading`, `error`, `editOpen`, `editForm`, `editServices`, `editDestinations`, `editLoading`, `editError`, `deleteOpen`, `deleteLoading`, `snackbar`
+  - Yardımcı fonksiyonlar: `formatDate()`, `toInputDate()`, `formatPrice()`
+  - Fallback görsel: Unsplash URL + onError handler
+
+## 7. Firma Rehberleri Listesi (CompanyGuidesPage)
+- **API Endpoint:** `GET /api/companies/{companyId}/guides`
+- **Görev:** Firmaya kayıtlı rehberlerin listelenmesi sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Sayfa başlığı ("Rehberlerim" + GroupsIcon + rehber sayısı)
+  - "Panele Dön" butonu → `/company`
+  - Rehber kartları grid düzeni (Card + CardActionArea):
+    - Avatar (64x64, secondary renk, ismin ilk harfi)
+    - Rehber adı (h6, fontWeight 700, noWrap, fallback: "İsimsiz Rehber")
+    - Puan (MUI Rating, precision 0.1, readOnly, puan > 0 ise)
+    - Diller (LanguageIcon + virgülle ayrılmış liste)
+    - Uzman Rotalar (max 3 Chip, outlined, secondary, ExploreIcon + fazlası için "+N" chip)
+    - Deneyim yılı (WorkHistoryIcon)
+    - "Detaylar" butonu (VisibilityIcon)
+  - Boş durum ekranı (GroupsIcon 64px + "Henüz kayıtlı rehberiniz yok")
+  - Loading Skeleton (6 kart)
+  - Error Alert
+- **Kullanıcı Deneyimi:**
+  - Tüm kart tıklanabilir (CardActionArea) → `/company/guides/{guide.id}`
+  - Skeleton loading ekranı
+  - Boş liste mesajı
+- **Teknik Detaylar:**
+  - State: `guides` (array), `loading` (boolean), `error` (string/null)
+  - Responsive grid: xs=1, sm=2, md=3 sütun
+
+## 8. Rehber Detay Sayfası (CompanyGuideDetailPage)
+- **API Endpoint:** `GET /api/guides/{guideId}`
+- **Görev:** Firma perspektifinden rehber detay profili sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - "Rehberlere Dön" butonu → `/company/guides`
+  - **Profil Başlık Kartı:**
+    - Banner (xs=160, md=220 yükseklik, gradient fallback)
+    - Avatar (110x110, mt=-6 ile banner üzerine taşma)
+    - Ad Soyad (h4, fontWeight 800)
+    - "Rehber" Chip + Puan (Rating)
+  - **Biyografi Kartı:** CardTravelIcon + "Hakkında" bölümü
+  - **Uzmanlık Kartı (2 sütunlu grid):**
+    - Diller (virgülle ayrılmış)
+    - Uzman Rotalar (virgülle ayrılmış)
+    - Deneyim (yıl)
+  - **İletişim Kartı (2 sütunlu grid):**
+    - E-posta (EmailIcon)
+    - Telefon (PhoneIcon)
+    - Üyelik Tarihi (CalendarMonthIcon)
+    - Sosyal Medya: Instagram, LinkedIn (harici bağlantılar)
+  - **İstatistik Kartı (4 StatCard):**
+    - Toplam Tur, Puan, Deneyim (Yıl), Üyelik Tarihi
+  - Loading Skeleton
+  - Error Alert
+- **Teknik Detaylar:**
+  - URL Params: `guideId` (useParams)
+  - State: `guide` (object/null), `loading` (boolean), `error` (string/null)
+  - Yardımcı bileşenler: `InfoRow`, `SocialRow`, `StatCard`
+  - Responsive: info grid xs=1, sm=2; stat grid xs=2, sm=4
+
+## 9. Firma Profil Yönetimi (CompanyProfilePage)
+- **API Endpoint:** `GET /api/companies/{companyId}` + `PUT /api/companies/{companyId}` + `DELETE /api/companies/{companyId}` + `POST /api/companies/{companyId}/profile-image` + `POST /api/companies/{companyId}/banner-image`
+- **Görev:** Firma profil görüntüleme, düzenleme, resim yükleme ve hesap silme sayfası tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - **Profil Başlık Kartı:**
+    - Banner (xs=160, md=220) + banner yükleme butonu (AddPhotoAlternateIcon, Tooltip)
+    - Avatar (110x110) + profil resmi yükleme butonu overlay (CameraAltIcon)
+    - Firma adı (düzenleme modunda TextField)
+    - "Tur Firması" Chip + Puan (Rating)
+    - Düzenle/Kaydet/İptal butonları (EditIcon, SaveIcon, CloseIcon)
+  - **Hakkımızda Kartı:** DirectionsBusIcon + açıklama (düzenleme modunda multiline TextField)
+  - **İletişim Bilgileri Kartı:**
+    - E-posta (salt okunur)
+    - Telefon (düzenlenebilir TextField)
+    - Adres (düzenlenebilir TextField)
+    - Üyelik Tarihi (salt okunur)
+    - Sosyal Medya: Instagram, LinkedIn (düzenlenebilir TextField)
+  - **İstatistik Kartı:** 4 StatCard (Toplam Tur, Ortalama Puan, Toplam Değerlendirme, Kayıtlı Rehber)
+  - **Tehlikeli Bölge:** Kırmızı kenarlıklı Paper + "Hesabı Sil" butonu (DeleteForeverIcon)
+  - Snackbar (bottom-center, autoHideDuration: 4000)
+- **Profil ve Kapak Resmi Yükleme:**
+  - Profil resmi: accept `image/jpeg,image/png,image/webp`, `companyApi.uploadProfileImage()`
+  - Kapak resmi: accept `image/jpeg,image/png,image/webp`, `companyApi.uploadBannerImage()`
+  - Yükleme sırasında CircularProgress gösterimi
+  - Ref tabanlı hidden file input tetikleme
+- **Inline Düzenleme:**
+  - Düzenlenebilir alanlar: firma adı, telefon, adres, açıklama, instagram, linkedin
+  - Düzenleme moduna geçiş: "Düzenle" butonu
+  - Kaydetme: `companyApi.updateProfile()` çağrısı
+  - İptal: orijinal değerlere geri dönüş
+- **Hesap Silme Dialog:**
+  - Firma adını yazarak onay gerektiren dialog
+  - Buton disabled: `deleteConfirmText !== company.name` olduğu sürece
+  - Başarılı silme: `logout()` + `navigate("/", { replace: true })`
+  - Hata durumunda dialog içinde Alert gösterimi
+- **Teknik Detaylar:**
+  - State: `company`, `loading`, `error`, `editing`, `formData`, `saving`, `saveError`, `snackbar`, `deleteOpen`, `deleteConfirmText`, `deleting`, `deleteError`, `stats`, `uploading`, `uploadingBanner`
+  - Ref: `fileInputRef` (profil resmi), `bannerInputRef` (kapak resmi)
+  - Paralel API çağrıları: profil + turlar + rehberler (`Promise.all`)
+
+## 10. Platform İstatistikleri (HomePage - İstatistik Bölümü)
+- **API Endpoint:** `GET /api/tours/stats`
+- **Görev:** Ana sayfadaki platform istatistikleri ve genel yapının tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - **Hero Bölümü:** Full-width gradient, TravelExploreIcon, başlık, 3 CTA butonu:
+    - "Turları Keşfet" → `/user/tours`
+    - "Firma Olarak Başla" → `/register`
+    - "Rehber Olarak Katıl" → `/register`
+  - **Roller Bölümü ("Herkes İçin Bir Platform"):** 3 kart (Gezginler / Firmalar / Rehberler)
+  - **Öne Çıkan Turlar:** Maksimum 4 TourCard + "Tüm Turları Gör" butonu
+  - **Nasıl Çalışır Bölümü:** 3 adım (Keşfet, Seç & Katıl, Deneyimleyin)
+  - **CTA Bölümü:** Gradient, "Kayıt Ol" + "Giriş Yap" butonları
+  - Loading: 4 Skeleton kart
+  - Error: Alert severity="error"
+  - Empty: "Henüz tur bulunmuyor" mesajı
+- **Teknik Detaylar:**
+  - State: `tours` (array), `toursLoading` (boolean), `toursError` (string/null)
+  - API: `tourApi.getTours()` mount'ta çağrılır, ilk 4 tur gösterilir
+
+## 11. Firma Navigasyon Çubuğu (CompanyNavbar)
+- **Görev:** Firma paneli üst navigasyon çubuğu bileşeni tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Fixed AppBar (yarı saydam arka plan + `backdropFilter: blur(10px)`)
+  - TravelBook logo + "Firma Paneli" badge (secondary renk)
+  - Navigasyon linkleri:
+    - Ana Sayfa → `/` (HomeIcon)
+    - Turlarım → `/company/tours` (MapIcon)
+    - Rehberlerim → `/company/guides` (GroupsIcon)
+    - Profilim → `/company/profile` (PersonIcon)
+    - Hakkımızda → `/about` (InfoIcon)
+  - Aktif link tespiti (underline animasyonu, ::after pseudo-element, bold)
+  - Kullanıcı Avatar menüsü (email, Profilim linki, Çıkış Yap butonu)
+  - Mobil Drawer (sağdan açılır, 280px genişlik, tüm linkler + çıkış butonu)
+- **Responsive Tasarım:**
+  - Desktop: nav linkleri görünür (md ve üzeri)
+  - Mobil: hamburger menü ikonu (xs), Drawer bileşeni
+
+## 12. Firma Alt Bilgi (CompanyFooter)
+- **Görev:** Firma paneli alt bilgi bileşeni tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - 4 sütunlu Grid düzeni:
+    - Marka (md=4): TravelBook logo + GitHub ikonu
+    - Firma Paneli (md=2): Panel, Turlarım, Profilim linkleri
+    - Keşfet (md=2): Ana Sayfa, Hakkımızda linkleri
+    - İletişim (md=3): E-posta, telefon, adres
+  - Copyright (dinamik yıl: `new Date().getFullYear()`)
+  - Koyu tema: `bgcolor: "primary.dark"`, beyaz metin
+
+## 13. Firma Layout (CompanyLayout)
+- **Görev:** Firma paneli sayfa düzeni wrapper bileşeni tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - CompanyNavbar + Outlet + CompanyFooter
+  - Flexbox column layout (`minHeight: "100vh"`)
+  - `<Outlet />` ana içerik alanı (`flexGrow: 1`)
+- **Yetkilendirme Kontrolü:**
+  - Giriş yapılmamışsa → `/login` yönlendirmesi
+  - Yanlış rol (company değilse) → `/` yönlendirmesi
+  - Doğru rol → Sayfa içeriği render edilir
+- **Teknik Detaylar:**
+  - Route değişiminde `window.scrollTo(0, 0)` ile sayfa başına scroll
+  - React Router `Outlet`, `useLocation`, `Navigate` kullanımı
