@@ -1,0 +1,252 @@
+# Ümmü Fidan'ın Web Frontend Görevleri
+
+**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+
+## 1. Kullanıcı Giriş Yapma (LoginPage - Kullanıcı Sekmesi)
+- **API Endpoint:** `POST /api/users/auth/login`
+- **Görev:** 3 sekmeli giriş sayfasındaki kullanıcı giriş sekmesinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Responsive giriş formu (full-screen gradient arka plan)
+  - Tabs bileşeni (Kullanıcı / Firma / Rehber sekmeleri, PersonIcon)
+  - E-posta input alanı (type="email")
+  - Şifre input alanı (type="password", Visibility/VisibilityOff toggle)
+  - "Giriş Yap" butonu (contained, fullWidth)
+  - TravelBook logo linki → Ana Sayfa
+  - "Hesap Oluştur" linki → `/register`
+  - "Ana Sayfaya Dön" linki → `/`
+  - Loading durumu ("Giriş Yapılıyor…" disabled buton)
+  - Error Alert bileşeni
+- **Form Validasyonu:**
+  - E-posta ve şifre boş olamaz kontrolü
+  - Server-side hata mesajları Alert ile gösterilmesi
+- **Kullanıcı Deneyimi:**
+  - Başarılı giriş sonrası `/user/tours` sayfasına yönlendirme
+  - Hata durumunda kullanıcı dostu mesajlar (Alert severity="error")
+  - Şifre görünürlük toggle (IconButton ile Visibility/VisibilityOff)
+  - Loading state ile çift tıklama koruması
+- **Teknik Detaylar:**
+  - Framework: React + Material UI (MUI)
+  - Auth: `useAuth()` hook ile `login(role, email, password)` çağrısı
+  - State yönetimi: `roleIdx`, `email`, `password`, `showPassword`, `error`, `loading`
+  - JWT token yönetimi (useAuth hook üzerinden)
+
+## 2. Kullanıcı Kayıt Olma (RegisterPage - Kullanıcı Sekmesi)
+- **API Endpoint:** `POST /api/users/auth/register`
+- **Görev:** 3 sekmeli kayıt sayfasındaki kullanıcı kayıt sekmesinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Responsive kayıt formu (full-screen gradient arka plan)
+  - Tabs bileşeni (Kullanıcı / Firma / Rehber sekmeleri)
+  - Ad Soyad input alanı (text, required)
+  - E-posta Adresi input alanı (type="email", required)
+  - Şifre input alanı (type="password", toggle visibility)
+  - Şifreyi Onayla input alanı (type="password")
+  - Telefon input alanı (type="tel", required, placeholder="+90 555 123 4567")
+  - "Kayıt Ol" butonu (contained, fullWidth)
+  - "Zaten hesabınız var mı? Giriş Yap" linki → `/login`
+  - Loading state ve Error Alert
+- **Form Validasyonu:**
+  - Şifre eşleşme kontrolü (`password !== confirmPassword` → "Şifreler eşleşmiyor.")
+  - Şifre minimum uzunluk kontrolü (`password.length < 6` → "Şifre en az 6 karakter olmalıdır.")
+  - Tüm alanlar required
+  - `confirmPassword` alanı API isteğinden hariç tutulur
+- **Kullanıcı Deneyimi:**
+  - Başarılı kayıt sonrası `/user/tours` sayfasına yönlendirme
+  - Hata durumunda kullanıcı dostu mesajlar
+  - Şifre görünürlük toggle
+- **Teknik Detaylar:**
+  - Auth: `useAuth()` hook ile `register(role, data)` çağrısı
+  - State: `roleIdx`, `forms` (her rol için ayrı form state), `showPassword`, `error`, `loading`
+
+## 3. Tur Filtreleme (ToursPage - Filtre Bölümü)
+- **API Endpoint:** `GET /api/tours?param=value`
+- **Görev:** Turlar sayfasındaki filtreleme ve arama bölümünün tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Sayfa başlığı ("Turları Keşfet", açıklama metni)
+  - Filtre bölümü (Paper, Collapse ile açılır/kapanır):
+    - FilterListIcon + "Filtrele" başlığı + aktif filtre sayısı (Chip)
+    - Tur Adı input alanı (SearchIcon, placeholder: "Ör: Kapadokya", Grid sm=6, md=3)
+    - Lokasyon input alanı (LocationOnIcon, placeholder: "Ör: İstanbul", Grid sm=6, md=3)
+    - Min Fiyat input alanı (type="number", AttachMoneyIcon, min=0, Grid xs=6, sm=3, md=2)
+    - Max Fiyat input alanı (type="number", min=0, Grid xs=6, sm=3, md=2)
+    - Tarih input alanı (type="date", CalendarTodayIcon, Grid sm=6, md=2)
+    - "Ara" butonu (contained, secondary, SearchIcon)
+    - Filtreleri Temizle butonu (ClearIcon, error renk)
+  - Sonuç bilgisi metni ("{N} tur bulundu" veya "Sonuç bulunamadı")
+  - "Filtreleri Temizle" butonu (aktif filtre varsa)
+  - Tur kartları grid düzeni (TourCard bileşeni, xs=12, sm=6, md=4)
+  - Boş durum ekranı (SearchIcon 64px + "Tur bulunamadı" + "Tüm Filtreleri Temizle" butonu)
+  - Loading (CircularProgress, center)
+  - Error Alert (severity="error")
+- **Filtre Mekanizması:**
+  - `filters` state: `{ title, location, minPrice, maxPrice, date }`
+  - Ara butonuna basıldığında sadece dolu alanlar `activeFilters` olarak API'ye gönderilir
+  - `fetchTours(queryFilters)` → `tourApi.getTours(queryFilters)` çağrısı
+  - Filtreleri temizle: tüm inputlar sıfırlanır, tüm turlar yeniden yüklenir
+- **Kullanıcı Deneyimi:**
+  - Filtre paneli açılır/kapanır (Collapse + IconButton)
+  - Aktif filtre sayısı Chip olarak gösterilir
+  - CircularProgress loading state
+  - Filtre uygulanmadığında tüm turlar listelenir
+- **Teknik Detaylar:**
+  - State: `tours`, `loading`, `error`, `filtersOpen`, `hasSearched`, `filters`, `appliedFilters`
+  - `useCallback` ile `fetchTours` fonksiyonu optimizasyonu
+  - `useEffect` ile mount'ta tüm turların yüklenmesi
+  - Responsive grid: xs=12, sm=6, md=4 (tur kartları); xs=12, sm=6, md=3/2 (filtre inputları)
+
+## 4. Tüm Tur Rehberlerinin Listelenmesi (GuideList)
+- **API Endpoint:** `GET /api/guides`
+- **Görev:** Tüm tur rehberlerinin listelendiği sayfanın tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Sayfa başlığı ("Tur Rehberleri", açıklama metni)
+  - Rehber kartları grid düzeni (Card bileşeni):
+    - Avatar (56x56, secondary renk, PersonIcon, profil resmi varsa gösterilir)
+    - Rehber adı (h6, fontWeight 700)
+    - Puan (MUI Rating, precision 0.5, readOnly, puan > 0 ise)
+    - Biyografi (body2, text.secondary)
+    - Deneyim yılı (WorkIcon + "{N} yıl deneyim")
+    - E-posta (EmailIcon + e-posta adresi)
+    - Telefon (PhoneIcon + telefon numarası, varsa)
+    - Diller (TranslateIcon + Chip listesi, outlined, size="small")
+  - Boş durum ekranı (PersonIcon 64px + "Henüz rehber bulunamadı" mesajı)
+  - Loading (CircularProgress, center)
+  - Error Alert (severity="error")
+- **Kullanıcı Deneyimi:**
+  - Kart hover efekti (translateY(-4px) + boxShadow)
+  - Skeleton loading (CircularProgress)
+  - Boş liste mesajı
+- **Teknik Detaylar:**
+  - State: `guides` (array), `loading` (boolean), `error` (string/null)
+  - `useCallback` ile `fetchGuides` fonksiyonu optimizasyonu
+  - API: `guideApi.getAllGuides()` mount'ta çağrılır
+  - Responsive grid: xs=12, sm=6, md=4 sütun
+
+## 5. Tur Satın Alma (ToursPage - Satın Alma İşlevi)
+- **API Endpoint:** `POST /api/tours/{tourId}/purchases`
+- **Görev:** Turlar sayfasında tur satın alma işlevinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - TourCard bileşeninde "Satın Al" butonu (contained, secondary, ShoppingCartIcon)
+  - Satın alınmış turlarda "Satın Alındı" disabled butonu
+  - Satın Alma Onay Dialog (Dialog, maxWidth="xs", fullWidth):
+    - Başlık: "Satın Alma Onayı" (fontWeight 700)
+    - Onay mesajı: "Bu turu satın almak istediğinizden emin misiniz?"
+    - Tur bilgileri kutusu (Paper, grey.50 bgcolor):
+      - Tur adı (subtitle1, fontWeight 700)
+      - Güzergâh (ArrowRightAltIcon + kalkış → varış)
+      - Tarih aralığı (CalendarTodayIcon + formatDate)
+      - Fiyat (h5, fontWeight 800, secondary.main)
+      - Firma adı (Chip, outlined, varsa)
+    - "Vazgeç" butonu (color="inherit")
+    - "Satın Al" butonu (contained, secondary, ShoppingCartIcon)
+  - Snackbar bildirim (bottom-center, autoHideDuration: 3000):
+    - Başarılı: "Satın alma başarılı!" (severity="success")
+    - Hata: "Satın alma sırasında bir hata oluştu." (severity="error")
+- **İşlev Akışı:**
+  - Kullanıcı "Satın Al" butonuna tıklar → Onay dialog açılır
+  - "Satın Al" onaylanır → `purchaseApi.purchaseTour(tourId)` çağrılır
+  - Başarılı: purchasedTours state güncellenir, Snackbar gösterilir
+  - Hata: Snackbar ile hata mesajı gösterilir
+- **Teknik Detaylar:**
+  - State: `purchaseLoading`, `snackbar`, `selectedTour`, `confirmOpen`, `purchasedTours`
+  - Mount'ta mevcut satın almalar yüklenir: `userApi.getPurchases(user.id)` → `purchasedTours` map
+  - Sadece giriş yapmış kullanıcılar (user rolü) satın alabilir
+
+## 6. Tur Satın Alma İptali (ToursPage - İptal İşlevi)
+- **API Endpoint:** `DELETE /api/purchases/{purchasesId}`
+- **Görev:** Turlar sayfasında tur satın alma iptalinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - TourCard bileşeninde "İptal Et" butonu (outlined, error, CancelIcon, satın alınmış turlarda görünür)
+  - İptal Onay Dialog (Dialog, maxWidth="xs", fullWidth):
+    - Başlık: "Satın Alma İptali" (fontWeight 700, color="error.main")
+    - Onay mesajı: "Bu tur satın alımını iptal etmek istediğinizden emin misiniz?"
+    - Tur bilgileri kutusu (Paper, grey.50 bgcolor):
+      - Tur adı, güzergâh, tarih aralığı, fiyat
+    - "Vazgeç" butonu (color="inherit")
+    - "İptal Et" butonu (contained, error, CancelIcon)
+  - Snackbar bildirim:
+    - Başarılı: "Satın alma iptal edildi!" (severity="success")
+    - Hata: "İptal sırasında bir hata oluştu." (severity="error")
+- **İşlev Akışı:**
+  - Kullanıcı "İptal Et" butonuna tıklar → İptal onay dialog açılır
+  - "İptal Et" onaylanır → `purchaseApi.cancelPurchase(purchaseId)` çağrılır
+  - Başarılı: purchasedTours state'inden ilgili tur kaldırılır, Snackbar gösterilir
+  - Hata: Snackbar ile hata mesajı gösterilir
+- **Teknik Detaylar:**
+  - State: `cancelLoading`, `cancelConfirmOpen`, `cancelTour`
+  - purchasedTours map'inden `purchaseId` alınarak iptal API'si çağrılır
+  - Başarılı iptal sonrası tur kartı tekrar "Satın Al" butonunu gösterir
+
+## 7. Favori Tur Listeleme (FavoritesList)
+- **API Endpoint:** `GET /api/users/{userId}/favorites`
+- **Görev:** Kullanıcının favori turlarının listelendiği sayfanın tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - Sayfa başlığı ("Favori Turlarım", açıklama metni)
+  - Giriş yapmamış kullanıcılar için uyarı (Alert severity="warning": "Favorilerinizi görmek için lütfen giriş yapın.")
+  - Favori tur kartları grid düzeni (Card bileşeni):
+    - Tur görseli (CardMedia, height=200, getImageUrl veya fallback)
+    - Tur adı (h6, fontWeight 700, noWrap)
+    - Konum (LocationOnIcon + text)
+    - Tarih aralığı (CalendarTodayIcon + tr-TR formatı)
+    - Puan (MUI Rating, precision 0.5, readOnly, puan > 0 ise)
+    - Fiyat (h5, fontWeight 800, secondary.main, TRY formatı)
+    - Firma adı (Chip, outlined, varsa)
+    - "Favorilerden Kaldır" butonu (outlined, error, DeleteIcon)
+  - Boş durum ekranı (FavoriteIcon 64px + "Henüz favori turunuz yok" mesajı)
+  - Loading (CircularProgress, center)
+  - Error Alert (severity="error")
+- **Kullanıcı Deneyimi:**
+  - Kart hover efekti (translateY(-4px) + boxShadow)
+  - "Kaldırılıyor..." loading state (buton disabled)
+  - Snackbar bildirimleri (bottom-center, autoHideDuration: 3000)
+- **Teknik Detaylar:**
+  - State: `favorites`, `loading`, `error`, `removeLoading`, `snackbar`, `confirmOpen`, `selectedTour`
+  - `useCallback` ile `fetchFavorites` fonksiyonu optimizasyonu
+  - API: `favoriteApi.getFavorites(user.id)` mount'ta çağrılır
+  - Responsive grid: xs=12, sm=6, md=4 sütun
+
+## 8. Favori Tur Ekleme (ToursPage - Favori Ekleme İşlevi)
+- **API Endpoint:** `POST /api/users/{userId}/favorites`
+- **Görev:** Turlar sayfasında favori tur ekleme işlevinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - TourCard bileşeninde "Favorilere Ekle" butonu (outlined, error, FavoriteBorderIcon)
+  - Favoriye eklenmiş turlarda "Favorilerde" butonu (contained, error, FavoriteIcon)
+  - Snackbar bildirim:
+    - Başarılı: "Favorilere eklendi!" (severity="success")
+    - Hata: "Favorilere eklenirken bir hata oluştu." (severity="error")
+    - Giriş yapılmamış: "Favorilere eklemek için giriş yapın." (severity="warning")
+- **İşlev Akışı:**
+  - Kullanıcı "Favorilere Ekle" butonuna tıklar
+  - Giriş yapmamışsa → Snackbar uyarısı gösterilir
+  - Giriş yapmışsa → `favoriteApi.addFavorite(user.id, tourId)` çağrılır
+  - Başarılı: `favoriteTours` state güncellenir, buton "Favorilerde" olarak değişir
+  - Hata: Snackbar ile hata mesajı gösterilir
+- **Teknik Detaylar:**
+  - State: `favoriteTours` (map: tourId → boolean), `favoriteLoading`
+  - Mount'ta mevcut favoriler yüklenir: `favoriteApi.getFavorites(user.id)` → `favoriteTours` map
+  - Toggle mantığı: aynı buton ile ekleme/kaldırma işlemi yapılır
+
+## 9. Favori Tur Silme (FavoritesList - Favori Kaldırma İşlevi)
+- **API Endpoint:** `DELETE /api/users/{userId}/favorites/{tourId}`
+- **Görev:** Favoriler sayfasında favori tur kaldırma işlevinin tasarımı ve implementasyonu
+- **UI Bileşenleri:**
+  - "Favorilerden Kaldır" butonu (outlined, error, DeleteIcon, her tur kartında)
+  - Kaldırma Onay Dialog (Dialog, maxWidth="xs", fullWidth):
+    - Başlık: "Favori Kaldırma" (fontWeight 700, color="error.main")
+    - Onay mesajı: "Bu turu favorilerden kaldırmak istediğinizden emin misiniz?"
+    - Tur bilgileri kutusu (Paper, grey.50 bgcolor):
+      - Tur adı (subtitle1, fontWeight 700)
+      - Konum (LocationOnIcon + text)
+      - Tarih aralığı (CalendarTodayIcon + formatDate)
+      - Fiyat (h5, fontWeight 800, secondary.main)
+    - "Vazgeç" butonu (color="inherit")
+    - "Kaldır" butonu (contained, error, DeleteIcon)
+  - Snackbar bildirim:
+    - Başarılı: "Tur favorilerden kaldırıldı!" (severity="success")
+    - Hata: "Favori kaldırılırken bir hata oluştu." (severity="error")
+- **İşlev Akışı:**
+  - Kullanıcı "Favorilerden Kaldır" butonuna tıklar → Onay dialog açılır
+  - "Kaldır" onaylanır → `favoriteApi.removeFavorite(user.id, tourId)` çağrılır
+  - Başarılı: favorites listesinden ilgili tur filtrelenir, Snackbar gösterilir
+  - Hata: Snackbar ile hata mesajı gösterilir
+- **Teknik Detaylar:**
+  - State: `removeLoading`, `confirmOpen`, `selectedTour`
+  - Başarılı kaldırma sonrası kart listeden anında kaybolur (`setFavorites(prev => prev.filter(...))`)
