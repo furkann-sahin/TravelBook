@@ -16,11 +16,28 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Footer() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isCompany = isAuthenticated && user?.role === "company";
 
   const quickLinks = [
     { label: "Ana Sayfa", path: "/" },
     { label: "Hakkımızda", path: "/about" },
+    ...(isCompany
+      ? [
+          { label: "Dashboard", path: "/company" },
+          { label: "Turlarım", path: "/company/tours" },
+          { label: "Profil", path: "/company/profile" },
+        ]
+      : []),
+    ...(isAuthenticated && !isCompany
+      ? [
+          { label: "Turlar", path: "/user/tours" },
+          { label: "Seyahatlerim", path: "/user/purchases" },
+          { label: "Rehberler", path: "/guides" },
+          { label: "Favorilerim", path: "/user/favorites" },
+          { label: "Profil", path: "/user/profile" },
+        ]
+      : []),
     ...(!isAuthenticated
       ? [
           { label: "Giriş Yap", path: "/login" },
@@ -103,10 +120,10 @@ export default function Footer() {
               İletişim
             </Typography>
             <Typography variant="body2" sx={{ mb: 0.8 }}>
-              receparslan965@gmail.com
+              info@travelbook.com
             </Typography>
             <Typography variant="body2" sx={{ mb: 0.8 }}>
-              +90 (546) 897 25 47
+              +90 (555) 123 45 67
             </Typography>
             <Typography variant="body2">Merkez, Isparta, Türkiye</Typography>
           </Grid>

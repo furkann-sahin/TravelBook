@@ -51,7 +51,10 @@ const deleteCompany = async (req, res) => {
       });
     }
 
-    res.status(204).send();
+    createResponse(res, 200, {
+      status: "success",
+      message: "Firma hesabı başarıyla silindi",
+    });
   } catch (error) {
     console.error("Firma silinirken hata oluştu:", error);
     createResponse(res, 500, {

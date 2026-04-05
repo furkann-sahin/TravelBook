@@ -171,6 +171,8 @@ export const tourApi = {
   },
 
   getTourDetail: (tourId) => request(`/tours/${tourId}`),
+
+  getStats: () => request("/tours/stats"),
 };
 
 // PURCHASES

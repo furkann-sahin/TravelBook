@@ -19,7 +19,7 @@ import {
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useAuth } from "../hooks/useAuth";
-import { userApi } from "../services/api";
+import { userApi, getImageUrl } from "../services/api";
 
 export default function UserPurchasesPage() {
   const navigate = useNavigate();
@@ -139,7 +139,7 @@ export default function UserPurchasesPage() {
                 <CardMedia
                   component="img"
                   image={
-                    purchase.tour?.imageUrl ||
+                    getImageUrl(purchase.tour?.imageUrl) ||
                     "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=900"
                   }
                   alt={purchase.tour?.title}
@@ -160,7 +160,7 @@ export default function UserPurchasesPage() {
                       <Stack direction="row" spacing={1.5} alignItems="center">
                         <CalendarTodayIcon sx={{ fontSize: 16, color: "text.disabled" }} />
                         <Typography variant="body2" color="text.secondary">
-                          Tur Tarihi: {formatDate(purchase.tour?.date)}
+                          Tur Tarihi: {formatDate(purchase.tour?.startDate)}
                         </Typography>
                       </Stack>
                     </Box>
@@ -178,7 +178,7 @@ export default function UserPurchasesPage() {
                     <Button
                       variant="outlined"
                       color="secondary"
-                      onClick={() => navigate(`/tours/${purchase.tour?.id}`)}
+                      onClick={() => navigate(`/user/tours/${purchase.tour?.id}`)}
                     >
                       Tur Detayı
                     </Button>

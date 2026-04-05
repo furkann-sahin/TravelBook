@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // MUI Components
@@ -9,9 +9,6 @@ import {
   TextField,
   Button,
   Grid,
-  Card,
-  CardContent,
-  CardMedia,
   Chip,
   InputAdornment,
   CircularProgress,
@@ -19,7 +16,6 @@ import {
   Paper,
   IconButton,
   Collapse,
-  Rating,
   Snackbar,
   Dialog,
   DialogTitle,
@@ -34,21 +30,21 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { tourApi, purchaseApi, favoriteApi, getImageUrl } from "../services/api";
+import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import { tourApi, purchaseApi, favoriteApi } from "../services/api";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useAuth } from "../hooks/useAuth";
+import TourCard, { formatDate } from "../components/TourCard";
 
 export default function ToursPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(true);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -88,6 +84,10 @@ export default function ToursPage() {
     }
   }, []);
 
+  useEffect(() => {
+    fetchTours();
+  }, [fetchTours]);
+
   const handleFilterChange = (field) => (e) => {
     setFilters((prev) => ({ ...prev, [field]: e.target.value }));
   };
@@ -118,10 +118,8 @@ export default function ToursPage() {
       date: "",
     });
     setAppliedFilters({});
-    setTours([]);
-    setHasSearched(false);
     setError(null);
-    setLoading(false);
+    fetchTours();
   };
 
   const handleOpenConfirm = (tour) => {
@@ -258,14 +256,7 @@ export default function ToursPage() {
 
   const hasActiveFilters = Object.keys(appliedFilters).length > 0;
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("tr-TR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
+
 
   return (
     <Box sx={{ pt: 4, pb: 8, minHeight: "80vh" }}>
@@ -511,12 +502,7 @@ export default function ToursPage() {
           </Box>
         )}
 
-        {!loading && !hasSearched && !error && (
-          <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-            Filtre eklemeden de Ara butonuna basarak tüm turları
-            görüntüleyebilirsiniz.
-          </Alert>
-        )}
+
 
         {/* Error */}
         {error && (
@@ -533,213 +519,19 @@ export default function ToursPage() {
                 size={{ xs: 12, sm: 6, md: 4 }}
                 key={tour.id || `${tour.name}-${tour.startDate}`}
               >
-                <Card
-                  elevation={0}
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    borderRadius: 3,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={
-                      getImageUrl(tour.imageUrl) ||
-                      "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"
-                    }
-                    alt={tour.name}
-                    sx={{ objectFit: "cover" }}
-                  />
-                  <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      gutterBottom
-                      noWrap
-                    >
-                      {tour.name}
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        mb: 1,
-                      }}
-                    >
-                      <LocationOnIcon
-                        sx={{ fontSize: 18, color: "secondary.main" }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {tour.location}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        mb: 1.5,
-                      }}
-                    >
-                      <CalendarTodayIcon
-                        sx={{ fontSize: 16, color: "text.disabled" }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDate(tour.startDate)} –{" "}
-                        {formatDate(tour.endDate)}
-                      </Typography>
-                    </Box>
-
-                    {tour.rating > 0 && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          mb: 1.5,
-                        }}
-                      >
-                        <Rating
-                          value={tour.rating}
-                          precision={0.5}
-                          size="small"
-                          readOnly
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          ({tour.rating})
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {tour.services?.length > 0 && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 0.5,
-                          mb: 1.5,
-                        }}
-                      >
-                        {tour.services.map((service) => (
-                          <Chip
-                            key={service}
-                            label={service}
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                          />
-                        ))}
-                      </Box>
-                    )}
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mt: "auto",
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        fontWeight={800}
-                        color="secondary.main"
-                      >
-                        ₺{tour.price?.toLocaleString("tr-TR")}
-                      </Typography>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        {tour.companyName && (
-                          <Chip
-                            label={tour.companyName}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="secondary"
-                          onClick={() => navigate(`/tours/${tour.id}`)}
-                          disabled={!tour.id}
-                        >
-                          Detay
-                        </Button>
-                      </Box>
-                    </Box>
-
-                    <Button
-                      variant={
-                        favoriteTours[tour.id] ? "contained" : "outlined"
-                      }
-                      color="error"
-                      fullWidth
-                      startIcon={
-                        favoriteTours[tour.id] ? (
-                          <FavoriteIcon />
-                        ) : (
-                          <FavoriteBorderIcon />
-                        )
-                      }
-                      onClick={() => handleToggleFavorite(tour)}
-                      disabled={favoriteLoading === tour.id}
-                      sx={{ mt: 2, borderRadius: 2, py: 1 }}
-                    >
-                      {favoriteLoading === tour.id
-                        ? "İşleniyor..."
-                        : favoriteTours[tour.id]
-                          ? "Favorilerde"
-                          : "Favorilere Ekle"}
-                    </Button>
-
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      fullWidth
-                      startIcon={<ShoppingCartIcon />}
-                      onClick={() => handleOpenConfirm(tour)}
-                      disabled={
-                        purchaseLoading === tour.id || !!purchasedTours[tour.id]
-                      }
-                      sx={{ mt: 1, borderRadius: 2, py: 1 }}
-                    >
-                      {purchaseLoading === tour.id
-                        ? "İşleniyor..."
-                        : purchasedTours[tour.id]
-                          ? "Satın Alındı"
-                          : "Satın Al"}
-                    </Button>
-
-                    {purchasedTours[tour.id] && (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        fullWidth
-                        startIcon={<CancelIcon />}
-                        onClick={() => handleOpenCancelConfirm(tour)}
-                        disabled={cancelLoading === tour.id}
-                        sx={{ mt: 1, borderRadius: 2, py: 1 }}
-                      >
-                        {cancelLoading === tour.id
-                          ? "İptal ediliyor..."
-                          : "İptal Et"}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
+                <TourCard
+                  tour={tour}
+                  variant="full"
+                  onDetail={(t) => navigate(`/user/tours/${t.id}`)}
+                  onPurchase={handleOpenConfirm}
+                  onCancel={handleOpenCancelConfirm}
+                  onToggleFavorite={handleToggleFavorite}
+                  purchaseLoading={purchaseLoading}
+                  cancelLoading={cancelLoading}
+                  favoriteLoading={favoriteLoading}
+                  isPurchased={purchasedTours[tour.id]}
+                  isFavorite={favoriteTours[tour.id]}
+                />
               </Grid>
             ))}
 
@@ -801,11 +593,13 @@ export default function ToursPage() {
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}
               >
-                <LocationOnIcon
+                <ArrowRightAltIcon
                   sx={{ fontSize: 16, color: "secondary.main" }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {selectedTour.location}
+                  {selectedTour.departureLocation && selectedTour.arrivalLocation
+                    ? `${selectedTour.departureLocation} → ${selectedTour.arrivalLocation}`
+                    : selectedTour.location || "-"}
                 </Typography>
               </Box>
               <Box
@@ -887,11 +681,13 @@ export default function ToursPage() {
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}
               >
-                <LocationOnIcon
+                <ArrowRightAltIcon
                   sx={{ fontSize: 16, color: "secondary.main" }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {cancelTour.location}
+                  {cancelTour.departureLocation && cancelTour.arrivalLocation
+                    ? `${cancelTour.departureLocation} → ${cancelTour.arrivalLocation}`
+                    : cancelTour.location || "-"}
                 </Typography>
               </Box>
               <Box

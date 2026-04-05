@@ -88,7 +88,7 @@ const updateUserPassword = async (req, res) => {
   try {
     const { userId } = req.params;
     const { oldPassword, newPassword } = req.body;
-    const authenticatedUserId = req.userId || req.payload?.id;
+    const authenticatedUserId = req.payload?.id;
 
     if (authenticatedUserId !== userId) {
       return createResponse(res, 403, {
@@ -141,7 +141,7 @@ const getUserPurchases = async (req, res) => {
   try {
     const { userId } = req.params;
     const { status } = req.query;
-    const authenticatedUserId = req.userId || req.payload?.id;
+    const authenticatedUserId = req.payload?.id;
 
     if (authenticatedUserId !== userId) {
       return createResponse(res, 403, {

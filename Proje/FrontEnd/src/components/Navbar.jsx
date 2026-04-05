@@ -135,7 +135,7 @@ export default function Navbar() {
                     {link.label}
                   </Button>
 
-                  {link.path === "/tours" && isAuthenticated && user?.role === "user" && (
+                  {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
                     <Button
                       component={RouterLink}
                       to={purchasesPath}
@@ -309,7 +309,7 @@ export default function Navbar() {
                   </ListItemButton>
                 </ListItem>
 
-                {link.path === "/tours" && isAuthenticated && user?.role === "user" && (
+                {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
                   <ListItem disablePadding>
                     <ListItemButton
                       component={RouterLink}

@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Container,
   Divider,
+  Grid,
   Paper,
   Stack,
   TextField,
@@ -16,13 +17,21 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import PlaceIcon from "@mui/icons-material/Place";
+import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices";
+import BusinessIcon from "@mui/icons-material/Business";
+import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { tourApi, reviewApi } from "../services/api";
+import { tourApi, reviewApi, getImageUrl } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import { formatDate } from "../components/TourCard";
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200";
 
 export default function TourDetailPage() {
   const navigate = useNavigate();
@@ -56,15 +65,6 @@ export default function TourDetailPage() {
 
     fetchTour();
   }, [tourId]);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("tr-TR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
 
   const resetReviewMessages = () => {
     setReviewError("");
@@ -149,21 +149,23 @@ export default function TourDetailPage() {
     }
   };
 
+  /* ── Loading ── */
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 8, display: "flex", justifyContent: "center" }}>
+      <Container maxWidth="lg" sx={{ py: 8, display: "flex", justifyContent: "center" }}>
         <CircularProgress color="secondary" />
       </Container>
     );
   }
 
+  /* ── Error ── */
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ py: 6 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
           {error}
         </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/tours")}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/user/tours")}>
           Turlara Dön
         </Button>
       </Container>
@@ -172,187 +174,417 @@ export default function TourDetailPage() {
 
   if (!tour) return null;
 
-  return (
-    <Box sx={{ py: 5 }}>
-      <Container maxWidth="md">
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/tours")}
-          sx={{ mb: 2 }}
-        >
-          Turlara Dön
-        </Button>
+  const routeLabel =
+    tour.departureLocation && tour.arrivalLocation
+      ? `${tour.departureLocation} → ${tour.arrivalLocation}`
+      : tour.location || "—";
 
-        <Paper
-          elevation={0}
+  const heroImage =
+    tour.images?.length > 0 ? getImageUrl(tour.images[0]) : FALLBACK_IMAGE;
+
+  return (
+    <Box sx={{ pb: 8, bgcolor: "background.default" }}>
+      {/* ── Hero Image ── */}
+      <Box
+        sx={{
+          position: "relative",
+          height: { xs: 260, md: 400 },
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          component="img"
+          src={heroImage}
+          alt={tour.title}
           sx={{
-            overflow: "hidden",
-            borderRadius: 3,
-            border: "1px solid",
-            borderColor: "divider",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
+          }}
+        />
+        <Container
+          maxWidth="lg"
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            pb: 3,
+            px: { xs: 2, md: 3 },
           }}
         >
-          <Box
-            component="img"
-            src={
-              tour.images?.[0] ||
-              "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200"
-            }
-            alt={tour.title}
-            sx={{ width: "100%", height: { xs: 220, md: 340 }, objectFit: "cover" }}
-          />
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/user/tours")}
+            sx={{ color: "#fff", mb: 1 }}
+          >
+            Turlara Dön
+          </Button>
+          <Typography
+            variant="h3"
+            fontWeight={800}
+            color="#fff"
+            sx={{ fontSize: { xs: "1.75rem", md: "2.5rem" } }}
+          >
+            {tour.title}
+          </Typography>
+        </Container>
+      </Box>
 
-          <Box sx={{ p: { xs: 2.5, md: 4 } }}>
-            <Typography variant="h4" fontWeight={800} gutterBottom>
-              {tour.title}
-            </Typography>
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 2 }}>
-              <Chip icon={<LocationOnIcon />} label={tour.location || "-"} variant="outlined" />
-              <Chip icon={<CalendarTodayIcon />} label={formatDate(tour.date)} variant="outlined" />
-              <Chip icon={<AccessTimeIcon />} label={tour.duration || "-"} variant="outlined" />
-            </Stack>
-
-            <Typography variant="h5" color="secondary.main" fontWeight={800} sx={{ mb: 2 }}>
-              ₺{tour.price?.toLocaleString("tr-TR")}
-            </Typography>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-              Tur Açıklaması
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              {tour.description || "Açıklama bulunamadı."}
-            </Typography>
-
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-              Dahil Olanlar
-            </Typography>
-            {tour.included?.length ? (
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 3 }}>
-                {tour.included.map((item) => (
-                  <Chip key={item} label={item} color="secondary" variant="outlined" />
-                ))}
-              </Stack>
-            ) : (
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Dahil olan bilgiler bulunamadı.
-              </Typography>
-            )}
-
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-              Gezilecek Yerler
-            </Typography>
-            {tour.places?.length ? (
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
-                {tour.places.map((place) => (
-                  <Chip key={place} label={place} />
-                ))}
-              </Stack>
-            ) : (
-              <Typography color="text.secondary">Gezilecek yer bilgisi bulunamadı.</Typography>
-            )}
-
-            <Divider sx={{ my: 3 }} />
-
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5 }}>
-              Yorumlar
-            </Typography>
-
-            {reviewError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {reviewError}
-              </Alert>
-            )}
-
-            {reviewSuccess && (
-              <Alert severity="success" sx={{ mb: 2 }}>
-                {reviewSuccess}
-              </Alert>
-            )}
-
-            <Box
-              component="form"
-              onSubmit={handleSubmitReview}
-              sx={{ mb: 3, p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+      {/* ── Content ── */}
+      <Container maxWidth="lg" sx={{ mt: -4, position: "relative", zIndex: 1 }}>
+        <Grid container spacing={3}>
+          {/* Left — Info cards */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            {/* Quick info bar */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                mb: 3,
+              }}
             >
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
-                {editingReviewId ? "Yorumunu Güncelle" : "Yorum Ekle"}
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                label="Yorumunuz"
-                value={reviewForm.comment}
-                onChange={(e) =>
-                  setReviewForm((prev) => ({ ...prev, comment: e.target.value }))
-                }
-                sx={{ mb: 1.5 }}
-              />
-              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                <Rating
-                  value={reviewForm.rating}
-                  precision={1}
-                  onChange={(_, nextValue) =>
-                    setReviewForm((prev) => ({ ...prev, rating: nextValue || 0 }))
-                  }
-                />
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  {editingReviewId && (
-                    <Button variant="outlined" onClick={cancelEditReview} disabled={reviewLoading}>
-                      İptal
-                    </Button>
-                  )}
-                  <Button type="submit" variant="contained" color="secondary" disabled={reviewLoading}>
-                    {editingReviewId ? "Güncelle" : "Yorum Yap"}
-                  </Button>
-                </Box>
-              </Stack>
-            </Box>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <ArrowRightAltIcon color="secondary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Güzergâh
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {routeLabel}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CalendarTodayIcon color="secondary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Tarih
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {formatDate(tour.startDate || tour.date)}
+                        {tour.endDate && ` – ${formatDate(tour.endDate)}`}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                {tour.duration && (
+                  <Grid size={{ xs: 6, sm: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <AccessTimeIcon color="secondary" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Süre
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {tour.duration}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+                {tour.companyName && (
+                  <Grid size={{ xs: 6, sm: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <BusinessIcon color="secondary" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Tur Firması
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {tour.companyName}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+                {tour.guideName && (
+                  <Grid size={{ xs: 6, sm: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <PersonIcon color="secondary" />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Rehber
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {tour.guideName}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+            </Paper>
 
-            <Stack spacing={1.5}>
-              {reviews.length === 0 && (
-                <Typography color="text.secondary">Henüz yorum bulunmuyor.</Typography>
+            {/* Description */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                mb: 3,
+              }}
+            >
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5 }}>
+                Tur Açıklaması
+              </Typography>
+              <Typography color="text.secondary" sx={{ whiteSpace: "pre-line" }}>
+                {tour.description || "Açıklama bulunamadı."}
+              </Typography>
+            </Paper>
+
+            {/* Destinations & Services */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                mb: 3,
+              }}
+            >
+              {/* Destinations */}
+              <Box sx={{ mb: tour.services?.length > 0 || tour.included?.length > 0 ? 3 : 0 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                  <PlaceIcon color="secondary" />
+                  <Typography variant="h6" fontWeight={700}>
+                    Gezilecek Yerler
+                  </Typography>
+                </Box>
+                {tour.places?.length > 0 ? (
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {tour.places.map((place) => (
+                      <Chip key={place} label={place} color="secondary" variant="outlined" />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography color="text.secondary" variant="body2">
+                    Gezilecek yer bilgisi bulunamadı.
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Services */}
+              {(tour.services?.length > 0 || tour.included?.length > 0) && (
+                <Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                    <MiscellaneousServicesIcon color="secondary" />
+                    <Typography variant="h6" fontWeight={700}>
+                      Dahil Olanlar
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {[...(tour.services || []), ...(tour.included || [])].map((item) => (
+                      <Chip key={item} label={item} variant="outlined" />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </Paper>
+
+            {/* Reviews */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                Yorumlar
+              </Typography>
+
+              {reviewError && (
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                  {reviewError}
+                </Alert>
+              )}
+              {reviewSuccess && (
+                <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                  {reviewSuccess}
+                </Alert>
               )}
 
-              {reviews.map((review) => {
-                const isOwnReview = user?.id && review.userId === user.id;
+              {/* Review form */}
+              <Box
+                component="form"
+                onSubmit={handleSubmitReview}
+                sx={{
+                  mb: 3,
+                  p: 2.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  bgcolor: "grey.50",
+                }}
+              >
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                  {editingReviewId ? "Yorumunu Güncelle" : "Yorum Ekle"}
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  label="Yorumunuz"
+                  value={reviewForm.comment}
+                  onChange={(e) =>
+                    setReviewForm((prev) => ({ ...prev, comment: e.target.value }))
+                  }
+                  sx={{ mb: 1.5 }}
+                />
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                  <Rating
+                    value={reviewForm.rating}
+                    precision={1}
+                    onChange={(_, nextValue) =>
+                      setReviewForm((prev) => ({ ...prev, rating: nextValue || 0 }))
+                    }
+                  />
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    {editingReviewId && (
+                      <Button variant="outlined" onClick={cancelEditReview} disabled={reviewLoading}>
+                        İptal
+                      </Button>
+                    )}
+                    <Button type="submit" variant="contained" color="secondary" disabled={reviewLoading}>
+                      {editingReviewId ? "Güncelle" : "Yorum Yap"}
+                    </Button>
+                  </Box>
+                </Stack>
+              </Box>
 
-                return (
-                  <Paper key={review.id} variant="outlined" sx={{ p: 2 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {review.userName || "Kullanıcı"}
-                      </Typography>
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
-                        <Rating value={review.rating} precision={1} size="small" readOnly />
-                        {isOwnReview && (
-                          <>
-                            <IconButton size="small" onClick={() => startEditReview(review)}>
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteReview(review.id)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </>
-                        )}
+              <Stack spacing={1.5}>
+                {reviews.length === 0 && (
+                  <Typography color="text.secondary">Henüz yorum bulunmuyor.</Typography>
+                )}
+
+                {reviews.map((review) => {
+                  const isOwnReview = user?.id && review.userId === user.id;
+
+                  return (
+                    <Paper key={review.id} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          {review.userName || "Kullanıcı"}
+                        </Typography>
+                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                          <Rating value={review.rating} precision={1} size="small" readOnly />
+                          {isOwnReview && (
+                            <>
+                              <IconButton size="small" onClick={() => startEditReview(review)}>
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteReview(review.id)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </>
+                          )}
+                        </Stack>
                       </Stack>
-                    </Stack>
+                      <Typography variant="body2" color="text.secondary">
+                        {review.comment}
+                      </Typography>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            </Paper>
+          </Grid>
+
+          {/* Right — Price sidebar */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                position: "sticky",
+                top: 90,
+              }}
+            >
+              <Typography variant="h4" fontWeight={800} color="secondary.main" gutterBottom>
+                ₺{tour.price?.toLocaleString("tr-TR")}
+              </Typography>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Stack spacing={1.5}>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Güzergâh
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {routeLabel}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tarih
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatDate(tour.startDate || tour.date)}
+                  </Typography>
+                </Box>
+                {tour.duration && (
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography variant="body2" color="text.secondary">
-                      {review.comment}
+                      Süre
                     </Typography>
-                  </Paper>
-                );
-              })}
-            </Stack>
-          </Box>
-        </Paper>
+                    <Typography variant="body2" fontWeight={600}>
+                      {tour.duration}
+                    </Typography>
+                  </Box>
+                )}
+                {tour.companyName && (
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Tur Firması
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {tour.companyName}
+                    </Typography>
+                  </Box>
+                )}
+                {tour.guideName && (
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Rehber
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {tour.guideName}
+                    </Typography>
+                  </Box>
+                )}
+              </Stack>
+            </Paper>
+          </Grid>
+        </Grid>
       </Container>
     </Box>
   );

@@ -28,7 +28,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PhoneIcon from "@mui/icons-material/Phone";
 
 import { useAuth } from "../hooks/useAuth";
-import { guideApi } from "../services/api";
+import { guideApi, getImageUrl } from "../services/api";
 
 export default function GuideToursPage() {
     const { user } = useAuth();
@@ -161,7 +161,7 @@ export default function GuideToursPage() {
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                             <CheckCircleIcon color="secondary" />
-                            Kayıtlı Firmalarım
+                            Turlarım & Firmalarım
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                             Kayıtlı olduğunuz firmalar ve size atanan turlar
@@ -382,11 +382,11 @@ function TourCard({ tour, formatDate, formatPrice, onRemove }) {
             }}
         >
             {/* Image */}
-            {tour.imageUrl ? (
+            {tour.images?.[0] ? (
                 <CardMedia
                     component="img"
                     height={180}
-                    image={tour.imageUrl}
+                    image={getImageUrl(tour.images[0])}
                     alt={tour.name}
                     sx={{ objectFit: "cover" }}
                 />

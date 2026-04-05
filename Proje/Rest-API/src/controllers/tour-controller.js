@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 const Tour = mongoose.model("Tour");
 const Review = mongoose.model("Review");
 const Purchase = mongoose.model("Purchase");
+const User = mongoose.model("User");
+const Company = mongoose.model("Company");
+const Guide = mongoose.model("Guide");
 const { createResponse } = require("../utils/create-response");
 
 // Helper functions
@@ -51,11 +54,20 @@ const mapTourDetail = (tour, reviews = []) => ({
   description: tour.description,
   price: tour.price,
   location: tour.location,
+  departureLocation: tour.departureLocation || "",
+  arrivalLocation: tour.arrivalLocation || "",
   date: tour.date || tour.startDate,
+  startDate: tour.startDate,
+  endDate: tour.endDate,
   duration: tour.duration,
   included: tour.included || [],
+  services: tour.services || [],
   places: tour.places || [],
   images: tour.images || [],
+  companyName: tour.companyId?.name || null,
+  guideName: tour.guideId
+    ? `${tour.guideId.firstName} ${tour.guideId.lastName}`
+    : null,
   reviews: reviews.map(mapReview),
 });
 
@@ -67,7 +79,8 @@ const getTours = async (req, res) => {
     const andFilters = [];
 
     if (location) {
-      andFilters.push({ location: { $regex: location, $options: "i" } });
+      const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      andFilters.push({ location: { $regex: escapedLocation, $options: "i" } });
     }
 
     const priceFilter = {};
@@ -79,7 +92,8 @@ const getTours = async (req, res) => {
     }
 
     if (title) {
-      const regex = new RegExp(title, "i");
+      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedTitle, "i");
       andFilters.push({ $or: [{ title: regex }, { name: regex }] });
     }
 
@@ -106,20 +120,27 @@ const getTours = async (req, res) => {
     const query = andFilters.length ? { $and: andFilters } : {};
 
     const tours = await Tour.find(query)
-      .select("name location price startDate endDate images services rating companyId")
+      .select("name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places")
       .sort({ startDate: 1 })
-      .populate("companyId", "name");
+      .populate("companyId", "name")
+      .populate("guideId", "firstName lastName");
     
     const tourList = tours.map((tour) => ({
       id: tour._id,
       name: tour.name,
       location: tour.location,
+      departureLocation: tour.departureLocation || "",
+      arrivalLocation: tour.arrivalLocation || "",
+      places: tour.places || [],
       price: tour.price,
       startDate: tour.startDate,
       endDate: tour.endDate,
       imageUrl: tour.images.length > 0 ? tour.images[0] : null,
       services: tour.services,
       companyName: tour.companyId?.name || null,
+      guideName: tour.guideId
+        ? `${tour.guideId.firstName} ${tour.guideId.lastName}`
+        : null,
       rating: tour.rating,
     }));
 
@@ -150,7 +171,9 @@ const getTourDetail = async (req, res) => {
     }
 
     const [tour, reviews] = await Promise.all([
-      Tour.findById(tourId),
+      Tour.findById(tourId)
+        .populate("companyId", "name")
+        .populate("guideId", "firstName lastName"),
       Review.find({ tourId }).sort({ createdAt: -1 }),
     ]);
 
@@ -175,12 +198,12 @@ const getTourDetail = async (req, res) => {
 const purchaseTour = async (req, res) => {
   try {
     const { tourId } = req.params;
-    const userId = req.payload?.id || req.body?.userId;
+    const userId = req.payload?.id;
 
     if (!userId) {
-      return createResponse(res, 400, {
+      return createResponse(res, 401, {
         status: "error",
-        message: "Kullanıcı gerekli",
+        message: "Satın alma için giriş yapmalısınız",
       });
     }
 
@@ -261,9 +284,30 @@ const cancelPurchase = async (req, res) => {
   }
 };
 
+// GET PLATFORM STATS
+const getStats = async (_req, res) => {
+  try {
+    const [userCount, tourCount, companyCount, guideCount] = await Promise.all([
+      User.countDocuments(),
+      Tour.countDocuments(),
+      Company.countDocuments(),
+      Guide.countDocuments(),
+    ]);
+
+    createResponse(res, 200, {
+      status: "success",
+      data: { userCount, tourCount, companyCount, guideCount },
+    });
+  } catch (error) {
+    console.error("İstatistikler alınırken hata:", error);
+    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+  }
+};
+
 module.exports = {
   getTours,
   getTourDetail,
   purchaseTour,
   cancelPurchase,
+  getStats,
 };

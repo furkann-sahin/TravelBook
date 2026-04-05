@@ -123,10 +123,10 @@ export default function CompanyFooter() {
               İletişim
             </Typography>
             <Typography variant="body2" sx={{ mb: 0.8 }}>
-              receparslan965@gmail.com
+              info@travelbook.com
             </Typography>
             <Typography variant="body2" sx={{ mb: 0.8 }}>
-              +90 (546) 897 25 47
+              +90 (555) 123 45 67
             </Typography>
             <Typography variant="body2">Merkez, Isparta, Türkiye</Typography>
           </Grid>

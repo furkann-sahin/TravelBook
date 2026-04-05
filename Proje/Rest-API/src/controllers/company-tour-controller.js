@@ -128,6 +128,12 @@ const createTour = async (req, res) => {
         message: "Bitiş tarihi başlangıç tarihinden sonra olmalıdır",
       });
     }
+    if (start < new Date()) {
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Başlangıç tarihi geçmiş bir tarih olamaz",
+      });
+    }
 
     // Build images array from uploaded file (if any)
     const images = [];
@@ -149,6 +155,19 @@ const createTour = async (req, res) => {
       }
     }
 
+    // Parse places/destinations
+    let places = [];
+    if (req.body.places) {
+      try {
+        const parsed = JSON.parse(req.body.places);
+        if (Array.isArray(parsed)) {
+          places = parsed.map((s) => String(s).trim()).filter(Boolean);
+        }
+      } catch {
+        places = req.body.places.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+    }
+
     const tour = new Tour({
       name,
       description,
@@ -157,12 +176,25 @@ const createTour = async (req, res) => {
       startDate: start,
       endDate: end,
       totalCapacity,
-      places: [],
+      places,
+      departureLocation: req.body.departureLocation?.trim() || "",
+      arrivalLocation: req.body.arrivalLocation?.trim() || "",
       images,
       services,
       companyId,
-      guideId: req.body.guideId || null,
+      guideId: null,
     });
+
+    // Validate guideId if provided
+    if (req.body.guideId) {
+      if (!company.registeredGuides.some((id) => id.equals(req.body.guideId))) {
+        return createResponse(res, 400, {
+          status: "error",
+          message: "Bu rehber firmanıza kayıtlı değil",
+        });
+      }
+      tour.guideId = req.body.guideId;
+    }
 
     await tour.save();
 
@@ -187,6 +219,8 @@ const createTour = async (req, res) => {
         totalCapacity: tour.totalCapacity,
         filledCapacity: tour.filledCapacity,
         places: tour.places,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
         images: tour.images,
         services: tour.services,
         guideId: tour.guideId,

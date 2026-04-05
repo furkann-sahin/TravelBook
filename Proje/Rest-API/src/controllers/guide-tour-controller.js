@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Guide = mongoose.model("Guide");
+const Tour = mongoose.model("Tour");
 const { createResponse } = require("../utils/create-response");
 
 // Rehberin Kayıtlı Olduğu Turları Listeleme
@@ -25,6 +26,14 @@ const assignGuideToTour = async (req, res) => {
     }
 
     const { tourId } = req.body;
+
+    if (!tourId || !mongoose.Types.ObjectId.isValid(tourId)) {
+      return createResponse(res, 400, { status: "error", message: "Geçerli bir tur ID gereklidir" });
+    }
+
+    const tour = await Tour.findById(tourId);
+    if (!tour) return createResponse(res, 404, { status: "error", message: "Tur bulunamadı" });
+
     const guide = await Guide.findById(req.params.guideId);
 
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });

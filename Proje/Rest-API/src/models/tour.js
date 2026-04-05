@@ -51,6 +51,16 @@ const tourSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    departureLocation: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    arrivalLocation: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     duration: {
       type: String,
       trim: true,

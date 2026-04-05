@@ -11,8 +11,8 @@ const listSavedGuideCompanies = async (req, res) => {
             "name email phone address description rating tourCount"
         );
         if (!guide)
-            return createResponse(res, 404, { message: "Rehber bulunamadı" });
-        createResponse(res, 200, guide.registeredCompanies);
+            return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+        createResponse(res, 200, { status: "success", data: guide.registeredCompanies });
     } catch (error) {
         createResponse(res, 500, {
             message: "Firmalar listelenirken hata oluştu",
@@ -23,22 +23,27 @@ const listSavedGuideCompanies = async (req, res) => {
 // Rehber firmaya kayıt olma (POST /api/guides/:guideId/companies)
 const applyToCompany = async (req, res) => {
     try {
+        if (req.payload.id !== req.params.guideId) {
+            return createResponse(res, 403, { status: "error", message: "Yalnızca kendi kayıtlarınızı yönetebilirsiniz" });
+        }
+
         const { companyId } = req.body;
         if (!companyId)
-            return createResponse(res, 400, { message: "companyId gereklidir" });
+            return createResponse(res, 400, { status: "error", message: "companyId gereklidir" });
 
         const guide = await Guide.findById(req.params.guideId);
         if (!guide)
-            return createResponse(res, 404, { message: "Rehber bulunamadı" });
+            return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
 
         const company = await Company.findById(companyId);
         if (!company)
-            return createResponse(res, 404, { message: "Firma bulunamadı" });
+            return createResponse(res, 404, { status: "error", message: "Firma bulunamadı" });
 
         // Zaten kayıtlı mı kontrol et
         const companyObjectId = new mongoose.Types.ObjectId(companyId);
         if (guide.registeredCompanies.some((id) => id.equals(companyObjectId))) {
             return createResponse(res, 409, {
+                status: "error",
                 message: "Bu firmaya zaten kayıtlısınız",
             });
         }
@@ -53,10 +58,11 @@ const applyToCompany = async (req, res) => {
             await company.save();
         }
 
-        createResponse(res, 201, { message: "Firmaya başarıyla kayıt oldunuz" });
+        createResponse(res, 201, { status: "success", message: "Firmaya başarıyla kayıt oldunuz" });
     } catch (error) {
         console.error("Firmaya kayıt hatası:", error);
         createResponse(res, 500, {
+            status: "error",
             message: "Firmaya kayıt olurken hata oluştu",
         });
     }
@@ -67,13 +73,18 @@ const removeFromCompany = async (req, res) => {
     try {
         const { guideId, companyId } = req.params;
 
+        if (req.payload.id !== guideId) {
+            return createResponse(res, 403, { status: "error", message: "Yalnızca kendi kayıtlarınızı yönetebilirsiniz" });
+        }
+
         const guide = await Guide.findById(guideId);
         if (!guide)
-            return createResponse(res, 404, { message: "Rehber bulunamadı" });
+            return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
 
         const companyObjectId = new mongoose.Types.ObjectId(companyId);
         if (!guide.registeredCompanies.some((id) => id.equals(companyObjectId))) {
             return createResponse(res, 404, {
+                status: "error",
                 message: "Bu firma kaydınızda bulunamadı",
             });
         }
@@ -88,10 +99,11 @@ const removeFromCompany = async (req, res) => {
             await company.save();
         }
 
-        createResponse(res, 200, { message: "Firma kaydınız başarıyla silindi" });
+        createResponse(res, 200, { status: "success", message: "Firma kaydınız başarıyla silindi" });
     } catch (error) {
         console.error("Firmadan ayrılma hatası:", error);
         createResponse(res, 500, {
+            status: "error",
             message: "Firmadan ayrılırken hata oluştu",
         });
     }

@@ -31,11 +31,12 @@ import { companyTourApi } from "../services/api";
 const initialForm = {
   name: "",
   description: "",
-  location: "",
   price: "",
   startDate: "",
   endDate: "",
   totalCapacity: "",
+  departureLocation: "",
+  arrivalLocation: "",
 };
 
 export default function CreateTourPage() {
@@ -44,6 +45,8 @@ export default function CreateTourPage() {
   const [form, setForm] = useState(initialForm);
   const [services, setServices] = useState([]);
   const [serviceInput, setServiceInput] = useState("");
+  const [destinations, setDestinations] = useState([]);
+  const [destinationInput, setDestinationInput] = useState("");
   const [selectedGuideId, setSelectedGuideId] = useState("");
   const [guides, setGuides] = useState([]);
   const [guidesLoading, setGuidesLoading] = useState(false);
@@ -110,11 +113,27 @@ export default function CreateTourPage() {
     setServices((prev) => prev.filter((s) => s !== service));
   };
 
+  const addDestination = () => {
+    const trimmed = destinationInput.trim();
+    if (!trimmed) return;
+    if (destinations.includes(trimmed)) {
+      setDestinationInput("");
+      return;
+    }
+    setDestinations((prev) => [...prev, trimmed]);
+    setDestinationInput("");
+  };
+
+  const removeDestination = (dest) => {
+    setDestinations((prev) => prev.filter((d) => d !== dest));
+  };
+
   // Client-side validation
   const validate = () => {
     if (!form.name.trim()) return "Tur adı zorunludur.";
     if (!form.description.trim()) return "Açıklama zorunludur.";
-    if (!form.location.trim()) return "Konum zorunludur.";
+    if (!form.departureLocation.trim()) return "Kalkış yeri zorunludur.";
+    if (!form.arrivalLocation.trim()) return "Varış yeri zorunludur.";
 
     const price = Number(form.price);
     if (!form.price || isNaN(price) || price < 0) return "Geçerli bir fiyat giriniz.";
@@ -149,16 +168,21 @@ export default function CreateTourPage() {
       const formData = new FormData();
       formData.append("name", form.name.trim());
       formData.append("description", form.description.trim());
-      formData.append("location", form.location.trim());
+      formData.append("location", `${form.departureLocation.trim()} → ${form.arrivalLocation.trim()}`);
       formData.append("price", Number(form.price));
       formData.append("startDate", form.startDate);
       formData.append("endDate", form.endDate);
       formData.append("totalCapacity", Number(form.totalCapacity));
+      formData.append("departureLocation", form.departureLocation.trim());
+      formData.append("arrivalLocation", form.arrivalLocation.trim());
       if (imageFile) {
         formData.append("image", imageFile);
       }
       if (services.length > 0) {
         formData.append("services", JSON.stringify(services));
+      }
+      if (destinations.length > 0) {
+        formData.append("places", JSON.stringify(destinations));
       }
       if (selectedGuideId) {
         formData.append("guideId", selectedGuideId);
@@ -245,14 +269,70 @@ export default function CreateTourPage() {
               placeholder="Tur hakkında detaylı açıklama yazın…"
             />
 
-            <TextField
-              label="Konum"
-              required
-              fullWidth
-              value={form.location}
-              onChange={(e) => updateField("location", e.target.value)}
-              placeholder="Örn: Nevşehir, Kapadokya"
-            />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Kalkış Yeri"
+                  required
+                  fullWidth
+                  value={form.departureLocation}
+                  onChange={(e) => updateField("departureLocation", e.target.value)}
+                  placeholder="Örn: İstanbul"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Varış Yeri"
+                  required
+                  fullWidth
+                  value={form.arrivalLocation}
+                  onChange={(e) => updateField("arrivalLocation", e.target.value)}
+                  placeholder="Örn: Nevşehir"
+                />
+              </Grid>
+            </Grid>
+
+            {/* Destinations (Places to Visit) */}
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                Gezilecek Yerler (isteğe bağlı)
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  value={destinationInput}
+                  onChange={(e) => setDestinationInput(e.target.value)}
+                  placeholder="Örn: Eyfel Kulesi"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addDestination();
+                    }
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={addDestination}
+                  sx={{ minWidth: 44, px: 1 }}
+                >
+                  <AddIcon />
+                </Button>
+              </Box>
+              {destinations.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {destinations.map((dest) => (
+                    <Chip
+                      key={dest}
+                      label={dest}
+                      color="secondary"
+                      onDelete={() => removeDestination(dest)}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
 
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>

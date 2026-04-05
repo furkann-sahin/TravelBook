@@ -44,7 +44,7 @@ export default function App() {
           <Route element={<AdaptiveLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/tours/:tourId" element={<TourDetailPage />} />
+            <Route path="/user/tours/:tourId" element={<TourDetailPage />} />
             <Route path="/user/profile" element={<UserProfilePage />} />
             <Route path="/users/:userId/purchases" element={<UserPurchasesPage />} />
             <Route path="/user/tours" element={<ToursPage />} />

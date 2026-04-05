@@ -23,7 +23,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { favoriteApi } from "../services/api";
+import { favoriteApi, getImageUrl } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
 export default function FavoritesList() {
@@ -49,7 +49,7 @@ export default function FavoritesList() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchFavorites();
@@ -154,7 +154,7 @@ export default function FavoritesList() {
                   <CardMedia
                     component="img"
                     height="200"
-                    image={tour.imageUrl || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"}
+                    image={getImageUrl(tour.imageUrl) || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"}
                     alt={tour.name}
                     sx={{ objectFit: "cover" }}
                   />

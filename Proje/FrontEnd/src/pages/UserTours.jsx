@@ -156,7 +156,7 @@ export default function UserTours() {
         tour.location.toLowerCase().includes(filters.location.toLowerCase())) &&
       (!filters.minPrice || tour.price >= Number(filters.minPrice)) &&
       (!filters.maxPrice || tour.price <= Number(filters.maxPrice)) &&
-      (!filters.date || tour.date === filters.date)
+      (!filters.date || tour.startDate === filters.date)
     );
   });
 
@@ -252,7 +252,7 @@ export default function UserTours() {
                       }}
                     >
                       <Typography variant="h6" fontWeight={700} gutterBottom>
-                        {tour.title}
+                        {tour.name}
                       </Typography>
 
                       <Box
@@ -283,7 +283,7 @@ export default function UserTours() {
                           sx={{ fontSize: 16, color: "text.disabled" }}
                         />
                         <Typography variant="body2" color="text.secondary">
-                          {formatDate(tour.date)}
+                          {formatDate(tour.startDate)}
                         </Typography>
                       </Box>
 
@@ -377,7 +377,7 @@ export default function UserTours() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
                 <CalendarTodayIcon sx={{ fontSize: 16, color: "text.disabled" }} />
                 <Typography variant="body2" color="text.secondary">
-                  {formatDate(selectedTour.date)}
+                  {formatDate(selectedTour.startDate)}
                 </Typography>
               </Box>
               <Typography variant="h5" fontWeight={800} color="secondary.main" sx={{ mt: 1.5 }}>
@@ -432,7 +432,7 @@ export default function UserTours() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
                 <CalendarTodayIcon sx={{ fontSize: 16, color: "text.disabled" }} />
                 <Typography variant="body2" color="text.secondary">
-                  {formatDate(cancelTour.date)}
+                  {formatDate(cancelTour.startDate)}
                 </Typography>
               </Box>
               <Typography variant="h5" fontWeight={800} color="secondary.main" sx={{ mt: 1.5 }}>

@@ -8,10 +8,11 @@ const getFavorites = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).populate(
-      "favorites",
-      "name location price startDate endDate images rating companyId",
-    );
+    const user = await User.findById(userId).populate({
+      path: "favorites",
+      select: "name location price startDate endDate images rating companyId",
+      populate: { path: "companyId", select: "name" },
+    });
 
     if (!user) {
       return createResponse(res, 404, {
@@ -20,26 +21,17 @@ const getFavorites = async (req, res) => {
       });
     }
 
-    const favorites = await User.findById(userId)
-      .populate({
-        path: "favorites",
-        select:
-          "name location price startDate endDate images rating companyId",
-        populate: { path: "companyId", select: "name" },
-      })
-      .then((u) =>
-        u.favorites.map((tour) => ({
-          id: tour._id,
-          name: tour.name,
-          location: tour.location,
-          price: tour.price,
-          startDate: tour.startDate,
-          endDate: tour.endDate,
-          imageUrl: tour.images.length > 0 ? tour.images[0] : null,
-          companyName: tour.companyId?.name || null,
-          rating: tour.rating,
-        })),
-      );
+    const favorites = user.favorites.map((tour) => ({
+      id: tour._id,
+      name: tour.name,
+      location: tour.location,
+      price: tour.price,
+      startDate: tour.startDate,
+      endDate: tour.endDate,
+      imageUrl: tour.images.length > 0 ? tour.images[0] : null,
+      companyName: tour.companyId?.name || null,
+      rating: tour.rating,
+    }));
 
     createResponse(res, 200, {
       status: "success",
