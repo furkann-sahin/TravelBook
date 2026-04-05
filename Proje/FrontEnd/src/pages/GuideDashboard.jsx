@@ -79,7 +79,7 @@ export default function GuideDashboard() {
         try {
             setLoading(true);
             const data = await guideApi.getDetail(guideId);
-            setProfile(data);
+            setProfile(data?.data ?? data);
         } catch (err) {
             setError(err.message || "Profil yüklenemedi");
         } finally {
@@ -92,7 +92,8 @@ export default function GuideDashboard() {
         try {
             setLoading(true);
             const data = await guideApi.listCompanies();
-            setCompanies(Array.isArray(data) ? data : []);
+            const list = data?.data ?? data;
+            setCompanies(Array.isArray(list) ? list : []);
         } catch (err) {
             setError(err.message || "Firmalar yüklenemedi");
         } finally {

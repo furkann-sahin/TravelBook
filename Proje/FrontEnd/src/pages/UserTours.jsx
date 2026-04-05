@@ -21,7 +21,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { tourApi } from "../services/api";
+import { tourApi, purchaseApi } from "../services/api";
 
 export default function UserTours() {
   const [tours, setTours] = useState([]);
@@ -81,8 +81,8 @@ export default function UserTours() {
     setConfirmOpen(false);
     setPurchaseLoading(tourId);
     try {
-      const res = await tourApi.purchaseTour(tourId);
-      const purchaseId = res?.data?.purchaseId;
+      const res = await purchaseApi.purchaseTour(tourId);
+      const purchaseId = res?.data?._id;
       setPurchasedTours((prev) => ({ ...prev, [tourId]: purchaseId }));
       setSnackbar({
         open: true,
@@ -118,7 +118,7 @@ export default function UserTours() {
     setCancelConfirmOpen(false);
     setCancelLoading(tourId);
     try {
-      await tourApi.cancelPurchase(purchaseId);
+      await purchaseApi.cancelPurchase(purchaseId);
       setPurchasedTours((prev) => {
         const updated = { ...prev };
         delete updated[tourId];

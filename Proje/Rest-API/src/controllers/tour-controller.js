@@ -105,7 +105,7 @@ const getTours = async (req, res) => {
 
     const query = andFilters.length ? { $and: andFilters } : {};
 
-    const tours = await Tour.find(filter)
+    const tours = await Tour.find(query)
       .select("name location price startDate endDate images services rating companyId")
       .sort({ startDate: 1 })
       .populate("companyId", "name");
@@ -192,7 +192,27 @@ const purchaseTour = async (req, res) => {
       });
     }
 
+    // Kapasite kontrolü
+    if (tour.filledCapacity >= tour.totalCapacity) {
+      return createResponse(res, 409, {
+        status: "error",
+        message: "Tur kapasitesi dolu",
+      });
+    }
+
+    // Mükerrer satın alma kontrolü
+    const existingPurchase = await Purchase.findOne({ userId, tourId });
+    if (existingPurchase) {
+      return createResponse(res, 409, {
+        status: "error",
+        message: "Bu turu zaten satın aldınız",
+      });
+    }
+
     const purchase = await Purchase.create({ userId, tourId });
+
+    // Kapasiteyi atomik olarak artır
+    await Tour.findByIdAndUpdate(tourId, { $inc: { filledCapacity: 1 } });
 
     createResponse(res, 201, {
       status: "success",
@@ -225,6 +245,9 @@ const cancelPurchase = async (req, res) => {
         message: "Yetkisiz işlem",
       });
     }
+
+    // Kapasiteyi atomik olarak azalt
+    await Tour.findByIdAndUpdate(purchase.tourId, { $inc: { filledCapacity: -1 } });
 
     await purchase.deleteOne();
 

@@ -52,7 +52,7 @@ export default function LoginPage() {
       await login(selectedRole, email, password);
       navigate(
         selectedRole === "user" ? 
-        "/user" 
+        "/user/tours" 
         : selectedRole === "guide" ?
         "/guide"
         : selectedRole === "company" ?

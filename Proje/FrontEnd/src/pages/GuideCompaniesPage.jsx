@@ -39,7 +39,7 @@ export default function GuideCompaniesPage() {
                 guideApi.listCompanies(),
                 guideApi.listMyCompanies(user.id),
             ]);
-            setCompanies(allRes ?? []);
+            setCompanies(allRes?.data ?? []);
             const ids = new Set((myRes ?? []).map((c) => c._id || c.id));
             setMyCompanyIds(ids);
         } catch (err) {

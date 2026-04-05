@@ -24,6 +24,12 @@ async function request(endpoint, options = {}) {
   const res = await fetch(url, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem("tb_token");
+      localStorage.removeItem("tb_user");
+      window.location.href = "/login";
+      return;
+    }
     const body = await res.json().catch(() => ({}));
     const error = new Error(
       body.message || body.error || `Request failed (${res.status})`,

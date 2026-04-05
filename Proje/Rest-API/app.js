@@ -66,11 +66,15 @@ apiRouter.use("/reviews", reviewRoutes);
 
 app.use("/api", apiRouter);
 
-// Error handling for unauthorized access
+// Error handling
 app.use((err, _req, res, _next) => {
   if (err.name === "UnauthorizedError") {
-    res.status(401).json({ message: err.name + ": " + err.message });
+    return res.status(401).json({ message: err.name + ": " + err.message });
   }
+  console.error(err);
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+  });
 });
 
 module.exports = app;

@@ -214,7 +214,15 @@ const listCompanyGuides = async (req, res) => {
       });
     }
 
-    const guides = await Guide.find()
+    const company = await Company.findById(companyId);
+    if (!company) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Firma bulunamadı",
+      });
+    }
+
+    const guides = await Guide.find({ _id: { $in: company.registeredGuides } })
       .select("firstName lastName email phone languages expertRoutes rating")
       .sort({ firstName: 1 });
 
