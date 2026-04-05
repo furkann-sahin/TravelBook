@@ -284,8 +284,207 @@ const listCompanyGuides = async (req, res) => {
   }
 };
 
+// Get a single tour detail for a company
+const getCompanyTourDetail = async (req, res) => {
+  try {
+    const { companyId, tourId } = req.params;
+
+    if (req.payload.id !== companyId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı görüntüleyebilirsiniz",
+      });
+    }
+
+    const tour = await Tour.findOne({ _id: tourId, companyId });
+    if (!tour) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Tur bulunamadı",
+      });
+    }
+
+    const company = await Company.findById(companyId).select("name");
+
+    let guide = null;
+    if (tour.guideId) {
+      const g = await Guide.findById(tour.guideId).select("firstName lastName email phone");
+      if (g) {
+        guide = {
+          id: g._id,
+          firstName: g.firstName,
+          lastName: g.lastName,
+          email: g.email,
+          phone: g.phone,
+        };
+      }
+    }
+
+    createResponse(res, 200, {
+      status: "success",
+      data: {
+        id: tour._id,
+        name: tour.name,
+        description: tour.description,
+        location: tour.location,
+        price: tour.price,
+        startDate: tour.startDate,
+        endDate: tour.endDate,
+        totalCapacity: tour.totalCapacity,
+        filledCapacity: tour.filledCapacity,
+        places: tour.places,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
+        images: tour.images,
+        services: tour.services,
+        guideId: tour.guideId,
+        companyId: tour.companyId,
+        companyName: company?.name || "",
+        guide,
+        rating: tour.rating,
+        reviewCount: tour.reviewCount,
+      },
+    });
+  } catch (error) {
+    console.error("Tur detayı alınırken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
+  }
+};
+
+// Update a company tour
+const updateCompanyTour = async (req, res) => {
+  try {
+    const { companyId, tourId } = req.params;
+
+    if (req.payload.id !== companyId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı güncelleyebilirsiniz",
+      });
+    }
+
+    const tour = await Tour.findOne({ _id: tourId, companyId });
+    if (!tour) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Tur bulunamadı",
+      });
+    }
+
+    const allowedFields = [
+      "name", "description", "location", "price", "startDate", "endDate",
+      "totalCapacity", "departureLocation", "arrivalLocation",
+    ];
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        if (field === "price" || field === "totalCapacity") {
+          tour[field] = Number(req.body[field]);
+        } else if (field === "startDate" || field === "endDate") {
+          tour[field] = new Date(req.body[field]);
+        } else {
+          tour[field] = req.body[field];
+        }
+      }
+    }
+
+    // Handle places array
+    if (req.body.places !== undefined) {
+      if (Array.isArray(req.body.places)) {
+        tour.places = req.body.places.map((s) => String(s).trim()).filter(Boolean);
+      }
+    }
+
+    // Handle services array
+    if (req.body.services !== undefined) {
+      if (Array.isArray(req.body.services)) {
+        tour.services = req.body.services.map((s) => String(s).trim()).filter(Boolean);
+      }
+    }
+
+    await tour.save();
+
+    createResponse(res, 200, {
+      status: "success",
+      message: "Tur başarıyla güncellendi",
+      data: {
+        id: tour._id,
+        name: tour.name,
+        description: tour.description,
+        location: tour.location,
+        price: tour.price,
+        startDate: tour.startDate,
+        endDate: tour.endDate,
+        totalCapacity: tour.totalCapacity,
+        filledCapacity: tour.filledCapacity,
+        places: tour.places,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
+        images: tour.images,
+        services: tour.services,
+        guideId: tour.guideId,
+        companyId: tour.companyId,
+      },
+    });
+  } catch (error) {
+    console.error("Tur güncellenirken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
+  }
+};
+
+// Delete a company tour
+const deleteCompanyTour = async (req, res) => {
+  try {
+    const { companyId, tourId } = req.params;
+
+    if (req.payload.id !== companyId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı silebilirsiniz",
+      });
+    }
+
+    const tour = await Tour.findOne({ _id: tourId, companyId });
+    if (!tour) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Tur bulunamadı",
+      });
+    }
+
+    // Remove tour from guide's registeredTours if assigned
+    if (tour.guideId) {
+      await Guide.findByIdAndUpdate(tour.guideId, {
+        $pull: { registeredTours: tour._id },
+      });
+    }
+
+    await Tour.findByIdAndDelete(tourId);
+
+    createResponse(res, 200, {
+      status: "success",
+      message: "Tur başarıyla silindi",
+    });
+  } catch (error) {
+    console.error("Tur silinirken hata oluştu:", error);
+    createResponse(res, 500, {
+      status: "error",
+      message: "Sunucu hatası oluştu",
+    });
+  }
+};
+
 module.exports = {
   listCompanyTours,
   createTour,
   listCompanyGuides,
+  getCompanyTourDetail,
+  updateCompanyTour,
+  deleteCompanyTour,
 };

@@ -25,4 +25,25 @@ router.get(
   companyTourController.listCompanyGuides,
 );
 
+// Get a single tour detail
+router.get(
+  "/:companyId/tours/:tourId",
+  requireAuth,
+  companyTourController.getCompanyTourDetail,
+);
+
+// Update a tour
+router.put(
+  "/:companyId/tours/:tourId",
+  requireAuth,
+  companyTourController.updateCompanyTour,
+);
+
+// Delete a tour
+router.delete(
+  "/:companyId/tours/:tourId",
+  requireAuth,
+  companyTourController.deleteCompanyTour,
+);
+
 module.exports = router;

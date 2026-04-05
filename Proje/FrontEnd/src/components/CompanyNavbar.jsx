@@ -23,6 +23,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MapIcon from "@mui/icons-material/Map";
+import GroupsIcon from "@mui/icons-material/Groups";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
@@ -39,8 +40,8 @@ export default function CompanyNavbar() {
 
   const navLinks = [
     { label: "Ana Sayfa", path: "/", icon: <HomeIcon />, key: "home" },
-    { label: "Panel", path: "/company", icon: <DashboardIcon />, key: "dashboard" },
     { label: "Turlarım", path: "/company/tours", icon: <MapIcon />, key: "tours" },
+    { label: "Rehberlerim", path: "/company/guides", icon: <GroupsIcon />, key: "guides" },
     { label: "Profilim", path: "/company/profile", icon: <PersonIcon />, key: "profile" },
     { label: "Hakkımızda", path: "/about", icon: <InfoIcon />, key: "about" },
   ];
@@ -55,6 +56,7 @@ export default function CompanyNavbar() {
     if (pathname === "/") return "home";
     if (pathname === "/about") return "about";
     if (pathname.startsWith("/company/tours")) return "tours";
+    if (pathname.startsWith("/company/guides")) return "guides";
     if (pathname.startsWith("/company/profile")) return "profile";
     if (pathname.startsWith("/company")) return "dashboard";
     return null;

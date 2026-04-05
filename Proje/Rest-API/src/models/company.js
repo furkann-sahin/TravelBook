@@ -53,6 +53,24 @@ const companySchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    profileImageUrl: {
+      type: String,
+      default: null,
+    },
+    bannerImageUrl: {
+      type: String,
+      default: null,
+    },
+    instagram: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    linkedin: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     registeredGuides: [{ // Firmaya kayıt olan rehberler
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Guide'
