@@ -1,6 +1,6 @@
 # Ümmü Fidan'ın Web Frontend Görevleri
 
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** https://youtu.be/5Dvc74l0Jh8
 
 ## 1. Kullanıcı Giriş Yapma (LoginPage - Kullanıcı Sekmesi)
 - **API Endpoint:** `POST /api/users/auth/login`
