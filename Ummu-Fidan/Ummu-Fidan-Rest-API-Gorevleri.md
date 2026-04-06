@@ -1,6 +1,6 @@
 # Ümmü Fidan'ın REST API Metotları
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)
+**API Test Videosu:** https://youtu.be/WPItiD87N9Y
 
 ## 1. Kullanıcı Giriş Yapma
 - **Endpoint:** `POST /api/users/auth/login`
