@@ -1,6 +1,6 @@
 ﻿# Beyza Keklikoglu'nun REST API Metotlari
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)
+**API Test Videosu:** (https://youtu.be/38pjP2JaWQ0)
 
 ## 1. Kullanici Hesap Silme
 - **Endpoint:** `DELETE /api/users/{userId}`

@@ -1,6 +1,6 @@
 # Beyza Keklikoğlu'nun Web Frontend Görevleri
 
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** (https://youtu.be/CZ27pIYMS0A)
 
 ## 1. Kullanıcı Hesap Silme (UserProfilePage)
 - **API Endpoint:** `DELETE /api/users/{userId}`
