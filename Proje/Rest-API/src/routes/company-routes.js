@@ -1,31 +1,9 @@
 const router = require("express").Router();
-const multer = require("multer");
-const path = require("path");
-const crypto = require("crypto");
 const requireAuth = require("../middlewares/auth");
+const { createImageUpload } = require("../middlewares/upload");
 const companyController = require("../controllers/company-controller");
 
-// Multer storage config for company profile/banner images
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(__dirname, "../../public/uploads/companies"));
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${crypto.randomBytes(16).toString("hex")}${ext}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (_req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    cb(ext && mime ? null : new Error("Sadece resim dosyası yüklenebilir"), ext && mime);
-  },
-});
+const upload = createImageUpload("uploads/companies");
 
 // Get company detail
 router.get("/:companyId", companyController.getCompanyDetail);

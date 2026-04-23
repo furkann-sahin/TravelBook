@@ -72,6 +72,16 @@ const guideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    bannerImageUrl: {
+      type: String,
+      default: null,
+    },
+    galleryImageUrls: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     instagram: {
       type: String,
       trim: true,

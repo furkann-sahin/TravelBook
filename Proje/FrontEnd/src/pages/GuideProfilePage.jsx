@@ -81,21 +81,15 @@ export default function GuideProfilePage() {
 
     // NEW — Banner (cover) image
     const bannerInputRef = useRef(null);
-    const [bannerUrl, setBannerUrl] = useState(null);
     const [uploadingBanner, setUploadingBanner] = useState(false);
+    const [uploadingGallery, setUploadingGallery] = useState(false);
 
     // NEW — Availability status
     const [available, setAvailable] = useState(true);
 
     // NEW — Gallery
     const galleryInputRef = useRef(null);
-    const [galleryImages, setGalleryImages] = useState([
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop",
-    ]);
-
-
+    const galleryImages = guide?.galleryImageUrls ?? [];
 
     const fetchProfile = useCallback(async () => {
         if (!user?.id) return;
@@ -132,11 +126,11 @@ export default function GuideProfilePage() {
             Array.isArray(guide.languages) && guide.languages.length > 0,
             Array.isArray(guide.expertRoutes) && guide.expertRoutes.length > 0,
             guide.experienceYears > 0,
-            galleryImages.length > 0,
+            Array.isArray(guide.galleryImageUrls) && guide.galleryImageUrls.length > 0,
         ];
         const filled = fields.filter(Boolean).length;
         return Math.round((filled / fields.length) * 100);
-    }, [guide, galleryImages]);
+    }, [guide]);
 
     const handleEdit = () => {
         setEditing(true);
@@ -231,36 +225,55 @@ export default function GuideProfilePage() {
         }
     };
 
-    // Banner upload (local only)
-    const handleBannerUpload = (e) => {
+    const handleBannerUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setUploadingBanner(true);
-        const reader = new FileReader();
-        reader.onload = () => {
-            setBannerUrl(reader.result);
-            setUploadingBanner(false);
+        try {
+            setUploadingBanner(true);
+            const res = await guideApi.uploadBannerImage(user.id, file);
+            setGuide((prev) => ({
+                ...prev,
+                bannerImageUrl: res.data?.bannerImageUrl || res.bannerImageUrl,
+            }));
             setSnackbar({ open: true, message: "Kapak fotoğrafı güncellendi" });
-        };
-        reader.readAsDataURL(file);
-        if (bannerInputRef.current) bannerInputRef.current.value = "";
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Kapak fotoğrafı yüklenirken hata oluştu" });
+        } finally {
+            setUploadingBanner(false);
+            if (bannerInputRef.current) bannerInputRef.current.value = "";
+        }
     };
 
-    // Gallery add (local only)
-    const handleGalleryAdd = (e) => {
+    const handleGalleryAdd = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            setGalleryImages((prev) => [...prev, reader.result]);
+        try {
+            setUploadingGallery(true);
+            const res = await guideApi.uploadGalleryImage(user.id, file);
+            setGuide((prev) => ({
+                ...prev,
+                galleryImageUrls: res.data?.galleryImageUrls || prev.galleryImageUrls || [],
+            }));
             setSnackbar({ open: true, message: "Fotoğraf galeriye eklendi" });
-        };
-        reader.readAsDataURL(file);
-        if (galleryInputRef.current) galleryInputRef.current.value = "";
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Galeri fotoğrafı yüklenirken hata oluştu" });
+        } finally {
+            setUploadingGallery(false);
+            if (galleryInputRef.current) galleryInputRef.current.value = "";
+        }
     };
 
-    const handleGalleryRemove = (index) => {
-        setGalleryImages((prev) => prev.filter((_, i) => i !== index));
+    const handleGalleryRemove = async (imageUrl) => {
+        try {
+            const res = await guideApi.removeGalleryImage(user.id, imageUrl);
+            setGuide((prev) => ({
+                ...prev,
+                galleryImageUrls: res.data?.galleryImageUrls || [],
+            }));
+            setSnackbar({ open: true, message: "Fotoğraf galeriden kaldırıldı" });
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Galeri fotoğrafı silinirken hata oluştu" });
+        }
     };
 
     const getImageSrc = (url) => {
@@ -318,6 +331,7 @@ export default function GuideProfilePage() {
     });
 
     const totalTours = guide.registeredTours?.length ?? 0;
+    const bannerImageSrc = getImageSrc(guide.bannerImageUrl);
 
     return (
         <Box sx={{ bgcolor: "background.default", minHeight: "80vh", py: 6 }}>
@@ -338,8 +352,8 @@ export default function GuideProfilePage() {
                     <Box
                         sx={{
                             height: { xs: 160, md: 220 },
-                            background: bannerUrl
-                                ? `url(${bannerUrl}) center/cover no-repeat`
+                            background: bannerImageSrc
+                                ? `url(${bannerImageSrc}) center/cover no-repeat`
                                 : "linear-gradient(135deg, #2D3436 0%, #636e72 40%, #D35400 100%)",
                             position: "relative",
                         }}
@@ -923,8 +937,13 @@ export default function GuideProfilePage() {
                                 <IconButton
                                     color="secondary"
                                     onClick={() => galleryInputRef.current?.click()}
+                                    disabled={uploadingGallery}
                                 >
-                                    <AddPhotoAlternateIcon />
+                                    {uploadingGallery ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : (
+                                        <AddPhotoAlternateIcon />
+                                    )}
                                 </IconButton>
                             </Tooltip>
                             <input
@@ -967,7 +986,7 @@ export default function GuideProfilePage() {
                             >
                                 {galleryImages.map((img, idx) => (
                                     <Box
-                                        key={idx}
+                                        key={img}
                                         sx={{
                                             position: "relative",
                                             paddingTop: "75%",
@@ -978,7 +997,7 @@ export default function GuideProfilePage() {
                                     >
                                         <Box
                                             component="img"
-                                            src={img}
+                                            src={getImageSrc(img)}
                                             alt={`Galeri ${idx + 1}`}
                                             sx={{
                                                 position: "absolute",
@@ -1007,7 +1026,7 @@ export default function GuideProfilePage() {
                                         >
                                             <IconButton
                                                 size="small"
-                                                onClick={() => handleGalleryRemove(idx)}
+                                                onClick={() => handleGalleryRemove(img)}
                                                 sx={{ color: "#fff", bgcolor: "rgba(244,67,54,0.8)", "&:hover": { bgcolor: "error.main" } }}
                                             >
                                                 <CloseIcon sx={{ fontSize: 18 }} />

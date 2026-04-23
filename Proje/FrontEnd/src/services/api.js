@@ -9,6 +9,22 @@ export function getImageUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
+async function uploadImage(endpoint, file, fieldName = "image") {
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const token = localStorage.getItem("tb_token");
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Resim yüklenemedi");
+  return data;
+}
+
 // Helper function
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
@@ -122,6 +138,12 @@ export const companyApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
+  uploadProfileImage: (companyId, file) =>
+    uploadImage(`/companies/${companyId}/profile-image`, file),
+
+  uploadBannerImage: (companyId, file) =>
+    uploadImage(`/companies/${companyId}/banner-image`, file),
 
   deleteAccount: (companyId) =>
     request(`/companies/${companyId}`, { method: "DELETE" }),
@@ -237,19 +259,20 @@ export const guideApi = {
   deleteAccount: (guideId) =>
     request(`/guides/${guideId}`, { method: "DELETE" }),
 
-  uploadProfileImage: async (guideId, file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    const token = localStorage.getItem("tb_token");
-    const res = await fetch(`${API_BASE}/guides/${guideId}/profile-image`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Resim yüklenemedi");
-    return data;
-  },
+  uploadProfileImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/profile-image`, file),
+
+  uploadBannerImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/banner-image`, file),
+
+  uploadGalleryImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/gallery-images`, file),
+
+  removeGalleryImage: (guideId, imageUrl) =>
+    request(`/guides/${guideId}/gallery-images`, {
+      method: "DELETE",
+      body: JSON.stringify({ imageUrl }),
+    }),
 
   listCompanies: () => request("/guides/companies"),
 

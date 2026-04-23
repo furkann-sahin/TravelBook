@@ -51,6 +51,15 @@ const updateGuideProfile = async (req, res) => {
     }
 };
 
+const ensureGuideOwnership = (req, res) => {
+    if (req.payload.id !== req.params.guideId) {
+        createResponse(res, 403, { status: "error", message: "Yalnızca kendi profilinizi güncelleyebilirsiniz" });
+        return false;
+    }
+
+    return true;
+};
+
 // Rehber Kayıt Silme
 const deleteGuide = async (req, res) => {
     try {
@@ -69,9 +78,7 @@ const deleteGuide = async (req, res) => {
 // Profil Resmi Yükleme
 const uploadProfileImage = async (req, res) => {
     try {
-        if (req.payload.id !== req.params.guideId) {
-            return createResponse(res, 403, { status: "error", message: "Yalnızca kendi resminizi yükleyebilirsiniz" });
-        }
+        if (!ensureGuideOwnership(req, res)) return;
 
         if (!req.file) return createResponse(res, 400, { status: "error", message: "Dosya yüklenemedi" });
 
@@ -86,6 +93,80 @@ const uploadProfileImage = async (req, res) => {
     } catch (error) {
         console.error("Resim yükleme hatası:", error);
         createResponse(res, 500, { status: "error", message: "Resim yüklenirken hata oluştu" });
+    }
+};
+
+const uploadBannerImage = async (req, res) => {
+    try {
+        if (!ensureGuideOwnership(req, res)) return;
+
+        if (!req.file) return createResponse(res, 400, { status: "error", message: "Dosya yüklenemedi" });
+
+        const imageUrl = `/uploads/guides/${req.file.filename}`;
+        const guide = await Guide.findByIdAndUpdate(
+            req.params.guideId,
+            { bannerImageUrl: imageUrl },
+            { new: true }
+        );
+
+        if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+        createResponse(res, 200, { status: "success", data: { bannerImageUrl: imageUrl } });
+    } catch (error) {
+        console.error("Kapak fotoğrafı yükleme hatası:", error);
+        createResponse(res, 500, { status: "error", message: "Kapak fotoğrafı yüklenirken hata oluştu" });
+    }
+};
+
+const uploadGalleryImage = async (req, res) => {
+    try {
+        if (!ensureGuideOwnership(req, res)) return;
+
+        if (!req.file) return createResponse(res, 400, { status: "error", message: "Dosya yüklenemedi" });
+
+        const imageUrl = `/uploads/guides/${req.file.filename}`;
+        const guide = await Guide.findByIdAndUpdate(
+            req.params.guideId,
+            { $addToSet: { galleryImageUrls: imageUrl } },
+            { new: true }
+        );
+
+        if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+        createResponse(res, 200, {
+            status: "success",
+            data: {
+                imageUrl,
+                galleryImageUrls: guide.galleryImageUrls,
+            },
+        });
+    } catch (error) {
+        console.error("Galeri fotoğrafı yükleme hatası:", error);
+        createResponse(res, 500, { status: "error", message: "Galeri fotoğrafı yüklenirken hata oluştu" });
+    }
+};
+
+const removeGalleryImage = async (req, res) => {
+    try {
+        if (!ensureGuideOwnership(req, res)) return;
+
+        const { imageUrl } = req.body;
+        if (!imageUrl) {
+            return createResponse(res, 400, { status: "error", message: "Silinecek fotoğraf belirtilmedi" });
+        }
+
+        const guide = await Guide.findByIdAndUpdate(
+            req.params.guideId,
+            { $pull: { galleryImageUrls: imageUrl } },
+            { new: true }
+        );
+
+        if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+        createResponse(res, 200, {
+            status: "success",
+            data: { galleryImageUrls: guide.galleryImageUrls },
+        });
+    } catch (error) {
+        console.error("Galeri fotoğrafı silme hatası:", error);
+        createResponse(res, 500, { status: "error", message: "Galeri fotoğrafı silinirken hata oluştu" });
     }
 };
 
@@ -122,4 +203,14 @@ const getAllGuides = async (_req, res) => {
     }
 };
 
-module.exports = { listCompanies, getGuideDetail, updateGuideProfile, deleteGuide, getAllGuides, uploadProfileImage };
+module.exports = {
+    listCompanies,
+    getGuideDetail,
+    updateGuideProfile,
+    deleteGuide,
+    getAllGuides,
+    uploadProfileImage,
+    uploadBannerImage,
+    uploadGalleryImage,
+    removeGalleryImage,
+};
