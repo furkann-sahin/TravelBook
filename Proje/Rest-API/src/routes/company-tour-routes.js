@@ -1,12 +1,21 @@
 const router = require("express").Router();
-const requireAuth = require("../middlewares/auth");
+const { requireAuth, requireRole } = require("../middlewares/auth");
 const upload = require("../middlewares/upload");
 const companyTourController = require("../controllers/company-tour-controller");
+const validate = require("../middlewares/validate");
+const {
+  companyIdParamsSchema,
+  companyTourParamsSchema,
+  createTourBodySchema,
+  updateTourBodySchema,
+} = require("../validations/tour-schemas");
 
 // List company tours
 router.get(
   "/:companyId/tours",
   requireAuth,
+  requireRole("company"),
+  validate({ params: companyIdParamsSchema }),
   companyTourController.listCompanyTours,
 );
 
@@ -14,7 +23,9 @@ router.get(
 router.post(
   "/:companyId/tours",
   requireAuth,
+  requireRole("company"),
   upload.single("image"),
+  validate({ params: companyIdParamsSchema, body: createTourBodySchema }),
   companyTourController.createTour,
 );
 
@@ -22,6 +33,8 @@ router.post(
 router.get(
   "/:companyId/guides",
   requireAuth,
+  requireRole("company"),
+  validate({ params: companyIdParamsSchema }),
   companyTourController.listCompanyGuides,
 );
 
@@ -29,6 +42,8 @@ router.get(
 router.get(
   "/:companyId/tours/:tourId",
   requireAuth,
+  requireRole("company"),
+  validate({ params: companyTourParamsSchema }),
   companyTourController.getCompanyTourDetail,
 );
 
@@ -36,6 +51,8 @@ router.get(
 router.put(
   "/:companyId/tours/:tourId",
   requireAuth,
+  requireRole("company"),
+  validate({ params: companyTourParamsSchema, body: updateTourBodySchema }),
   companyTourController.updateCompanyTour,
 );
 
@@ -43,6 +60,8 @@ router.put(
 router.delete(
   "/:companyId/tours/:tourId",
   requireAuth,
+  requireRole("company"),
+  validate({ params: companyTourParamsSchema }),
   companyTourController.deleteCompanyTour,
 );
 

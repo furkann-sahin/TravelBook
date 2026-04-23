@@ -40,9 +40,24 @@ export default function CompanyNavbar() {
 
   const navLinks = [
     { label: "Ana Sayfa", path: "/", icon: <HomeIcon />, key: "home" },
-    { label: "Turlarım", path: "/company/tours", icon: <MapIcon />, key: "tours" },
-    { label: "Rehberlerim", path: "/company/guides", icon: <GroupsIcon />, key: "guides" },
-    { label: "Profilim", path: "/company/profile", icon: <PersonIcon />, key: "profile" },
+    {
+      label: "Panel",
+      path: "/company",
+      icon: <DashboardIcon />,
+      key: "dashboard",
+    },
+    {
+      label: "Turlarım",
+      path: "/company/tours",
+      icon: <MapIcon />,
+      key: "tours",
+    },
+    {
+      label: "Rehberlerim",
+      path: "/company/guides",
+      icon: <GroupsIcon />,
+      key: "guides",
+    },
     { label: "Hakkımızda", path: "/about", icon: <InfoIcon />, key: "about" },
   ];
 
@@ -192,6 +207,17 @@ export default function CompanyNavbar() {
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
+                    navigate("/company");
+                  }}
+                >
+                  <ListItemIcon>
+                    <DashboardIcon fontSize="small" />
+                  </ListItemIcon>
+                  Panel
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
                     navigate("/company/profile");
                   }}
                 >
@@ -269,6 +295,17 @@ export default function CompanyNavbar() {
               gap: 1,
             }}
           >
+            <Button
+              component={RouterLink}
+              to="/company/profile"
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              onClick={() => setDrawerOpen(false)}
+            >
+              Profilim
+            </Button>
+
             <Button
               variant="outlined"
               color="primary"

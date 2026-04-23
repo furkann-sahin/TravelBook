@@ -1,12 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { userAuth, companyAuth, guideAuth } from "../../services/api";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 
 // Helper function to decode JWT token
 function decodeToken(token) {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(window.atob(base64));
+    const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const binary = window.atob(paddedBase64);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const json = new TextDecoder("utf-8").decode(bytes);
+    return JSON.parse(json);
   } catch {
     return null;
   }
@@ -54,7 +59,9 @@ export const loginThunk = createAsyncThunk(
       const data = await endpoint.login(email, password);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err.message || "Giriş başarısız");
+      return rejectWithValue({
+        message: getErrorMessage(err, "Giriş başarısız"),
+      });
     }
   },
 );
@@ -69,7 +76,9 @@ export const registerThunk = createAsyncThunk(
       const data = await endpoint.register(formData);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err.message || "Kayıt başarısız");
+      return rejectWithValue({
+        message: getErrorMessage(err, "Kayıt başarısız"),
+      });
     }
   },
 );
@@ -126,7 +135,8 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error =
+          action.payload?.message || action.error?.message || "Giriş başarısız";
       });
 
     // Register
@@ -141,7 +151,8 @@ const authSlice = createSlice({
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error =
+          action.payload?.message || action.error?.message || "Kayıt başarısız";
       });
   },
 });

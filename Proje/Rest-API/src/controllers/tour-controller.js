@@ -20,23 +20,6 @@ const endOfDay = (value) => {
   return date;
 };
 
-const mapTourListItem = (tour) => ({
-  id: tour.id || tour._id,
-  name: tour.title || tour.name,
-  title: tour.title || tour.name,
-  location: tour.location,
-  price: tour.price,
-  startDate: tour.date || tour.startDate,
-  endDate: tour.endDate || tour.date || tour.startDate,
-  date: tour.date || tour.startDate,
-  imageUrl:
-    Array.isArray(tour.images) && tour.images.length > 0
-      ? tour.images[0]
-      : null,
-  companyName: tour.companyName || null,
-  rating: tour.rating || 0,
-});
-
 const mapReview = (review) => ({
   id: review.id || review._id,
   tourId: review.tourId,
@@ -74,12 +57,19 @@ const mapTourDetail = (tour, reviews = []) => ({
 // GET TOURS
 const getTours = async (req, res) => {
   try {
-    const { title, price, location, date, minPrice, maxPrice } = req.query;
+    const { title, price, location, date, minPrice, maxPrice, page, limit } =
+      req.query;
 
+    // Validate pagination parameters
+    const currentPage = Number(page) || 1;
+    const pageSize = Number(limit) || 20;
+    const skip = (currentPage - 1) * pageSize;
+
+    // Build query incrementally so optional filters can be combined safely.
     const andFilters = [];
 
     if (location) {
-      const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       andFilters.push({ location: { $regex: escapedLocation, $options: "i" } });
     }
 
@@ -92,13 +82,14 @@ const getTours = async (req, res) => {
     }
 
     if (title) {
-      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedTitle, "i");
       andFilters.push({ $or: [{ title: regex }, { name: regex }] });
     }
 
     if (date) {
       const queryDate = new Date(date);
+      // Support both legacy `date` and newer `startDate` fields.
       andFilters.push({
         $or: [
           {
@@ -119,12 +110,21 @@ const getTours = async (req, res) => {
 
     const query = andFilters.length ? { $and: andFilters } : {};
 
-    const tours = await Tour.find(query)
-      .select("name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places")
-      .sort({ startDate: 1 })
-      .populate("companyId", "name")
-      .populate("guideId", "firstName lastName");
-    
+    // Execute count and find in parallel for efficiency.
+    const [totalCount, tours] = await Promise.all([
+      Tour.countDocuments(query),
+      Tour.find(query)
+        .select(
+          "name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places",
+        )
+        .sort({ startDate: 1 })
+        .skip(skip)
+        .limit(pageSize)
+        .populate("companyId", "name")
+        .populate("guideId", "firstName lastName"),
+    ]);
+
+    // Normalize tour documents into the compact list response shape.
     const tourList = tours.map((tour) => ({
       id: tour._id,
       name: tour.name,
@@ -147,13 +147,15 @@ const getTours = async (req, res) => {
     createResponse(res, 200, {
       status: "success",
       results: tourList.length,
+      total: totalCount,
+      page: currentPage,
+      totalPages: Math.ceil(totalCount / pageSize),
       data: tourList,
     });
   } catch (error) {
-    console.error("Turlar listelenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Turlar listelenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -189,8 +191,10 @@ const getTourDetail = async (req, res) => {
       data: mapTourDetail(tour, reviews),
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Tur detayı alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -243,8 +247,10 @@ const purchaseTour = async (req, res) => {
       data: purchase,
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Satın alma işlemi sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -270,7 +276,9 @@ const cancelPurchase = async (req, res) => {
     }
 
     // Kapasiteyi atomik olarak azalt
-    await Tour.findByIdAndUpdate(purchase.tourId, { $inc: { filledCapacity: -1 } });
+    await Tour.findByIdAndUpdate(purchase.tourId, {
+      $inc: { filledCapacity: -1 },
+    });
 
     await purchase.deleteOne();
 
@@ -279,8 +287,10 @@ const cancelPurchase = async (req, res) => {
       message: "Satın alma iptal edildi",
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Satın alma iptali sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -299,8 +309,10 @@ const getStats = async (_req, res) => {
       data: { userCount, tourCount, companyCount, guideCount },
     });
   } catch (error) {
-    console.error("İstatistikler alınırken hata:", error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Platform istatistikleri alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 

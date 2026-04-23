@@ -42,10 +42,9 @@ const register = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Error during user registration:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Kullanıcı kaydı sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
       statusCode: 500,
     });
   }
@@ -93,10 +92,9 @@ const login = async (req, res) => {
       },
     )(req, res);
   } catch (error) {
-    console.error("Error during user login:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Kullanıcı girişi sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
       statusCode: 500,
     });
   }

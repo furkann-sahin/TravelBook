@@ -22,6 +22,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { tourApi, purchaseApi } from "../services/api";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function UserTours() {
   const [tours, setTours] = useState([]);
@@ -53,8 +54,8 @@ export default function UserTours() {
     try {
       const res = await tourApi.getTours({});
       setTours(res.data || []);
-    } catch {
-      setError("Turlar yüklenirken bir hata oluştu.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Turlar yüklenirken bir hata oluştu."));
       setTours([]);
     } finally {
       setLoading(false);
@@ -89,10 +90,10 @@ export default function UserTours() {
         message: "Satın alma başarılı!",
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "Satın alma sırasında hata oluştu.",
+        message: getErrorMessage(err, "Satın alma sırasında hata oluştu."),
         severity: "error",
       });
     } finally {
@@ -129,10 +130,10 @@ export default function UserTours() {
         message: "Satın alma iptal edildi!",
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "İptal sırasında hata oluştu.",
+        message: getErrorMessage(err, "İptal sırasında hata oluştu."),
         severity: "error",
       });
     } finally {

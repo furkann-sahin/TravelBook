@@ -24,6 +24,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Define user roles for registration
 const roles = [
@@ -99,21 +100,21 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { confirmPassword, ...data } = form;
+      const { confirmPassword: _CONFIRM_PASSWORD, ...data } = form;
 
       // Convert comma-separated strings to arrays for guide role
       if (selectedRole === "guide") {
         data.languages = data.languages
           ? data.languages
-            .split(",")
-            .map((l) => l.trim())
-            .filter(Boolean)
+              .split(",")
+              .map((l) => l.trim())
+              .filter(Boolean)
           : [];
         data.expertRoutes = data.expertRoutes
           ? data.expertRoutes
-            .split(",")
-            .map((r) => r.trim())
-            .filter(Boolean)
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
           : [];
         data.experienceYears = data.experienceYears
           ? Number(data.experienceYears)
@@ -121,17 +122,14 @@ export default function RegisterPage() {
       }
 
       await register(selectedRole, data);
-      navigate(
-        selectedRole === "user" ?
-          "/user/tours"
-          : selectedRole === "guide" ?
-            "/guide"
-            : selectedRole === "company" ?
-              "/company"
-              : "/"
-      );
+      const roleRedirect = {
+        user: "/user/tours",
+        guide: "/guide",
+        company: "/company",
+      };
+      navigate(roleRedirect[selectedRole] ?? "/");
     } catch (err) {
-      setError(err.message || "Kayıt başarısız oldu.");
+      setError(getErrorMessage(err, "Kayıt başarısız oldu."));
     } finally {
       setLoading(false);
     }

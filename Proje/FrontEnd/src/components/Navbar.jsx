@@ -135,32 +135,34 @@ export default function Navbar() {
                     {link.label}
                   </Button>
 
-                  {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
-                    <Button
-                      component={RouterLink}
-                      to={purchasesPath}
-                      sx={{
-                        color: textColor,
-                        fontWeight: isPurchasesPage ? 700 : 500,
-                        position: "relative",
-                        "&::after": {
-                          content: '""',
-                          position: "absolute",
-                          bottom: 4,
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          width: isPurchasesPage ? "60%" : 0,
-                          height: 2,
-                          bgcolor: "secondary.main",
-                          borderRadius: 1,
-                          transition: "width 0.25s",
-                        },
-                        "&:hover::after": { width: "60%" },
-                      }}
-                    >
-                      Seyahatlerim
-                    </Button>
-                  )}
+                  {link.path === "/user/tours" &&
+                    isAuthenticated &&
+                    user?.role === "user" && (
+                      <Button
+                        component={RouterLink}
+                        to={purchasesPath}
+                        sx={{
+                          color: textColor,
+                          fontWeight: isPurchasesPage ? 700 : 500,
+                          position: "relative",
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            bottom: 4,
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            width: isPurchasesPage ? "60%" : 0,
+                            height: 2,
+                            bgcolor: "secondary.main",
+                            borderRadius: 1,
+                            transition: "width 0.25s",
+                          },
+                          "&:hover::after": { width: "60%" },
+                        }}
+                      >
+                        Seyahatlerim
+                      </Button>
+                    )}
                 </Fragment>
               ))}
 
@@ -232,13 +234,13 @@ export default function Navbar() {
                       onClick={() => {
                         setAnchorEl(null);
                         navigate(
-                          user?.role === "user" ? 
-                          "/user/profile" 
-                          : user?.role === "guide" ?
-                          "/guide/profile"
-                          : user?.role === "company" ?
-                          "/company/profile"
-                          : "/"
+                          user?.role === "user"
+                            ? "/user/profile"
+                            : user?.role === "guide"
+                              ? "/guide/profile"
+                              : user?.role === "company"
+                                ? "/company/profile"
+                                : "/",
                         );
                       }}
                     >
@@ -309,18 +311,20 @@ export default function Navbar() {
                   </ListItemButton>
                 </ListItem>
 
-                {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
-                  <ListItem disablePadding>
-                    <ListItemButton
-                      component={RouterLink}
-                      to={purchasesPath}
-                      onClick={() => setDrawerOpen(false)}
-                      selected={isPurchasesPage}
-                    >
-                      <ListItemText primary="Seyahatlerim" />
-                    </ListItemButton>
-                  </ListItem>
-                )}
+                {link.path === "/user/tours" &&
+                  isAuthenticated &&
+                  user?.role === "user" && (
+                    <ListItem disablePadding>
+                      <ListItemButton
+                        component={RouterLink}
+                        to={purchasesPath}
+                        onClick={() => setDrawerOpen(false)}
+                        selected={isPurchasesPage}
+                      >
+                        <ListItemText primary="Seyahatlerim" />
+                      </ListItemButton>
+                    </ListItem>
+                  )}
               </Fragment>
             ))}
           </List>
@@ -335,48 +339,18 @@ export default function Navbar() {
           >
             {isAuthenticated ? (
               <>
-                {user?.role === "company" && (
+                {user?.role === "user" && (
                   <Button
                     component={RouterLink}
-                    to="/company"
-                    variant="contained"
+                    to="/user/profile"
+                    variant="outlined"
                     color="secondary"
                     fullWidth
                     onClick={() => setDrawerOpen(false)}
                   >
-                    Firma Paneli
+                    Profilim
                   </Button>
                 )}
-                {user?.role === "guide" && (
-                  <Button
-                    component={RouterLink}
-                    to="/guide"
-                    variant="contained"
-                    color="secondary"
-                    fullWidth
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    Rehber Paneli
-                  </Button>
-                )}
-                <Button
-                  component={RouterLink}
-                  to={
-                    user?.role === "user"
-                      ? "/user/profile"
-                      : user?.role === "company"
-                      ? "/company/profile"
-                      : user?.role === "guide"
-                      ? "/guide/profile"
-                      : "/"
-                  }
-                  variant="outlined"
-                  color="secondary"
-                  fullWidth
-                  onClick={() => setDrawerOpen(false)}
-                >
-                  Profilim
-                </Button>
                 <Button
                   variant="outlined"
                   color="primary"

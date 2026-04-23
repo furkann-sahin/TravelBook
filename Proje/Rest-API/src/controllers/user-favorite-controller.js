@@ -8,6 +8,13 @@ const getFavorites = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    if (req.payload.id !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi favorilerinizi görüntüleyebilirsiniz",
+      });
+    }
+
     const user = await User.findById(userId).populate({
       path: "favorites",
       select: "name location price startDate endDate images rating companyId",
@@ -39,10 +46,9 @@ const getFavorites = async (req, res) => {
       data: favorites,
     });
   } catch (error) {
-    console.error("Favoriler listelenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Favoriler listelenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -100,10 +106,9 @@ const addFavorite = async (req, res) => {
       data: { tourId },
     });
   } catch (error) {
-    console.error("Favori eklenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Favori eklenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -130,7 +135,7 @@ const removeFavorite = async (req, res) => {
     }
 
     const tourObjectId = new mongoose.Types.ObjectId(tourId);
-    const index = user.favorites.findIndex(fav => fav.equals(tourObjectId));
+    const index = user.favorites.findIndex((fav) => fav.equals(tourObjectId));
     if (index === -1) {
       return createResponse(res, 404, {
         status: "error",
@@ -146,10 +151,9 @@ const removeFavorite = async (req, res) => {
       message: "Tur favorilerden kaldırıldı",
     });
   } catch (error) {
-    console.error("Favori silinirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Favori silinirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };

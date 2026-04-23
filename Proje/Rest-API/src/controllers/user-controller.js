@@ -22,10 +22,9 @@ const getUserDetail = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    console.error("Kullanıcı detayları alınırken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Kullanıcı detayları alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -75,10 +74,9 @@ const updateUser = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    console.error("Kullanıcı güncellenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Kullanıcı güncellenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -128,10 +126,9 @@ const updateUserPassword = async (req, res) => {
       message: "Şifre başarıyla güncellendi",
     });
   } catch (error) {
-    console.error("Şifre güncellenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Şifre güncellenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -199,10 +196,9 @@ const getUserPurchases = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.error("Seyahatler alınırken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Seyahatler alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -230,10 +226,9 @@ const deleteUser = async (req, res) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error("Kullanıcı silinirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Kullanıcı silinirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };

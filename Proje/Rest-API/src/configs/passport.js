@@ -54,7 +54,6 @@ passport.use(
   ),
 );
 
-
 passport.use(
   "guide-local",
   new LocalStrategy(
@@ -70,7 +69,7 @@ passport.use(
         if (!guide || !guide.validatePassword(password)) {
           return done(null, false, { message: "Geçersiz e-posta veya şifre" });
         }
-        return done(null, guide); // Success
+        return done(null, guide);
       } catch (err) {
         return done(err);
       }

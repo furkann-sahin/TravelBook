@@ -15,6 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 
 import { useAuth } from "../hooks/useAuth";
 import { userApi } from "../services/api";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function UserProfilePage() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function UserProfilePage() {
         setProfile(res.data);
         setForm({ name: res.data.name, phone: res.data.phone || "" });
       })
-      .catch(() => setError("Profil bilgileri yüklenemedi."));
+      .catch((err) => setError(getErrorMessage(err, "Profil bilgileri yüklenemedi.")));
   }, [isAuthenticated, user, navigate]);
 
   const handleUpdate = async (e) => {

@@ -29,11 +29,11 @@ const register = async (req, res) => {
 
     // Create a new company
     const company = new Company({
-      name: name,
-      email: email,
-      description: description,
-      phone: phone,
-      address: address,
+      name,
+      email,
+      description,
+      phone,
+      address,
     });
 
     // Set password and save the company
@@ -46,13 +46,12 @@ const register = async (req, res) => {
     createResponse(res, 201, {
       status: "success",
       message: `${company.name} başarıyla kayıt oldu`,
-      token: token,
+      token,
     });
   } catch (error) {
-    console.error("Error during company registration:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma kaydı sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
       statusCode: 500,
     });
   }
@@ -97,15 +96,14 @@ const login = async (req, res) => {
         createResponse(res, 200, {
           status: "success",
           message: `${company.name} başarıyla giriş yaptı`,
-          token: token,
+          token,
         });
       },
     )(req, res);
   } catch (error) {
-    console.error("Error during company login:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma girişi sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
       statusCode: 500,
     });
   }

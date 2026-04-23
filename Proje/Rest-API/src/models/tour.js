@@ -106,6 +106,9 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+tourSchema.index({ location: 1, price: 1, startDate: 1 });
+tourSchema.index({ companyId: 1, startDate: -1 });
+
 tourSchema.pre("validate", function () {
   if (!this.name && this.title) this.name = this.title;
   if (!this.title && this.name) this.title = this.name;

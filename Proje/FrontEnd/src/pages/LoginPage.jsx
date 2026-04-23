@@ -24,6 +24,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Define user roles for login
 const roles = [
@@ -34,7 +35,7 @@ const roles = [
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [roleIdx, setRoleIdx] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,21 +49,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const roleRedirect = { user: "/user/tours", guide: "/guide", company: "/company" };
     try {
       await login(selectedRole, email, password);
-      navigate(
-        selectedRole === "user" ? 
-        "/user/tours" 
-        : selectedRole === "guide" ?
-        "/guide"
-        : selectedRole === "company" ?
-        "/company"
-        : "/"
-      );
+      navigate(roleRedirect[selectedRole] ?? "/");
     } catch (err) {
-      setError(
-        err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
-      );
+      setError(getErrorMessage(err, "Giriş başarısız. Lütfen bilgilerinizi kontrol edin."));
     } finally {
       setLoading(false);
     }

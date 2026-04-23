@@ -48,14 +48,13 @@ const register = async (req, res) => {
         createResponse(res, 201, {
             status: "success",
             message: `${guide.firstName} başarıyla kayıt oldu`,
-            token: token,
+            token,
             guideId: guide._id,
         });
     } catch (error) {
-        console.error("Rehber kayıt hatası:", error);
         createResponse(res, 500, {
             status: "error",
-            message: "Sunucu hatası oluştu",
+            message: `Rehber kaydı sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
             statusCode: 500,
         });
     }
@@ -98,16 +97,15 @@ const login = async (req, res) => {
                 createResponse(res, 200, {
                     status: "success",
                     message: `${guide.firstName} başarıyla giriş yaptı`,
-                    token: token,
+                    token,
                     guideId: guide._id,
                 });
             },
         )(req, res);
     } catch (error) {
-        console.error("Rehber giriş hatası:", error);
         createResponse(res, 500, {
             status: "error",
-            message: "Sunucu hatası oluştu",
+            message: `Rehber girişi sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
             statusCode: 500,
         });
     }

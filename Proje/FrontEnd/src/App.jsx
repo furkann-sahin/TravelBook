@@ -30,11 +30,15 @@ import FavoritesList from "./pages/FavoritesList";
 import GuideList from "./pages/GuideList";
 import NotFoundPage from "./pages/NotFoundPage";
 import { useAuth } from "./hooks/useAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-/* Picks CompanyLayout for company users, MainLayout for everyone else */
+/* Picks role layout for authenticated panel users, MainLayout otherwise */
 function AdaptiveLayout() {
   const { isAuthenticated, user } = useAuth();
-  return isAuthenticated && user?.role === "company" ? <CompanyLayout /> : <MainLayout />;
+  if (!isAuthenticated) return <MainLayout />;
+  if (user?.role === "company") return <CompanyLayout />;
+  if (user?.role === "guide") return <GuideLayout />;
+  return <MainLayout />;
 }
 
 export default function App() {
@@ -48,35 +52,71 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/user/tours/:tourId" element={<TourDetailPage />} />
-            <Route path="/user/profile" element={<UserProfilePage />} />
-            <Route path="/users/:userId/purchases" element={<UserPurchasesPage />} />
+            <Route
+              path="/user/profile"
+              element={
+                <ProtectedRoute allowedRoles={["user"]}>
+                  <UserProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users/:userId/purchases"
+              element={
+                <ProtectedRoute allowedRoles={["user"]}>
+                  <UserPurchasesPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/user/tours" element={<ToursPage />} />
             <Route path="/user/tours/mock" element={<UserTours />} />
-            <Route path="/user/favorites" element={<FavoritesList />} />
+            <Route
+              path="/user/favorites"
+              element={
+                <ProtectedRoute allowedRoles={["user"]}>
+                  <FavoritesList />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/guides" element={<GuideList />} />
           </Route>
 
           {/* Company panel – protected by CompanyLayout */}
-          <Route path="/company" element={<CompanyLayout />}>
+          <Route
+            path="/company"
+            element={
+              <ProtectedRoute allowedRoles={["company"]}>
+                <CompanyLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<CompanyDashboardPage />} />
             <Route path="tours" element={<CompanyToursPage />} />
             <Route path="tours/create" element={<CreateTourPage />} />
             <Route path="tours/:tourId" element={<CompanyTourDetailPage />} />
             <Route path="guides" element={<CompanyGuidesPage />} />
-            <Route path="guides/:guideId" element={<CompanyGuideDetailPage />} />
+            <Route
+              path="guides/:guideId"
+              element={<CompanyGuideDetailPage />}
+            />
             <Route path="profile" element={<CompanyProfilePage />} />
           </Route>
 
           {/* Guide panel – protected by GuideLayout */}
-          <Route path="/guide" element={<GuideLayout />}>
+          <Route
+            path="/guide"
+            element={
+              <ProtectedRoute allowedRoles={["guide"]}>
+                <GuideLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<GuideDashboardPage />} />
-            <Route path="home" element={<HomePage />} />
             <Route path="companies" element={<GuideCompaniesPage />} />
             <Route path="tours" element={<GuideToursPage />} />
             <Route path="my-companies" element={<GuideMyCompaniesPage />} />
             <Route path="my-tours" element={<GuideMyToursPage />} />
             <Route path="profile" element={<GuideProfilePage />} />
-            <Route path="about" element={<AboutPage />} />
           </Route>
 
           {/* Auth pages */}

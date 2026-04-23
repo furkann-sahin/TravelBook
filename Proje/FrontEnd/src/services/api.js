@@ -1,7 +1,19 @@
-const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "/api").replace(/\/+$/, "");
 
 // Derive backend origin from the API URL (strip /api suffix) for static assets
-const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
+const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, "") || (import.meta.env.DEV ? "http://localhost:3000" : "");
+
+function resolveErrorMessage(payload, fallbackMessage) {
+  if (typeof payload?.message === "string" && payload.message.trim()) {
+    return payload.message;
+  }
+
+  if (typeof payload?.error === "string" && payload.error.trim()) {
+    return payload.error;
+  }
+
+  return fallbackMessage;
+}
 
 export function getImageUrl(path) {
   if (!path) return null;
@@ -10,6 +22,7 @@ export function getImageUrl(path) {
 }
 
 async function uploadImage(endpoint, file, fieldName = "image") {
+  // Centralized multipart upload helper used by profile/banner/gallery operations.
   const formData = new FormData();
   formData.append(fieldName, file);
 
@@ -21,7 +34,7 @@ async function uploadImage(endpoint, file, fieldName = "image") {
   });
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "Resim yüklenemedi");
+  if (!res.ok) throw new Error(resolveErrorMessage(data, "Resim yüklenemedi"));
   return data;
 }
 
@@ -29,6 +42,7 @@ async function uploadImage(endpoint, file, fieldName = "image") {
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem("tb_token");
+  const isAuthEndpoint = /\/(users|companies|guides)\/auth\/(login|register)$/.test(endpoint);
 
   const headers = {
     "Content-Type": "application/json",
@@ -41,15 +55,23 @@ async function request(endpoint, options = {}) {
 
   if (!res.ok) {
     if (res.status === 401) {
+      // Force fresh auth flow when the token is expired/invalid.
       localStorage.removeItem("tb_token");
       localStorage.removeItem("tb_user");
-      window.location.href = "/login";
-      return;
+      if (!isAuthEndpoint && window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+
+      const body = await res.json().catch(() => ({}));
+      const unauthorizedError = new Error(
+        resolveErrorMessage(body, "Oturum süresi doldu. Lütfen tekrar giriş yapın."),
+      );
+      unauthorizedError.status = 401;
+      unauthorizedError.data = body;
+      throw unauthorizedError;
     }
     const body = await res.json().catch(() => ({}));
-    const error = new Error(
-      body.message || body.error || `Request failed (${res.status})`,
-    );
+    const error = new Error(resolveErrorMessage(body, `Request failed (${res.status})`));
     error.status = res.status;
     error.data = body;
     throw error;
@@ -169,6 +191,7 @@ export const companyTourApi = {
     }),
 
   createTour: (companyId, formData) => {
+    // Tour creation uses multipart because image upload and scalar fields are sent together.
     const url = `${API_BASE}/companies/${companyId}/tours`;
     const token = localStorage.getItem("tb_token");
     const headers = {};
@@ -201,6 +224,8 @@ export const tourApi = {
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
     if (filters.date) params.append("date", filters.date);
+    if (filters.page) params.append("page", filters.page);
+    if (filters.limit) params.append("limit", filters.limit);
 
     const query = params.toString();
     return request(`/tours${query ? `?${query}` : ""}`);

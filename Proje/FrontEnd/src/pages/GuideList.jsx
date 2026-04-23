@@ -18,6 +18,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import WorkIcon from "@mui/icons-material/Work";
 import TranslateIcon from "@mui/icons-material/Translate";
 import { guideApi, getImageUrl } from "../services/api";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function GuideList() {
   const [guides, setGuides] = useState([]);
@@ -30,8 +31,8 @@ export default function GuideList() {
     try {
       const res = await guideApi.getAllGuides();
       setGuides(res.data || []);
-    } catch {
-      setError("Rehberler yüklenirken bir hata oluştu.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Rehberler yüklenirken bir hata oluştu."));
       setGuides([]);
     } finally {
       setLoading(false);

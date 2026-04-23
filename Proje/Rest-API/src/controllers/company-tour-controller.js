@@ -3,6 +3,7 @@ const Tour = mongoose.model("Tour");
 const Company = mongoose.model("Company");
 const Guide = mongoose.model("Guide");
 const { createResponse } = require("../utils/create-response");
+const { persistUploadedImage } = require("../utils/image-storage");
 
 // List tours for a company
 const listCompanyTours = async (req, res) => {
@@ -50,10 +51,9 @@ const listCompanyTours = async (req, res) => {
       data: tourList,
     });
   } catch (error) {
-    console.error("Firma turları listelenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma turları listelenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -80,54 +80,16 @@ const createTour = async (req, res) => {
       });
     }
 
-    // When sent as multipart/form-data, all fields arrive as strings
+    // Fields validated by Joi; cast numeric/date types (multipart/form-data string conversion)
     const name = req.body.name;
     const description = req.body.description;
     const location = req.body.location;
     const price = Number(req.body.price);
-    const startDate = req.body.startDate;
-    const endDate = req.body.endDate;
     const totalCapacity = Number(req.body.totalCapacity);
+    const start = new Date(req.body.startDate);
+    const end = new Date(req.body.endDate);
 
-    // Validate required fields
-    if (!name || !description || !location || req.body.price == null || !startDate || !endDate || !req.body.totalCapacity) {
-      return createResponse(res, 400, {
-        status: "error",
-        message: "Tüm zorunlu alanların doldurulması gereklidir (name, description, location, price, startDate, endDate, totalCapacity)",
-      });
-    }
-
-    // Validate price
-    if (isNaN(price) || price < 0) {
-      return createResponse(res, 400, {
-        status: "error",
-        message: "Fiyat geçerli bir sayı olmalıdır ve negatif olamaz",
-      });
-    }
-
-    // Validate capacity
-    if (!Number.isInteger(totalCapacity) || totalCapacity < 1) {
-      return createResponse(res, 400, {
-        status: "error",
-        message: "Kapasite en az 1 olmalıdır",
-      });
-    }
-
-    // Validate dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return createResponse(res, 400, {
-        status: "error",
-        message: "Geçerli tarih formatları giriniz",
-      });
-    }
-    if (end <= start) {
-      return createResponse(res, 400, {
-        status: "error",
-        message: "Bitiş tarihi başlangıç tarihinden sonra olmalıdır",
-      });
-    }
+    // Business rule: başlangıç tarihi geçmişte olamaz
     if (start < new Date()) {
       return createResponse(res, 400, {
         status: "error",
@@ -138,7 +100,7 @@ const createTour = async (req, res) => {
     // Build images array from uploaded file (if any)
     const images = [];
     if (req.file) {
-      images.push(`/images/tours/${req.file.filename}`);
+      images.push(await persistUploadedImage(req.file, "images/tours"));
     }
 
     // Parse services (arrives as JSON string from multipart/form-data)
@@ -228,10 +190,9 @@ const createTour = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Tur oluşturulurken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Tur oluşturulurken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -276,10 +237,9 @@ const listCompanyGuides = async (req, res) => {
       data: guideList,
     });
   } catch (error) {
-    console.error("Rehberler listelenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Rehberler listelenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -346,10 +306,9 @@ const getCompanyTourDetail = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Tur detayı alınırken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Tur detayı alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -430,10 +389,9 @@ const updateCompanyTour = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Tur güncellenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Tur güncellenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -472,10 +430,9 @@ const deleteCompanyTour = async (req, res) => {
       message: "Tur başarıyla silindi",
     });
   } catch (error) {
-    console.error("Tur silinirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Tur silinirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };

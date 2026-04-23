@@ -35,7 +35,9 @@ import { tourApi, purchaseApi, favoriteApi, userApi } from "../services/api";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useAuth } from "../hooks/useAuth";
-import TourCard, { formatDate } from "../components/TourCard";
+import TourCard from "../components/TourCard";
+import { formatDate } from "../utils/tour-formatters";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function ToursPage() {
   const navigate = useNavigate();
@@ -76,8 +78,8 @@ export default function ToursPage() {
     try {
       const res = await tourApi.getTours(queryFilters);
       setTours(res.data || []);
-    } catch {
-      setError("Turlar yüklenirken bir hata oluştu.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Turlar yüklenirken bir hata oluştu."));
       setTours([]);
     } finally {
       setLoading(false);
@@ -173,10 +175,10 @@ export default function ToursPage() {
         message: "Satın alma başarılı!",
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "Satın alma sırasında bir hata oluştu.",
+        message: getErrorMessage(err, "Satın alma sırasında bir hata oluştu."),
         severity: "error",
       });
     } finally {
@@ -213,10 +215,10 @@ export default function ToursPage() {
         message: "Satın alma iptal edildi!",
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "İptal sırasında bir hata oluştu.",
+        message: getErrorMessage(err, "İptal sırasında bir hata oluştu."),
         severity: "error",
       });
     } finally {
@@ -250,10 +252,10 @@ export default function ToursPage() {
           message: "Favorilerden kaldırıldı!",
           severity: "success",
         });
-      } catch {
+      } catch (err) {
         setSnackbar({
           open: true,
-          message: "Favori kaldırılırken bir hata oluştu.",
+          message: getErrorMessage(err, "Favori kaldırılırken bir hata oluştu."),
           severity: "error",
         });
       } finally {
@@ -269,10 +271,10 @@ export default function ToursPage() {
           message: "Favorilere eklendi!",
           severity: "success",
         });
-      } catch {
+      } catch (err) {
         setSnackbar({
           open: true,
-          message: "Favorilere eklenirken bir hata oluştu.",
+          message: getErrorMessage(err, "Favorilere eklenirken bir hata oluştu."),
           severity: "error",
         });
       } finally {

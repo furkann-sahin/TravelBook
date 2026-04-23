@@ -25,6 +25,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { favoriteApi, getImageUrl } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function FavoritesList() {
   const { user } = useAuth();
@@ -43,8 +44,8 @@ export default function FavoritesList() {
     try {
       const res = await favoriteApi.getFavorites(user.id);
       setFavorites(res.data || []);
-    } catch {
-      setError("Favoriler yüklenirken bir hata oluştu.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Favoriler yüklenirken bir hata oluştu."));
       setFavorites([]);
     } finally {
       setLoading(false);
@@ -74,8 +75,12 @@ export default function FavoritesList() {
       await favoriteApi.removeFavorite(user.id, tourId);
       setFavorites((prev) => prev.filter((t) => t.id !== tourId));
       setSnackbar({ open: true, message: "Tur favorilerden kaldırıldı!", severity: "success" });
-    } catch {
-      setSnackbar({ open: true, message: "Favori kaldırılırken bir hata oluştu.", severity: "error" });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getErrorMessage(err, "Favori kaldırılırken bir hata oluştu."),
+        severity: "error",
+      });
     } finally {
       setRemoveLoading(null);
       setSelectedTour(null);

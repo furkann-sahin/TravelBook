@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Company = mongoose.model("Company");
 const { createResponse } = require("../utils/create-response");
+const { persistUploadedImage } = require("../utils/image-storage");
 
 // Get company detail
 const getCompanyDetail = async (req, res) => {
@@ -21,10 +22,9 @@ const getCompanyDetail = async (req, res) => {
       data: company,
     });
   } catch (error) {
-    console.error("Firma detayları alınırken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma detayları alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -56,10 +56,9 @@ const deleteCompany = async (req, res) => {
       message: "Firma hesabı başarıyla silindi",
     });
   } catch (error) {
-    console.error("Firma silinirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma silinirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -76,7 +75,14 @@ const updateCompany = async (req, res) => {
       });
     }
 
-    const allowedFields = ["name", "phone", "address", "description", "instagram", "linkedin"];
+    const allowedFields = [
+      "name",
+      "phone",
+      "address",
+      "description",
+      "instagram",
+      "linkedin",
+    ];
     const updates = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
@@ -109,24 +115,15 @@ const updateCompany = async (req, res) => {
       data: company,
     });
   } catch (error) {
-    console.error("Firma güncellenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Firma güncellenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
 
-module.exports = {
-  getCompanyDetail,
-  deleteCompany,
-  updateCompany,
-  uploadProfileImage,
-  uploadBannerImage,
-};
-
 // Upload company profile image
-async function uploadProfileImage(req, res) {
+const uploadProfileImage = async (req, res) => {
   try {
     const { companyId } = req.params;
     if (req.payload.id !== companyId) {
@@ -141,7 +138,7 @@ async function uploadProfileImage(req, res) {
         message: "Dosya yüklenemedi",
       });
     }
-    const imageUrl = `/uploads/companies/${req.file.filename}`;
+    const imageUrl = await persistUploadedImage(req.file, "uploads/companies");
     const company = await Company.findByIdAndUpdate(
       companyId,
       { profileImageUrl: imageUrl },
@@ -158,16 +155,15 @@ async function uploadProfileImage(req, res) {
       data: { profileImageUrl: imageUrl },
     });
   } catch (error) {
-    console.error("Firma profil resmi yükleme hatası:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Resim yüklenirken hata oluştu",
+      message: `Firma profil resmi yüklenirken hata oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
-}
+};
 
 // Upload company banner image
-async function uploadBannerImage(req, res) {
+const uploadBannerImage = async (req, res) => {
   try {
     const { companyId } = req.params;
     if (req.payload.id !== companyId) {
@@ -182,7 +178,7 @@ async function uploadBannerImage(req, res) {
         message: "Dosya yüklenemedi",
       });
     }
-    const imageUrl = `/uploads/companies/${req.file.filename}`;
+    const imageUrl = await persistUploadedImage(req.file, "uploads/companies");
     const company = await Company.findByIdAndUpdate(
       companyId,
       { bannerImageUrl: imageUrl },
@@ -199,10 +195,17 @@ async function uploadBannerImage(req, res) {
       data: { bannerImageUrl: imageUrl },
     });
   } catch (error) {
-    console.error("Firma kapak resmi yükleme hatası:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Resim yüklenirken hata oluştu",
+      message: `Firma kapak resmi yüklenirken hata oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
-}
+};
+
+module.exports = {
+  getCompanyDetail,
+  deleteCompany,
+  updateCompany,
+  uploadProfileImage,
+  uploadBannerImage,
+};

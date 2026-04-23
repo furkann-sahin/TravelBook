@@ -34,6 +34,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
+import BusinessIcon from "@mui/icons-material/Business";
 import MapIcon from "@mui/icons-material/Map";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import EditIcon from "@mui/icons-material/Edit";
@@ -47,7 +48,6 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import LinkIcon from "@mui/icons-material/Link";
-import GroupsIcon from "@mui/icons-material/Groups";
 import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -61,6 +61,12 @@ export default function GuideProfilePage() {
     const [guide, setGuide] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [stats, setStats] = useState({
+        totalTours: 0,
+        totalCompanies: 0,
+        experienceYears: 0,
+        rating: 0,
+    });
 
     // Edit mode state
     const [editing, setEditing] = useState(false);
@@ -96,8 +102,33 @@ export default function GuideProfilePage() {
         try {
             setLoading(true);
             setError(null);
-            const res = await guideApi.getDetail(user.id);
-            setGuide(res.data ?? res);
+            const [profileResult, companiesResult, toursResult] = await Promise.allSettled([
+                guideApi.getDetail(user.id),
+                guideApi.listMyCompanies(user.id),
+                guideApi.listTours(user.id),
+            ]);
+
+            if (profileResult.status === "rejected") {
+                throw profileResult.reason;
+            }
+
+            const profile = profileResult.value?.data ?? profileResult.value ?? {};
+            const companies =
+                companiesResult.status === "fulfilled"
+                    ? companiesResult.value?.data ?? companiesResult.value ?? []
+                    : [];
+            const tours =
+                toursResult.status === "fulfilled"
+                    ? toursResult.value?.data ?? toursResult.value ?? []
+                    : [];
+
+            setGuide(profile);
+            setStats({
+                totalTours: Array.isArray(tours) ? tours.length : 0,
+                totalCompanies: Array.isArray(companies) ? companies.length : 0,
+                experienceYears: profile?.experienceYears ?? 0,
+                rating: profile?.rating ?? 0,
+            });
         } catch (err) {
             setError(err.message || "Profil bilgileri yüklenirken bir hata oluştu.");
         } finally {
@@ -330,7 +361,6 @@ export default function GuideProfilePage() {
         day: "numeric",
     });
 
-    const totalTours = guide.registeredTours?.length ?? 0;
     const bannerImageSrc = getImageSrc(guide.bannerImageUrl);
 
     return (
@@ -893,26 +923,30 @@ export default function GuideProfilePage() {
                         <Box
                             sx={{
                                 display: "grid",
-                                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
+                                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr 1fr" },
                                 gap: 3,
                                 mt: 2,
                             }}
                         >
                             <StatCard
                                 icon={<MapIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={totalTours}
+                                value={stats.totalTours}
                                 label="Toplam Tur"
                             />
                             <StatCard
+                                icon={<BusinessIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={stats.totalCompanies}
+                                label="Kayıtlı Firma"
+                            />
+                            <StatCard
                                 icon={<WorkHistoryIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={guide.experienceYears ?? "—"}
+                                value={stats.experienceYears}
                                 label="Deneyim (Yıl)"
                             />
                             <StatCard
-                                icon={<CalendarMonthIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={memberSince}
-                                label="Üyelik Tarihi"
-                                small
+                                icon={<StarIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={stats.rating > 0 ? Number(stats.rating).toFixed(1) : "0.0"}
+                                label="Ortalama Puan"
                             />
                         </Box>
                     </Paper>
