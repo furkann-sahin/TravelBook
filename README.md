@@ -58,3 +58,27 @@ Proje dokümantasyonuna aşağıdaki linklerden erişebilirsiniz:
 
 ---
 
+## Docker ile Calistirma
+
+Docker yapilandirmasi `Proje` klasoru altina eklendi.
+
+1. Terminalde `Proje` klasorune gecin.
+2. Asagidaki komutu calistirin:
+
+```bash
+docker compose up --build
+```
+
+Servisler:
+
+- Frontend: `http://localhost:8080`
+- REST API: `http://localhost:3000/api`
+- MongoDB: `mongodb://localhost:27017`
+
+Ortam degiskenleri (opsiyonel):
+
+- `JWT_SECRET` (varsayilan: `travelbook-dev-secret`)
+- `MONGODB_URI` (varsayilan: `mongodb://mongodb:27017/travelbook`)
+- `FRONTEND_URLS` (varsayilan: `http://localhost:8080,http://127.0.0.1:8080`)
+
+

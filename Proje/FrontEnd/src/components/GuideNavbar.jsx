@@ -30,6 +30,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useAuth } from "../hooks/useAuth";
+import { getImageUrl } from "../services/api";
 
 export default function GuideNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -81,6 +82,7 @@ export default function GuideNavbar() {
 
   const activeKey = getActiveKey(location.pathname);
   const isActive = (key) => activeKey === key;
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   return (
     <>
@@ -182,6 +184,7 @@ export default function GuideNavbar() {
                 sx={{ ml: 1 }}
               >
                 <Avatar
+                  src={avatarSrc || undefined}
                   sx={{
                     width: 34,
                     height: 34,

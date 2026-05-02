@@ -56,7 +56,7 @@ import { guideApi } from "../services/api";
 
 export default function GuideProfilePage() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
 
     const [guide, setGuide] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -123,6 +123,10 @@ export default function GuideProfilePage() {
                     : [];
 
             setGuide(profile);
+            updateUser({
+                name: `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || user?.name,
+                profileImageUrl: profile.profileImageUrl || null,
+            });
             setStats({
                 totalTours: Array.isArray(tours) ? tours.length : 0,
                 totalCompanies: Array.isArray(companies) ? companies.length : 0,
@@ -134,7 +138,7 @@ export default function GuideProfilePage() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [updateUser, user?.id, user?.name]);
 
     useEffect(() => {
         fetchProfile();
@@ -246,7 +250,9 @@ export default function GuideProfilePage() {
         try {
             setUploading(true);
             const res = await guideApi.uploadProfileImage(user.id, file);
-            setGuide((prev) => ({ ...prev, profileImageUrl: res.data?.profileImageUrl || res.profileImageUrl }));
+            const profileImageUrl = res.data?.profileImageUrl || res.profileImageUrl || null;
+            setGuide((prev) => ({ ...prev, profileImageUrl }));
+            updateUser({ profileImageUrl });
             setSnackbar({ open: true, message: "Profil resmi güncellendi" });
         } catch (err) {
             setSnackbar({ open: true, message: err.message || "Resim yüklenirken hata oluştu" });

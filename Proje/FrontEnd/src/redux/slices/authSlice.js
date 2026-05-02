@@ -22,6 +22,13 @@ function loadSession() {
   const token = localStorage.getItem("tb_token");
   if (!token) return { user: null, token: null };
 
+  let persistedUser = null;
+  try {
+    persistedUser = JSON.parse(localStorage.getItem("tb_user") || "null");
+  } catch {
+    persistedUser = null;
+  }
+
   const payload = decodeToken(token);
   if (!payload) return { user: null, token: null };
 
@@ -39,6 +46,7 @@ function loadSession() {
       name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
       email: payload.email,
       role: payload.role,
+      profileImageUrl: persistedUser?.id === payload.id ? persistedUser.profileImageUrl || null : null,
     },
   };
 }
@@ -88,12 +96,16 @@ function setSessionFromToken(state, token, fallbackRole) {
   const payload = decodeToken(token);
   if (!payload) return;
 
+  const currentUser = state.user;
+
   state.token = token;
   state.user = {
     id: payload.id,
     name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
     email: payload.email,
     role: payload.role || fallbackRole,
+    profileImageUrl:
+      currentUser?.id === payload.id ? currentUser.profileImageUrl || null : null,
   };
 
   localStorage.setItem("tb_token", token);
@@ -120,6 +132,11 @@ const authSlice = createSlice({
     },
     clearError(state) {
       state.error = null;
+    },
+    updateUser(state, action) {
+      if (!state.user) return;
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem("tb_user", JSON.stringify(state.user));
     },
   },
   extraReducers: (builder) => {
@@ -157,5 +174,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, updateUser } = authSlice.actions;
 export default authSlice.reducer;

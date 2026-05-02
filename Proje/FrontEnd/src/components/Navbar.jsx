@@ -26,6 +26,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import PersonIcon from "@mui/icons-material/Person";
 
 import { useAuth } from "../hooks/useAuth";
+import { getImageUrl } from "../services/api";
 
 // Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
 const navLinks = [
@@ -56,6 +57,7 @@ export default function Navbar() {
   const purchasesPath = user?.id
     ? `/users/${user.id}/purchases?status=past`
     : "/login";
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   const handleLogout = () => {
     setAnchorEl(null);
@@ -207,6 +209,7 @@ export default function Navbar() {
                     sx={{ ml: 1 }}
                   >
                     <Avatar
+                      src={avatarSrc || undefined}
                       sx={{
                         width: 34,
                         height: 34,

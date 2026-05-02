@@ -30,6 +30,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 
 import { useAuth } from "../hooks/useAuth";
+import { getImageUrl } from "../services/api";
 
 export default function CompanyNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -79,6 +80,7 @@ export default function CompanyNavbar() {
 
   const activeKey = getActiveKey(location.pathname);
   const isActive = (key) => activeKey === key;
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   return (
     <>
@@ -180,6 +182,7 @@ export default function CompanyNavbar() {
                 sx={{ ml: 1 }}
               >
                 <Avatar
+                  src={avatarSrc || undefined}
                   sx={{
                     width: 34,
                     height: 34,

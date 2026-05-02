@@ -66,8 +66,8 @@ const authLimiter = rateLimit({
 const allowedOrigins = new Set(
   [
     ...(process.env.FRONTEND_URLS || "").split(","),
-    process.env.FRONTEND_URL,
     "http://localhost:5173",
+    "http://localhost:8080",
   ]
     .map((origin) => (origin || "").trim())
     .filter(Boolean),
@@ -78,8 +78,6 @@ function isAllowedOrigin(origin) {
   if (allowedOrigins.has(origin)) return true;
 
   // Optional fallback for Vercel preview deployments.
-  // Example allowed when FRONTEND_URL is "https://travel-book-8ssh.vercel.app":
-  // "https://travel-book-git-branch-user.vercel.app"
   const isVercelPreview = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
   return isVercelPreview;
 }

@@ -48,7 +48,7 @@ import { companyApi, companyTourApi } from "../services/api";
 
 export default function CompanyProfilePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
 
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,13 +89,18 @@ export default function CompanyProfilePage() {
       setLoading(true);
       setError(null);
       const res = await companyApi.getProfile(user.id);
-      setCompany(res.data);
+      const profile = res.data;
+      setCompany(profile);
+      updateUser({
+        name: profile?.name || user?.name,
+        profileImageUrl: profile?.profileImageUrl || null,
+      });
     } catch (err) {
       setError(err.message || "Profil bilgileri yüklenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [updateUser, user?.id, user?.name]);
 
   const fetchStats = useCallback(async () => {
     if (!user?.id) return;
@@ -186,10 +191,12 @@ export default function CompanyProfilePage() {
     try {
       setUploading(true);
       const res = await companyApi.uploadProfileImage(user.id, file);
+      const profileImageUrl = res.data?.profileImageUrl || res.profileImageUrl || null;
       setCompany((prev) => ({
         ...prev,
-        profileImageUrl: res.data?.profileImageUrl || res.profileImageUrl,
+        profileImageUrl,
       }));
+      updateUser({ profileImageUrl });
       setSnackbar({ open: true, message: "Profil resmi güncellendi" });
     } catch (err) {
       setSnackbar({

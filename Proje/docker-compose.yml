@@ -1,0 +1,53 @@
+name: travelbook
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: travelbook-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./Rest-API
+      dockerfile: Dockerfile
+    container_name: travelbook-api
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-travelbook-dev-secret}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/travelbook}
+      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:8080,http://127.0.0.1:8080}
+    ports:
+      - "3000:3000"
+    volumes:
+      - api_uploads:/usr/src/app/public/uploads
+
+  frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: travelbook-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  mongodb_data:
+  api_uploads:
