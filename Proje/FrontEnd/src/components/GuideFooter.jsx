@@ -12,8 +12,9 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 const guideLinks = [
-    { label: "Panel", path: "/guide" },
-    { label: "Turlarım", path: "/guide/tours" },
+    { label: "Ana Sayfa", path: "/guide" },
+    { label: "Dashboard", path: "/guide/dashboard" },
+    { label: "Turlarım", path: "/guide/my-tours" },
     { label: "Profilim", path: "/guide/profile" },
 ];
 

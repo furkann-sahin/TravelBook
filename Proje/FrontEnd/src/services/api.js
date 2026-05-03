@@ -21,6 +21,106 @@ export function getImageUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
+function pickFirstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+  }
+  return "";
+}
+
+function toNonEmptyArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function normalizeTour(tour) {
+  if (!tour || typeof tour !== "object") return tour;
+
+  const normalizedId = tour.id || tour._id || tour.tourId || null;
+  const normalizedName = pickFirstString(tour.name, tour.title);
+  const normalizedTitle = pickFirstString(tour.title, normalizedName);
+
+  const existingImages = toNonEmptyArray(tour.images);
+  const normalizedImageUrl =
+    tour.imageUrl || tour.image || existingImages[0] || null;
+  const normalizedImages =
+    existingImages.length > 0
+      ? existingImages
+      : normalizedImageUrl
+        ? [normalizedImageUrl]
+        : [];
+
+  const normalizedLocation =
+    pickFirstString(
+      tour.location,
+      [tour.departureLocation, tour.arrivalLocation].filter(Boolean).join(" -> "),
+    );
+
+  return {
+    ...tour,
+    id: normalizedId,
+    _id: tour._id || normalizedId,
+    name: normalizedName,
+    title: normalizedTitle,
+    imageUrl: normalizedImageUrl,
+    images: normalizedImages,
+    location: normalizedLocation,
+  };
+}
+
+function normalizePurchase(purchase) {
+  if (!purchase || typeof purchase !== "object") return purchase;
+
+  return {
+    ...purchase,
+    tour: normalizeTour(purchase.tour),
+  };
+}
+
+function mapApiPayload(response, mapper) {
+  if (Array.isArray(response)) {
+    return response.map(mapper);
+  }
+
+  if (!response || typeof response !== "object") {
+    return response;
+  }
+
+  if (Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: response.data.map(mapper),
+    };
+  }
+
+  if (response.data && typeof response.data === "object") {
+    return {
+      ...response,
+      data: mapper(response.data),
+    };
+  }
+
+  return mapper(response);
+}
+
+function normalizeTourResponse(response) {
+  return mapApiPayload(response, normalizeTour);
+}
+
+function normalizePurchasesResponse(response) {
+  return mapApiPayload(response, normalizePurchase);
+}
+
+function withTourNormalization(promise) {
+  return promise.then(normalizeTourResponse);
+}
+
+function withPurchasesNormalization(promise) {
+  return promise.then(normalizePurchasesResponse);
+}
+
 async function uploadImage(endpoint, file, fieldName = "image") {
   // Centralized multipart upload helper used by profile/banner/gallery operations.
   const formData = new FormData();
@@ -130,9 +230,11 @@ export const userApi = {
   getProfile: (userId) => request(`/users/${userId}`),
 
   getPurchases: (userId, status) =>
-    request(
-      `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""
-      }`,
+    withPurchasesNormalization(
+      request(
+        `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""
+        }`,
+      ),
     ),
 
   updateProfile: (userId, data) =>
@@ -172,12 +274,13 @@ export const companyApi = {
 };
 
 export const companyTourApi = {
-  listTours: (companyId) => request(`/companies/${companyId}/tours`),
+  listTours: (companyId) =>
+    withTourNormalization(request(`/companies/${companyId}/tours`)),
 
   listGuides: (companyId) => request(`/companies/${companyId}/guides`),
 
   getTourDetail: (companyId, tourId) =>
-    request(`/companies/${companyId}/tours/${tourId}`),
+    withTourNormalization(request(`/companies/${companyId}/tours/${tourId}`)),
 
   updateTour: (companyId, tourId, data) =>
     request(`/companies/${companyId}/tours/${tourId}`, {
@@ -228,10 +331,11 @@ export const tourApi = {
     if (filters.limit) params.append("limit", filters.limit);
 
     const query = params.toString();
-    return request(`/tours${query ? `?${query}` : ""}`);
+    return withTourNormalization(request(`/tours${query ? `?${query}` : ""}`));
   },
 
-  getTourDetail: (tourId) => request(`/tours/${tourId}`),
+  getTourDetail: (tourId) =>
+    withTourNormalization(request(`/tours/${tourId}`)),
 
   getStats: () => request("/tours/stats"),
 };
@@ -312,7 +416,8 @@ export const guideApi = {
   removeFromCompany: (guideId, companyId) =>
     request(`/guides/${guideId}/companies/${companyId}`, { method: "DELETE" }),
 
-  listTours: (guideId) => request(`/guides/${guideId}/tours`),
+  listTours: (guideId) =>
+    withTourNormalization(request(`/guides/${guideId}/tours`)),
 
   assignTour: (guideId, tourId) =>
     request(`/guides/${guideId}/tours`, {
@@ -328,7 +433,8 @@ export const guideApi = {
 
 // FAVORITES
 export const favoriteApi = {
-  getFavorites: (userId) => request(`/users/${userId}/favorites`),
+  getFavorites: (userId) =>
+    withTourNormalization(request(`/users/${userId}/favorites`)),
 
   addFavorite: (userId, tourId) =>
     request(`/users/${userId}/favorites`, {

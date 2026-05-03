@@ -10,7 +10,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
   Box,
   Container,
@@ -21,70 +20,45 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import MapIcon from "@mui/icons-material/Map";
-import GroupIcon from "@mui/icons-material/Group";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PersonIcon from "@mui/icons-material/Person";
 
 import { useAuth } from "../hooks/useAuth";
 import { getImageUrl } from "../services/api";
 
-export default function CompanyNavbar() {
+const navLinks = [
+  { label: "Ana Sayfa", path: "/user", key: "home", icon: <HomeIcon /> },
+  {
+    label: "Dashboard",
+    path: "/user/dashboard",
+    key: "dashboard",
+    icon: <DashboardIcon />,
+  },
+];
+
+export default function UserNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const navLinks = [
-    { label: "Ana Sayfa", path: "/company", icon: <HomeIcon />, key: "home" },
-    {
-      label: "Dashboard",
-      path: "/company/dashboard",
-      icon: <DashboardIcon />,
-      key: "dashboard",
-    },
-    {
-      label: "Turlarım",
-      path: "/company/tours",
-      icon: <MapIcon />,
-      key: "tours",
-    },
-    {
-      label: "Rehberler",
-      path: "/company/guides",
-      icon: <GroupIcon />,
-      key: "guides",
-    },
-    {
-      label: "Profil",
-      path: "/company/profile",
-      icon: <PersonIcon />,
-      key: "profile",
-    },
-  ];
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
+  const purchasesPath = "/user/purchases?status=past";
+
+  const activeKey =
+    location.pathname === "/user"
+      ? "home"
+      : location.pathname.startsWith("/user/dashboard")
+        ? "dashboard"
+        : null;
 
   const handleLogout = () => {
     setAnchorEl(null);
     logout();
     navigate("/");
   };
-
-  const getActiveKey = (pathname) => {
-    if (pathname === "/company") return "home";
-    if (pathname.startsWith("/company/dashboard")) return "dashboard";
-    if (pathname.startsWith("/company/tours")) return "tours";
-    if (pathname.startsWith("/company/guides")) return "guides";
-    if (pathname.startsWith("/company/profile")) return "profile";
-    if (pathname.startsWith("/company")) return "dashboard";
-    return null;
-  };
-
-  const activeKey = getActiveKey(location.pathname);
-  const isActive = (key) => activeKey === key;
-  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   return (
     <>
@@ -98,10 +72,9 @@ export default function CompanyNavbar() {
       >
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-            {/* Brand */}
             <Box
               component={RouterLink}
-              to="/company"
+              to="/user"
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -109,9 +82,7 @@ export default function CompanyNavbar() {
                 textDecoration: "none",
               }}
             >
-              <DirectionsBusIcon
-                sx={{ fontSize: 32, color: "secondary.main" }}
-              />
+              <DirectionsBusIcon sx={{ fontSize: 32, color: "secondary.main" }} />
               <Typography
                 variant="h5"
                 sx={{
@@ -137,18 +108,11 @@ export default function CompanyNavbar() {
                   textTransform: "uppercase",
                 }}
               >
-                Firma Paneli
+                Kullanıcı
               </Typography>
             </Box>
 
-            {/* Desktop nav links */}
-            <Box
-              sx={{
-                display: { xs: "none", md: "flex" },
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
+            <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
               {navLinks.map((link) => (
                 <Button
                   key={link.key}
@@ -156,10 +120,8 @@ export default function CompanyNavbar() {
                   to={link.path}
                   startIcon={link.icon}
                   sx={{
-                    color: isActive(link.key)
-                      ? "secondary.main"
-                      : "text.primary",
-                    fontWeight: isActive(link.key) ? 700 : 500,
+                    color: activeKey === link.key ? "secondary.main" : "text.primary",
+                    fontWeight: activeKey === link.key ? 700 : 500,
                     position: "relative",
                     "&::after": {
                       content: '""',
@@ -167,7 +129,7 @@ export default function CompanyNavbar() {
                       bottom: 4,
                       left: "50%",
                       transform: "translateX(-50%)",
-                      width: isActive(link.key) ? "60%" : 0,
+                      width: activeKey === link.key ? "60%" : 0,
                       height: 2,
                       bgcolor: "secondary.main",
                       borderRadius: 1,
@@ -180,11 +142,7 @@ export default function CompanyNavbar() {
                 </Button>
               ))}
 
-              {/* User menu */}
-              <IconButton
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                sx={{ ml: 1 }}
-              >
+              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1 }}>
                 <Avatar
                   src={avatarSrc || undefined}
                   sx={{
@@ -214,40 +172,26 @@ export default function CompanyNavbar() {
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
-                    navigate("/company/dashboard");
+                    navigate("/user/profile");
                   }}
                 >
-                  <ListItemIcon>
-                    <DashboardIcon fontSize="small" />
-                  </ListItemIcon>
-                  Dashboard
+                  Profilim
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
-                    navigate("/company/profile");
+                    navigate(purchasesPath);
                   }}
                 >
-                  <ListItemIcon>
-                    <PersonIcon fontSize="small" />
-                  </ListItemIcon>
-                  Profilim
+                  Seyahatlerim
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  Çıkış Yap
-                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout}>Çıkış Yap</MenuItem>
               </Menu>
             </Box>
 
-            {/* Mobile menu icon */}
             <IconButton
-              sx={{
-                display: { xs: "flex", md: "none" },
-                color: "text.primary",
-              }}
+              sx={{ display: { xs: "flex", md: "none" }, color: "text.primary" }}
               onClick={() => setDrawerOpen(true)}
             >
               <MenuIcon />
@@ -256,27 +200,15 @@ export default function CompanyNavbar() {
         </Container>
       </AppBar>
 
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      >
+      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 280, pt: 2 }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 1 }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}>
             <DirectionsBusIcon color="secondary" />
             <Typography variant="h6" fontWeight={800} color="primary">
               TravelBook
             </Typography>
           </Box>
-          <Box sx={{ px: 2, mb: 2 }}>
-            <Typography variant="caption" color="text.secondary">
-              Firma Paneli – {user?.name}
-            </Typography>
-          </Box>
-          <Divider />
+
           <List>
             {navLinks.map((link) => (
               <ListItem key={link.key} disablePadding>
@@ -284,14 +216,14 @@ export default function CompanyNavbar() {
                   component={RouterLink}
                   to={link.path}
                   onClick={() => setDrawerOpen(false)}
-                  selected={isActive(link.key)}
+                  selected={activeKey === link.key}
                 >
-                  <ListItemIcon>{link.icon}</ListItemIcon>
                   <ListItemText primary={link.label} />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
+
           <Divider />
           <Box
             sx={{
@@ -304,7 +236,7 @@ export default function CompanyNavbar() {
           >
             <Button
               component={RouterLink}
-              to="/company/profile"
+              to="/user/profile"
               variant="outlined"
               color="secondary"
               fullWidth
@@ -312,12 +244,20 @@ export default function CompanyNavbar() {
             >
               Profilim
             </Button>
-
+            <Button
+              component={RouterLink}
+              to={purchasesPath}
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              onClick={() => setDrawerOpen(false)}
+            >
+              Seyahatlerim
+            </Button>
             <Button
               variant="outlined"
               color="primary"
               fullWidth
-              startIcon={<LogoutIcon />}
               onClick={() => {
                 setDrawerOpen(false);
                 handleLogout();
@@ -329,7 +269,6 @@ export default function CompanyNavbar() {
         </Box>
       </Drawer>
 
-      {/* Toolbar spacer */}
       <Toolbar />
     </>
   );

@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 const Company = mongoose.model("Company");
+const Tour = mongoose.model("Tour");
+const Guide = mongoose.model("Guide");
+const Purchase = mongoose.model("Purchase");
+const Review = mongoose.model("Review");
+const User = mongoose.model("User");
 const { createResponse } = require("../utils/create-response");
 const { persistUploadedImage } = require("../utils/image-storage");
 
@@ -42,7 +47,7 @@ const deleteCompany = async (req, res) => {
       });
     }
 
-    const company = await Company.findByIdAndDelete(companyId);
+    const company = await Company.findById(companyId).select("_id registeredGuides");
 
     if (!company) {
       return createResponse(res, 404, {
@@ -50,6 +55,51 @@ const deleteCompany = async (req, res) => {
         message: "Firma bulunamadı",
       });
     }
+
+    const tours = await Tour.find({ companyId }).select("_id guideId");
+    const tourIds = tours.map((tour) => tour._id);
+
+    const relatedGuideIdSet = new Set(
+      (company.registeredGuides || []).map((guideId) => guideId.toString()),
+    );
+    for (const tour of tours) {
+      if (tour.guideId) {
+        relatedGuideIdSet.add(tour.guideId.toString());
+      }
+    }
+
+    const relatedGuideIds = Array.from(relatedGuideIdSet).map(
+      (id) => new mongoose.Types.ObjectId(id),
+    );
+
+    const cleanupOperations = [];
+
+    if (relatedGuideIds.length > 0) {
+      cleanupOperations.push(
+        Guide.updateMany(
+          { _id: { $in: relatedGuideIds } },
+          {
+            $pull: {
+              registeredCompanies: company._id,
+              registeredTours: { $in: tourIds },
+            },
+          },
+        ),
+      );
+    }
+
+    if (tourIds.length > 0) {
+      cleanupOperations.push(
+        Purchase.deleteMany({ tourId: { $in: tourIds } }),
+        Review.deleteMany({ tourId: { $in: tourIds } }),
+        User.updateMany({}, { $pull: { favorites: { $in: tourIds } } }),
+        Tour.deleteMany({ _id: { $in: tourIds } }),
+      );
+    }
+
+    cleanupOperations.push(Company.findByIdAndDelete(companyId));
+
+    await Promise.all(cleanupOperations);
 
     createResponse(res, 200, {
       status: "success",

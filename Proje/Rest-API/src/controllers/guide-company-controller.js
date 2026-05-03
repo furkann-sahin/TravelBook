@@ -6,6 +6,13 @@ const { createResponse } = require("../utils/create-response");
 // Rehberin kayıt olduğu firmaları listeleme (GET /api/guides/:guideId/companies)
 const listSavedGuideCompanies = async (req, res) => {
   try {
+    if (req.payload?.id !== req.params.guideId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi kayıtlarınızı görüntüleyebilirsiniz",
+      });
+    }
+
     const guide = await Guide.findById(req.params.guideId).populate(
       "registeredCompanies",
       "name email phone address description rating tourCount",

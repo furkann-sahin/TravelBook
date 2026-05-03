@@ -135,7 +135,7 @@ export default function CompanyGuidesPage() {
             </Typography>
           </Box>
           <Button
-            onClick={() => navigate("/company")}
+            onClick={() => navigate("/company/dashboard")}
             startIcon={<ArrowBackIcon />}
             variant="outlined"
             color="primary"

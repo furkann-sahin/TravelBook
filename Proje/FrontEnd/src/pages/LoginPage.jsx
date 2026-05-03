@@ -25,6 +25,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
 // Define user roles for login
 const roles = [
@@ -49,10 +50,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const roleRedirect = { user: "/user/tours", guide: "/guide", company: "/company" };
     try {
       await login(selectedRole, email, password);
-      navigate(roleRedirect[selectedRole] ?? "/");
+      navigate(getDefaultRouteForRole(selectedRole));
     } catch (err) {
       setError(getErrorMessage(err, "Giriş başarısız. Lütfen bilgilerinizi kontrol edin."));
     } finally {

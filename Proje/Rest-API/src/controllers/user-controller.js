@@ -1,14 +1,52 @@
 const mongoose = require("mongoose");
 const User = mongoose.model("User");
 const Purchase = mongoose.model("Purchase");
+const Tour = mongoose.model("Tour");
+const Review = mongoose.model("Review");
 const { createResponse } = require("../utils/create-response");
+
+const syncTourReviewStats = async (tourId) => {
+  if (!mongoose.Types.ObjectId.isValid(tourId)) return;
+
+  const normalizedTourId = new mongoose.Types.ObjectId(tourId);
+  const [stats] = await Review.aggregate([
+    { $match: { tourId: normalizedTourId } },
+    {
+      $group: {
+        _id: "$tourId",
+        reviewCount: { $sum: 1 },
+        avgRating: { $avg: "$rating" },
+      },
+    },
+  ]);
+
+  if (!stats) {
+    await Tour.findByIdAndUpdate(tourId, { reviewCount: 0, rating: 0 });
+    return;
+  }
+
+  await Tour.findByIdAndUpdate(tourId, {
+    reviewCount: stats.reviewCount,
+    rating: Number(stats.avgRating.toFixed(1)),
+  });
+};
 
 // Get user detail
 const getUserDetail = async (req, res) => {
   try {
     const { userId } = req.params;
+    const authenticatedUserId = req.payload?.id;
 
-    const user = await User.findById(userId);
+    if (authenticatedUserId !== userId) {
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi profilinizi görüntüleyebilirsiniz",
+      });
+    }
+
+    const user = await User.findById(userId).select(
+      "name email phone createdAt updatedAt",
+    );
 
     if (!user) {
       return createResponse(res, 404, {
@@ -19,7 +57,14 @@ const getUserDetail = async (req, res) => {
 
     createResponse(res, 200, {
       status: "success",
-      data: user,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     createResponse(res, 500, {
@@ -71,7 +116,14 @@ const updateUser = async (req, res) => {
     createResponse(res, 200, {
       status: "success",
       message: "Profil başarıyla güncellendi",
-      data: user,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     createResponse(res, 500, {
@@ -85,7 +137,7 @@ const updateUser = async (req, res) => {
 const updateUserPassword = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { oldPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.body;
     const authenticatedUserId = req.payload?.id;
 
     if (authenticatedUserId !== userId) {
@@ -95,10 +147,10 @@ const updateUserPassword = async (req, res) => {
       });
     }
 
-    if (!oldPassword || !newPassword) {
+    if (!currentPassword || !newPassword) {
       return createResponse(res, 400, {
         status: "error",
-        message: "oldPassword ve newPassword alanları zorunludur",
+        message: "currentPassword ve newPassword alanları zorunludur",
       });
     }
 
@@ -111,7 +163,7 @@ const updateUserPassword = async (req, res) => {
       });
     }
 
-    if (!user.validatePassword(oldPassword)) {
+    if (!user.validatePassword(currentPassword)) {
       return createResponse(res, 400, {
         status: "error",
         message: "Eski şifre hatalı",
@@ -215,7 +267,7 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    const user = await User.findByIdAndDelete(userId);
+    const user = await User.findById(userId).select("_id");
 
     if (!user) {
       return createResponse(res, 404, {
@@ -223,6 +275,50 @@ const deleteUser = async (req, res) => {
         message: "Kullanıcı bulunamadı",
       });
     }
+
+    const [userPurchases, reviewedTourIds] = await Promise.all([
+      Purchase.find({ userId }).select("tourId"),
+      Review.find({ userId }).distinct("tourId"),
+    ]);
+
+    if (userPurchases.length > 0) {
+      const purchaseCountByTour = new Map();
+      for (const purchase of userPurchases) {
+        if (!purchase.tourId) continue;
+        const key = purchase.tourId.toString();
+        purchaseCountByTour.set(key, (purchaseCountByTour.get(key) || 0) + 1);
+      }
+
+      await Purchase.deleteMany({ userId });
+
+      const capacityUpdates = Array.from(purchaseCountByTour.entries()).map(
+        ([tourId, count]) => ({
+          updateOne: {
+            filter: { _id: new mongoose.Types.ObjectId(tourId) },
+            update: [
+              {
+                $set: {
+                  filledCapacity: {
+                    $max: [0, { $subtract: ["$filledCapacity", count] }],
+                  },
+                },
+              },
+            ],
+          },
+        }),
+      );
+
+      if (capacityUpdates.length > 0) {
+        await Tour.bulkWrite(capacityUpdates);
+      }
+    }
+
+    if (reviewedTourIds.length > 0) {
+      await Review.deleteMany({ userId });
+      await Promise.all(reviewedTourIds.map((tourId) => syncTourReviewStats(tourId)));
+    }
+
+    await User.findByIdAndDelete(userId);
 
     res.status(204).send();
   } catch (error) {

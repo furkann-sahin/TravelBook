@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import CompanyNavbar from "../components/CompanyNavbar";
 import CompanyFooter from "../components/CompanyFooter";
 import { useAuth } from "../hooks/useAuth";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
 export default function CompanyLayout() {
   const { pathname } = useLocation();
@@ -20,7 +21,7 @@ export default function CompanyLayout() {
 
   // Logged in but wrong role → send to home
   if (user?.role !== "company") {
-    return <Navigate to="/" replace />;
+    return <Navigate to={getDefaultRouteForRole(user?.role)} replace />;
   }
 
   return (

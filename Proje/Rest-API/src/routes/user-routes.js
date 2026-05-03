@@ -39,7 +39,13 @@ router.delete(
 );
 
 // Get user detail
-router.get("/:userId", userController.getUserDetail);
+router.get(
+  "/:userId",
+  requireAuth,
+  requireRole("user"),
+  validate({ params: userIdParamsSchema }),
+  userController.getUserDetail,
+);
 
 // List user purchases
 router.get(

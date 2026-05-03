@@ -25,6 +25,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 import { useAuth } from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
 // Define user roles for registration
 const roles = [
@@ -122,12 +123,7 @@ export default function RegisterPage() {
       }
 
       await register(selectedRole, data);
-      const roleRedirect = {
-        user: "/user/tours",
-        guide: "/guide",
-        company: "/company",
-      };
-      navigate(roleRedirect[selectedRole] ?? "/");
+      navigate(getDefaultRouteForRole(selectedRole));
     } catch (err) {
       setError(getErrorMessage(err, "Kayıt başarısız oldu."));
     } finally {

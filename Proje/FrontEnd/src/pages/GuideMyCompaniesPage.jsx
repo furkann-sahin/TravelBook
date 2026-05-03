@@ -125,7 +125,7 @@ export default function GuideMyCompaniesPage() {
   </Box>
   <Button
   component={RouterLink}
-  to="/guide"
+  to="/guide/dashboard"
   startIcon={<ArrowBackIcon />}
   variant="outlined"
   color="secondary"

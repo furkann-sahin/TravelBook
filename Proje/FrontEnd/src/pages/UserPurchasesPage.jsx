@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -23,7 +23,6 @@ import { userApi, getImageUrl } from "../services/api";
 
 export default function UserPurchasesPage() {
   const navigate = useNavigate();
-  const { userId } = useParams();
   const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
 
@@ -33,16 +32,11 @@ export default function UserPurchasesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const effectiveUserId = useMemo(() => userId || user?.id, [userId, user?.id]);
+  const effectiveUserId = user?.id;
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "user") {
       navigate("/login", { replace: true });
-      return;
-    }
-
-    if (effectiveUserId && user?.id && effectiveUserId !== user.id) {
-      navigate(`/users/${user.id}/purchases`, { replace: true });
       return;
     }
 

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Guide = mongoose.model("Guide");
 const Company = mongoose.model("Company");
+const Tour = mongoose.model("Tour");
 const { createResponse } = require("../utils/create-response");
 const { persistUploadedImage } = require("../utils/image-storage");
 
@@ -79,10 +80,23 @@ const deleteGuide = async (req, res) => {
       return createResponse(res, 403, { status: "error", message: "Yalnızca kendi hesabınızı silebilirsiniz" });
     }
 
-    const deletedGuide = await Guide.findByIdAndDelete(req.params.guideId);
-    if (!deletedGuide) {
+    const guide = await Guide.findById(req.params.guideId).select("_id");
+    if (!guide) {
       return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
     }
+
+    await Promise.all([
+      Company.updateMany(
+        { registeredGuides: guide._id },
+        { $pull: { registeredGuides: guide._id } },
+      ),
+      Tour.updateMany(
+        { guideId: guide._id },
+        { $set: { guideId: null } },
+      ),
+      Guide.findByIdAndDelete(guide._id),
+    ]);
+
     createResponse(res, 200, { status: "success", message: "Kaydınız başarıyla silinmiştir" });
   } catch (error) {
     createResponse(res, 500, {

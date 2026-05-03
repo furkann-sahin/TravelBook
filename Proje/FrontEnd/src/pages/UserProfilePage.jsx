@@ -12,14 +12,14 @@ import {
   Divider,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-
 import { useAuth } from "../hooks/useAuth";
 import { userApi } from "../services/api";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
-export default function UserProfilePage() {
+function UserProfilePage() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "" });
@@ -45,7 +45,9 @@ export default function UserProfilePage() {
         setProfile(res.data);
         setForm({ name: res.data.name, phone: res.data.phone || "" });
       })
-      .catch((err) => setError(getErrorMessage(err, "Profil bilgileri yüklenemedi.")));
+      .catch((err) =>
+        setError(getErrorMessage(err, "Profil bilgileri yüklenemedi.")),
+      );
   }, [isAuthenticated, user, navigate]);
 
   const handleUpdate = async (e) => {
@@ -66,7 +68,8 @@ export default function UserProfilePage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Hesabınızı silmek istediğinizden emin misiniz?")) return;
+    if (!window.confirm("Hesabınızı silmek istediğinizden emin misiniz?"))
+      return;
     try {
       await userApi.deleteAccount(user.id);
       logout();
@@ -98,11 +101,15 @@ export default function UserProfilePage() {
     setPasswordLoading(true);
     try {
       const res = await userApi.updatePassword(user.id, {
-        oldPassword: passwordForm.oldPassword,
+        currentPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword,
       });
       setSuccess(res?.message || "Şifre başarıyla güncellendi.");
-      setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordForm({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (err) {
       setError(err.message || "Şifre güncellenemedi.");
     } finally {
@@ -113,7 +120,7 @@ export default function UserProfilePage() {
   if (!profile) {
     return (
       <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Typography>Yükleniyor…</Typography>
+        <Typography>Yükleniyor...</Typography>
       </Container>
     );
   }
@@ -168,12 +175,8 @@ export default function UserProfilePage() {
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
             <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={loading}
-              >
-                {loading ? "Kaydediliyor…" : "Kaydet"}
+              <Button type="submit" variant="contained" disabled={loading}>
+                {loading ? "Kaydediliyor..." : "Kaydet"}
               </Button>
               <Button
                 variant="outlined"
@@ -195,7 +198,7 @@ export default function UserProfilePage() {
               <strong>E-posta:</strong> {profile.email}
             </Typography>
             <Typography>
-              <strong>Telefon:</strong> {profile.phone || "—"}
+              <strong>Telefon:</strong> {profile.phone || "-"}
             </Typography>
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <Button variant="contained" onClick={() => setEditing(true)}>
@@ -203,7 +206,7 @@ export default function UserProfilePage() {
               </Button>
               <Button
                 variant="outlined"
-                onClick={() => navigate(`/users/${user.id}/purchases`)}
+                onClick={() => navigate("/user/purchases")}
               >
                 Seyahatlerim
               </Button>
@@ -258,8 +261,12 @@ export default function UserProfilePage() {
             autoComplete="new-password"
           />
           <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-            <Button type="submit" variant="contained" disabled={passwordLoading}>
-              {passwordLoading ? "Güncelleniyor…" : "Şifreyi Güncelle"}
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={passwordLoading}
+            >
+              {passwordLoading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
             </Button>
           </Box>
         </Box>
@@ -267,3 +274,5 @@ export default function UserProfilePage() {
     </Container>
   );
 }
+
+export default UserProfilePage;

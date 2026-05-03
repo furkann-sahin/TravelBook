@@ -54,6 +54,19 @@ const mapTourDetail = (tour, reviews = []) => ({
   reviews: reviews.map(mapReview),
 });
 
+const decrementTourCapacitySafely = async (tourId, amount = 1) => {
+  if (!mongoose.Types.ObjectId.isValid(tourId) || amount <= 0) return;
+
+  await Tour.findOneAndUpdate(
+    {
+      _id: tourId,
+      filledCapacity: { $gte: amount },
+    },
+    { $inc: { filledCapacity: -amount } },
+    { new: false },
+  );
+};
+
 // GET TOURS
 const getTours = async (req, res) => {
   try {
@@ -211,24 +224,9 @@ const purchaseTour = async (req, res) => {
       });
     }
 
-    const tour = await Tour.findById(tourId);
-    if (!tour) {
-      return createResponse(res, 404, {
-        status: "error",
-        message: "Tur bulunamadı",
-      });
-    }
-
-    // Kapasite kontrolü
-    if (tour.filledCapacity >= tour.totalCapacity) {
-      return createResponse(res, 409, {
-        status: "error",
-        message: "Tur kapasitesi dolu",
-      });
-    }
-
-    // Mükerrer satın alma kontrolü
-    const existingPurchase = await Purchase.findOne({ userId, tourId });
+    const existingPurchase = await Purchase.findOne({ userId, tourId }).select(
+      "_id",
+    );
     if (existingPurchase) {
       return createResponse(res, 409, {
         status: "error",
@@ -236,10 +234,46 @@ const purchaseTour = async (req, res) => {
       });
     }
 
-    const purchase = await Purchase.create({ userId, tourId });
+    const reservedTour = await Tour.findOneAndUpdate(
+      {
+        _id: tourId,
+        $expr: { $lt: ["$filledCapacity", "$totalCapacity"] },
+      },
+      { $inc: { filledCapacity: 1 } },
+      { new: false },
+    );
 
-    // Kapasiteyi atomik olarak artır
-    await Tour.findByIdAndUpdate(tourId, { $inc: { filledCapacity: 1 } });
+    if (!reservedTour) {
+      const tourExists = await Tour.exists({ _id: tourId });
+
+      if (!tourExists) {
+        return createResponse(res, 404, {
+          status: "error",
+          message: "Tur bulunamadı",
+        });
+      }
+
+      return createResponse(res, 409, {
+        status: "error",
+        message: "Tur kapasitesi dolu",
+      });
+    }
+
+    let purchase;
+    try {
+      purchase = await Purchase.create({ userId, tourId });
+    } catch (error) {
+      await decrementTourCapacitySafely(tourId);
+
+      if (error?.code === 11000) {
+        return createResponse(res, 409, {
+          status: "error",
+          message: "Bu turu zaten satın aldınız",
+        });
+      }
+
+      throw error;
+    }
 
     createResponse(res, 201, {
       status: "success",
@@ -260,27 +294,32 @@ const cancelPurchase = async (req, res) => {
     const { purchaseId } = req.params;
     const userId = req.payload?.id;
 
-    const purchase = await Purchase.findById(purchaseId);
+    if (!userId) {
+      return createResponse(res, 401, {
+        status: "error",
+        message: "İşlem için giriş yapmalısınız",
+      });
+    }
+
+    const purchase = await Purchase.findOneAndDelete({ _id: purchaseId, userId });
+
     if (!purchase) {
+      const existingPurchase = await Purchase.findById(purchaseId).select("_id");
+
+      if (existingPurchase) {
+        return createResponse(res, 403, {
+          status: "error",
+          message: "Yetkisiz işlem",
+        });
+      }
+
       return createResponse(res, 404, {
         status: "error",
         message: "Kayıt bulunamadı",
       });
     }
 
-    if (purchase.userId.toString() !== userId) {
-      return createResponse(res, 403, {
-        status: "error",
-        message: "Yetkisiz işlem",
-      });
-    }
-
-    // Kapasiteyi atomik olarak azalt
-    await Tour.findByIdAndUpdate(purchase.tourId, {
-      $inc: { filledCapacity: -1 },
-    });
-
-    await purchase.deleteOne();
+    await decrementTourCapacitySafely(purchase.tourId);
 
     createResponse(res, 200, {
       status: "success",

@@ -12,7 +12,8 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 const companyLinks = [
-  { label: "Panel", path: "/company" },
+  { label: "Ana Sayfa", path: "/company" },
+  { label: "Dashboard", path: "/company/dashboard" },
   { label: "Turlarım", path: "/company/tours" },
   { label: "Profilim", path: "/company/profile" },
 ];

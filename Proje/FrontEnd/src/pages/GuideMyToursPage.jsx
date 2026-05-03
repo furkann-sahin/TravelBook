@@ -149,7 +149,7 @@ export default function GuideMyToursPage() {
   </Box>
   <Button
   component={RouterLink}
-  to="/guide"
+  to="/guide/dashboard"
   startIcon={<ArrowBackIcon />}
   variant="outlined"
   color="secondary"

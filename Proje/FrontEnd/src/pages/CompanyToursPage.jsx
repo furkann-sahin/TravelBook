@@ -165,7 +165,7 @@ export default function CompanyToursPage() {
             </Button>
             <Button
               component={RouterLink}
-              to="/company"
+              to="/company/dashboard"
               startIcon={<ArrowBackIcon />}
               variant="outlined"
               color="primary"

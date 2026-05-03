@@ -22,12 +22,12 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import BusinessIcon from "@mui/icons-material/Business";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MapIcon from "@mui/icons-material/Map";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
-import InfoIcon from "@mui/icons-material/Info";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useAuth } from "../hooks/useAuth";
 import { getImageUrl } from "../services/api";
@@ -40,26 +40,37 @@ export default function GuideNavbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
-    { label: "Ana Sayfa", path: "/", icon: <HomeIcon />, key: "home" },
+    { label: "Ana Sayfa", path: "/guide", icon: <HomeIcon />, key: "home" },
     {
-      label: "Panel",
-      path: "/guide",
+      label: "Dashboard",
+      path: "/guide/dashboard",
       icon: <DashboardIcon />,
       key: "dashboard",
     },
     {
-      label: "Firmalarım",
-      path: "/guide/my-companies",
-      icon: <CheckCircleIcon />,
+      label: "Firmalar",
+      path: "/guide/companies",
+      icon: <BusinessIcon />,
       key: "companies",
+    },
+    {
+      label: "Kayıtlarım",
+      path: "/guide/my-companies",
+      icon: <HowToRegIcon />,
+      key: "myCompanies",
     },
     {
       label: "Turlarım",
       path: "/guide/my-tours",
       icon: <MapIcon />,
-      key: "tours",
+      key: "myTours",
     },
-    { label: "Hakkımızda", path: "/about", icon: <InfoIcon />, key: "about" },
+    {
+      label: "Profil",
+      path: "/guide/profile",
+      icon: <PersonIcon />,
+      key: "profile",
+    },
   ];
 
   const handleLogout = () => {
@@ -69,12 +80,12 @@ export default function GuideNavbar() {
   };
 
   const getActiveKey = (pathname) => {
-    if (pathname === "/") return "home";
-    if (pathname === "/about") return "about";
-    if (pathname.startsWith("/guide/my-companies")) return "companies";
+    if (pathname === "/guide") return "home";
+    if (pathname.startsWith("/guide/dashboard")) return "dashboard";
     if (pathname.startsWith("/guide/companies")) return "companies";
-    if (pathname.startsWith("/guide/my-tours")) return "tours";
-    if (pathname.startsWith("/guide/tours")) return "tours";
+    if (pathname.startsWith("/guide/my-companies")) return "myCompanies";
+    if (pathname.startsWith("/guide/my-tours")) return "myTours";
+    if (pathname.startsWith("/guide/tours")) return "myTours";
     if (pathname.startsWith("/guide/profile")) return "profile";
     if (pathname.startsWith("/guide")) return "dashboard";
     return null;
@@ -212,13 +223,13 @@ export default function GuideNavbar() {
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
-                    navigate("/guide");
+                    navigate("/guide/dashboard");
                   }}
                 >
                   <ListItemIcon>
                     <DashboardIcon fontSize="small" />
                   </ListItemIcon>
-                  Panel
+                  Dashboard
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
