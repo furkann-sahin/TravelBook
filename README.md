@@ -66,7 +66,7 @@ Docker yapilandirmasi `Proje` klasoru altina eklendi.
 2. Asagidaki komutu calistirin:
 
 ```bash
-docker compose up --build
+docker compose -f infra/docker-compose.yml up --build
 ```
 
 Servisler:

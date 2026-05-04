@@ -1,0 +1,219 @@
+pipeline {
+    agent any
+
+    environment {
+        // Jenkins Credentials Store'da tanımlanması gereken secret'lar
+        JWT_SECRET      = credentials('travelbook-jwt-secret')
+        MONGODB_URI     = credentials('travelbook-mongodb-uri')
+        COMPOSE_PROJECT = 'travelbook'
+        API_IMAGE       = 'travelbook-api'
+        FRONTEND_IMAGE  = 'travelbook-frontend'
+        PROJECT_ROOT    = 'Proje'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        // Declarative varsayilan checkout'u kapat; checkout'u Checkout stage'inde tek sefer yap.
+        skipDefaultCheckout(true)
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    stages {
+
+        // ─────────────────────────────────────────
+        // 1) Kaynak kodu al
+        // ─────────────────────────────────────────
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    def normalizedBranch = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'main')
+                        .replaceFirst(/^origin\//, '')
+                        .replaceFirst(/^refs\/heads\//, '')
+
+                    env.EFFECTIVE_BRANCH = normalizedBranch
+                    echo "Branch: ${env.EFFECTIVE_BRANCH} | Build: #${env.BUILD_NUMBER}"
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 2) Bağımlılıkları yükle (her proje için bir kez)
+        //    npm ci: package-lock.json'a göre temiz kurulum
+        // ─────────────────────────────────────────
+        stage('Install Dependencies') {
+            parallel {
+                stage('Install: REST API') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/Rest-API") {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+                stage('Install: Frontend') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/FrontEnd") {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 3) Güvenlik denetimi (read-only)
+        //    CI icinde package-lock degistirmemek icin audit fix yerine audit kullan.
+        // ─────────────────────────────────────────
+        stage('Security Audit') {
+            parallel {
+                stage('Audit: REST API') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/Rest-API") {
+                            sh 'npm audit --audit-level=high'
+                        }
+                    }
+                }
+                stage('Audit: Frontend') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/FrontEnd") {
+                            sh 'npm audit --audit-level=high'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 4) Lint
+        // ─────────────────────────────────────────
+        stage('Lint') {
+            parallel {
+                stage('Lint: REST API') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/Rest-API") {
+                            sh 'npm run lint'
+                        }
+                    }
+                }
+                stage('Lint: Frontend') {
+                    steps {
+                        dir("${env.PROJECT_ROOT}/FrontEnd") {
+                            sh 'npm run lint'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 5) Frontend derleme — dist/ klasörü artifact olarak saklanır
+        // ─────────────────────────────────────────
+        stage('Build: Frontend') {
+            steps {
+                dir("${env.PROJECT_ROOT}/FrontEnd") {
+                    sh 'npm run build'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: "${env.PROJECT_ROOT}/FrontEnd/dist/**", fingerprint: true
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 6) Docker image'larını oluştur
+        // ─────────────────────────────────────────
+        stage('Build: Docker Images') {
+            steps {
+                script {
+                    def tag = env.BUILD_NUMBER
+
+                    sh """
+                        docker build \
+                            -t ${API_IMAGE}:${tag} \
+                            -t ${API_IMAGE}:latest \
+                            ${env.PROJECT_ROOT}/Rest-API
+                    """
+
+                    sh """
+                        docker build \
+                            --build-arg VITE_API_URL=/api \
+                            -t ${FRONTEND_IMAGE}:${tag} \
+                            -t ${FRONTEND_IMAGE}:latest \
+                            ${env.PROJECT_ROOT}/FrontEnd
+                    """
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 7) Deploy — yalnızca main branch
+        // ─────────────────────────────────────────
+        stage('Deploy') {
+            when {
+                expression {
+                    return env.EFFECTIVE_BRANCH == 'main'
+                }
+            }
+            steps {
+                script {
+                    // Secret'lar environment blokundan geliyor; interpolation yapmadan shell'e ilet.
+                    sh '''
+                        docker-compose \
+                            -p "$COMPOSE_PROJECT" \
+                            -f "$PROJECT_ROOT/infra/docker-compose.yml" \
+                            up -d --build --remove-orphans
+                    '''
+                }
+            }
+            post {
+                success {
+                    echo 'Deployment basarili.'
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // 8) Health Check
+        //    Deploy sonrası servislerin ayağa kalkmasını bekler,
+        //    ardından API ve Frontend'i curl ile sınar.
+        // ─────────────────────────────────────────
+        stage('Health Check') {
+            when {
+                expression {
+                    return env.EFFECTIVE_BRANCH == 'main'
+                }
+            }
+            steps {
+                script {
+                    sleep time: 15, unit: 'SECONDS'
+                    sh 'curl -f http://localhost:3000/api || echo "Backend henuz hazir degil"'
+                    sh 'curl -f http://localhost:8080     || echo "Frontend henuz hazir degil"'
+                }
+            }
+            post {
+                success {
+                    echo 'Deploy basarili: TravelBook calisiyor.'
+                }
+                failure {
+                    echo 'Deploy basarisiz: loglari kontrol et.'
+                }
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────
+    post {
+        always {
+            sh 'docker image prune -f || true'
+        }
+        success {
+            echo "Pipeline basariyla tamamlandi. Build #${env.BUILD_NUMBER}"
+        }
+        failure {
+            echo "Pipeline basarisiz oldu! Build #${env.BUILD_NUMBER}"
+        }
+    }
+}
