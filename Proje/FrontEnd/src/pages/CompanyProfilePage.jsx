@@ -23,7 +23,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import ImageIcon from "@mui/icons-material/Image";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -527,7 +527,18 @@ export default function CompanyProfilePage() {
               gutterBottom
               sx={{ display: "flex", alignItems: "center", gap: 1 }}
             >
-              <DirectionsBusIcon color="secondary" />
+              <Box
+                component="img"
+                src="/favicon.svg"
+                alt="TravelBook"
+                sx={{ width: 22, height: 22, objectFit: "contain" }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  const next = e.currentTarget.nextElementSibling;
+                  if (next) next.style.display = "inline-flex";
+                }}
+              />
+              <ImageIcon color="secondary" sx={{ display: "none" }} />
               Hakkımızda
             </Typography>
             {editing ? (

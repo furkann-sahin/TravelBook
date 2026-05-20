@@ -21,8 +21,8 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
 import PersonIcon from "@mui/icons-material/Person";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
+import BrandLogo from "../components/BrandLogo";
 import { useAuth } from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/getErrorMessage";
 import { getDefaultRouteForRole } from "../utils/authRoutes";
@@ -82,23 +82,13 @@ export default function LoginPage() {
           }}
         >
           {/* Logo */}
-          <Box
-            component={RouterLink}
+          <BrandLogo
             to="/"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-              mb: 1,
-              textDecoration: "none",
-            }}
-          >
-            <DirectionsBusIcon sx={{ fontSize: 36, color: "primary.main" }} />
-            <Typography variant="h4" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+            iconSize={36}
+            textVariant="h4"
+            textColor="primary.main"
+            sx={{ justifyContent: "center", mb: 1 }}
+          />
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
             Lütfen rolünüzü seçin ve giriş bilgilerinizi girin.

@@ -20,7 +20,6 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MapIcon from "@mui/icons-material/Map";
 import GroupIcon from "@mui/icons-material/Group";
@@ -28,6 +27,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
 import { getImageUrl } from "../services/api";
 
@@ -99,29 +99,11 @@ export default function CompanyNavbar() {
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
             {/* Brand */}
-            <Box
-              component={RouterLink}
+            <BrandLogo
               to="/company"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textDecoration: "none",
-              }}
+              iconSize={32}
+              textColor="primary.main"
             >
-              <DirectionsBusIcon
-                sx={{ fontSize: 32, color: "secondary.main" }}
-              />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: "primary.main",
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                TravelBook
-              </Typography>
               <Typography
                 variant="caption"
                 sx={{
@@ -139,7 +121,7 @@ export default function CompanyNavbar() {
               >
                 Firma Paneli
               </Typography>
-            </Box>
+            </BrandLogo>
 
             {/* Desktop nav links */}
             <Box
@@ -263,14 +245,13 @@ export default function CompanyNavbar() {
         onClose={() => setDrawerOpen(false)}
       >
         <Box sx={{ width: 280, pt: 2 }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 1 }}
-          >
-            <DirectionsBusIcon color="secondary" />
-            <Typography variant="h6" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+          <BrandLogo
+            to="/company"
+            iconSize={24}
+            textVariant="h6"
+            textColor="primary.main"
+            sx={{ px: 2, mb: 1 }}
+          />
           <Box sx={{ px: 2, mb: 2 }}>
             <Typography variant="caption" color="text.secondary">
               Firma Paneli – {user?.name}

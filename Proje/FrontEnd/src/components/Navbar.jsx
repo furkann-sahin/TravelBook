@@ -22,9 +22,9 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import PersonIcon from "@mui/icons-material/Person";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
 import { getImageUrl } from "../services/api";
 import { getDefaultRouteForRole } from "../utils/authRoutes";
@@ -81,28 +81,7 @@ export default function Navbar() {
       >
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-            <Box
-              component={RouterLink}
-              to="/"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textDecoration: "none",
-              }}
-            >
-              <DirectionsBusIcon sx={{ fontSize: 32, color: brandColor }} />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: brandColor,
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                TravelBook
-              </Typography>
-            </Box>
+            <BrandLogo to="/" iconSize={32} textColor={brandColor} />
 
             <Box
               sx={{
@@ -234,14 +213,13 @@ export default function Navbar() {
         onClose={() => setDrawerOpen(false)}
       >
         <Box sx={{ width: 260, pt: 2 }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
-          >
-            <DirectionsBusIcon color="primary" />
-            <Typography variant="h6" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+          <BrandLogo
+            to="/"
+            iconSize={24}
+            textVariant="h6"
+            textColor="primary.main"
+            sx={{ px: 2, mb: 2 }}
+          />
           <List>
             {publicNavLinks.map((link) => (
               <ListItem key={link.key} disablePadding>
