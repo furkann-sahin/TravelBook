@@ -19,11 +19,11 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import HomeIcon from "@mui/icons-material/Home";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
 import { getImageUrl } from "../services/api";
 
@@ -72,27 +72,11 @@ export default function UserNavbar() {
       >
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-            <Box
-              component={RouterLink}
+            <BrandLogo
               to="/user"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textDecoration: "none",
-              }}
+              iconSize={32}
+              textColor="primary.main"
             >
-              <DirectionsBusIcon sx={{ fontSize: 32, color: "secondary.main" }} />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: "primary.main",
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                TravelBook
-              </Typography>
               <Typography
                 variant="caption"
                 sx={{
@@ -110,7 +94,7 @@ export default function UserNavbar() {
               >
                 Kullanıcı
               </Typography>
-            </Box>
+            </BrandLogo>
 
             <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
               {navLinks.map((link) => (
@@ -202,12 +186,13 @@ export default function UserNavbar() {
 
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 280, pt: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}>
-            <DirectionsBusIcon color="secondary" />
-            <Typography variant="h6" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+          <BrandLogo
+            to="/user"
+            iconSize={24}
+            textVariant="h6"
+            textColor="primary.main"
+            sx={{ px: 2, mb: 2 }}
+          />
 
           <List>
             {navLinks.map((link) => (
