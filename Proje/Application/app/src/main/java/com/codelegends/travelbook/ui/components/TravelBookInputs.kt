@@ -1,6 +1,10 @@
 package com.codelegends.travelbook.ui.components
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -14,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun TravelBookTextField(
@@ -21,22 +26,38 @@ fun TravelBookTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    helperText: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true,
-    minLines: Int = 1
+    minLines: Int = 1,
+    maxLines: Int = Int.MAX_VALUE
 ) {
-    OutlinedTextField(
-        modifier = modifier.fillMaxWidth(),
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(text = label) },
-        singleLine = singleLine,
-        minLines = minLines,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-            keyboardType = keyboardType
-        ),
-        shape = MaterialTheme.shapes.medium
-    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(text = label) },
+            placeholder = placeholder?.let { { Text(text = it) } },
+            singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType
+            ),
+            shape = MaterialTheme.shapes.medium
+        )
+        if (helperText != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = helperText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 12.dp)
+            )
+        }
+    }
 }
 
 @Composable

@@ -9,6 +9,10 @@ import com.codelegends.travelbook.model.CompanyLoginInput
 import com.codelegends.travelbook.model.CompanyLoginRequestDto
 import com.codelegends.travelbook.model.CompanyRegisterInput
 import com.codelegends.travelbook.model.CompanyRegisterRequestDto
+import com.codelegends.travelbook.model.GuideLoginInput
+import com.codelegends.travelbook.model.GuideLoginRequestDto
+import com.codelegends.travelbook.model.GuideRegisterInput
+import com.codelegends.travelbook.model.GuideRegisterRequestDto
 import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.service.AuthApiService
 import retrofit2.Response
@@ -30,6 +34,16 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun loginGuide(input: GuideLoginInput): ApiResult<UserSession> {
+        val request = GuideLoginRequestDto(
+            email = input.email,
+            password = input.password
+        )
+        return authenticate(expectedRole = "guide") {
+            authApiService.loginGuide(request)
+        }
+    }
+
     override suspend fun registerCompany(input: CompanyRegisterInput): ApiResult<UserSession> {
         val request = CompanyRegisterRequestDto(
             name = input.name,
@@ -41,6 +55,25 @@ class AuthRepositoryImpl @Inject constructor(
         )
         return authenticate(expectedRole = "company") {
             authApiService.registerCompany(request)
+        }
+    }
+
+    override suspend fun registerGuide(input: GuideRegisterInput): ApiResult<UserSession> {
+        val request = GuideRegisterRequestDto(
+            firstName = input.firstName,
+            lastName = input.lastName,
+            email = input.email,
+            password = input.password,
+            phone = input.phone,
+            biography = input.biography,
+            languages = input.languages,
+            expertRoutes = input.expertRoutes,
+            experienceYears = input.experienceYears,
+            instagram = input.instagram,
+            linkedin = input.linkedin
+        )
+        return authenticate(expectedRole = "guide") {
+            authApiService.registerGuide(request)
         }
     }
 

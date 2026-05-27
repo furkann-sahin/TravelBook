@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.codelegends.travelbook.model.AuthRole
+import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.ui.components.TravelBookBrandLogo
 import com.codelegends.travelbook.ui.components.TravelBookPasswordField
 import com.codelegends.travelbook.ui.components.TravelBookTextField
@@ -64,7 +65,7 @@ private val roleIcons: List<ImageVector> = listOf(
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit,
+    onNavigateToHome: (UserSession) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -74,7 +75,7 @@ fun LoginScreen(
         viewModel.events.collect { event ->
             when (event) {
                 LoginEvent.NavigateToRegister -> onNavigateToRegister()
-                LoginEvent.NavigateToHome -> onNavigateToHome()
+                is LoginEvent.NavigateToHome -> onNavigateToHome(event.session)
                 LoginEvent.NavigateBack -> onNavigateBack()
             }
         }
@@ -201,9 +202,12 @@ fun LoginScreen(
 
                     Spacer(Modifier.height(20.dp))
 
+                    val selectedRole = AuthRole.entries[uiState.selectedRoleIndex]
+                    val isRoleSupported = selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE
+
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading,
+                        enabled = !uiState.isLoading && isRoleSupported,
                         onClick = viewModel::submit,
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(vertical = 14.dp),
@@ -215,6 +219,16 @@ fun LoginScreen(
                             text = if (uiState.isLoading) "Giriş yapılıyor..." else "Giriş Yap",
                             style = MaterialTheme.typography.labelLarge,
                             fontSize = 16.sp
+                        )
+                    }
+
+                    if (!isRoleSupported) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "${selectedRole.displayName} girişi yakında eklenecek.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
                         )
                     }
 
