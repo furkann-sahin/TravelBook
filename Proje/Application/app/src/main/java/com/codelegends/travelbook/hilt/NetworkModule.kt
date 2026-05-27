@@ -5,6 +5,7 @@ import com.codelegends.travelbook.core.config.AppConfig
 import com.codelegends.travelbook.core.network.AuthInterceptor
 import com.codelegends.travelbook.service.AuthApiService
 import com.codelegends.travelbook.service.CompanyTourApiService
+import com.codelegends.travelbook.service.GuideApiService
 import com.codelegends.travelbook.service.TourApiService
 import dagger.Module
 import dagger.Provides
@@ -74,5 +75,11 @@ object NetworkModule {
     @Singleton
     fun provideTourApiService(retrofit: Retrofit): TourApiService {
         return retrofit.create(TourApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGuideApiService(retrofit: Retrofit): GuideApiService {
+        return retrofit.create(GuideApiService::class.java)
     }
 }

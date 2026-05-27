@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.AuthRole
 import com.codelegends.travelbook.model.CompanyLoginInput
+import com.codelegends.travelbook.model.GuideLoginInput
+import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.usecase.CompanyLoginUseCase
+import com.codelegends.travelbook.usecase.GuideLoginUseCase
 import com.codelegends.travelbook.util.AuthValidators
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,13 +32,14 @@ data class LoginUiState(
 
 sealed interface LoginEvent {
     data object NavigateToRegister : LoginEvent
-    data object NavigateToHome : LoginEvent
+    data class NavigateToHome(val session: UserSession) : LoginEvent
     data object NavigateBack : LoginEvent
 }
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val companyLoginUseCase: CompanyLoginUseCase
+    private val companyLoginUseCase: CompanyLoginUseCase,
+    private val guideLoginUseCase: GuideLoginUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -64,17 +68,19 @@ class LoginViewModel @Inject constructor(
         val state = _uiState.value
         val role = AuthRole.entries[state.selectedRoleIndex]
 
-        if (role != AuthRole.COMPANY) {
-            _uiState.update {
-                it.copy(errorMessage = "Bu rol için giriş desteği yakında eklenecek")
+        when (role) {
+            AuthRole.COMPANY -> submitCompany(state)
+            AuthRole.GUIDE -> submitGuide(state)
+            else -> {
+                _uiState.update {
+                    it.copy(errorMessage = "Bu rol için giriş desteği yakında eklenecek")
+                }
             }
-            return
         }
+    }
 
-        val validationError =
-            AuthValidators.validateEmail(state.email)
-                ?: AuthValidators.validatePassword(state.password)
-
+    private fun submitCompany(state: LoginUiState) {
+        val validationError = validateForm(state)
         if (validationError != null) {
             _uiState.update { it.copy(errorMessage = validationError) }
             return
@@ -82,28 +88,54 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (
-                val result = companyLoginUseCase(
-                    CompanyLoginInput(
-                        email = state.email.trim(),
-                        password = state.password
-                    )
+            val result = companyLoginUseCase(
+                CompanyLoginInput(
+                    email = state.email.trim(),
+                    password = state.password
                 )
-            ) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false) }
-                    _events.emit(LoginEvent.NavigateToHome)
-                }
+            )
+            handleResult(result)
+        }
+    }
 
-                is ApiResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
+    private fun submitGuide(state: LoginUiState) {
+        val validationError = validateForm(state)
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = guideLoginUseCase(
+                GuideLoginInput(
+                    email = state.email.trim(),
+                    password = state.password
+                )
+            )
+            handleResult(result)
+        }
+    }
+
+    private suspend fun handleResult(result: ApiResult<UserSession>) {
+        when (result) {
+            is ApiResult.Success -> {
+                _uiState.update { it.copy(isLoading = false) }
+                _events.emit(LoginEvent.NavigateToHome(result.data))
+            }
+            is ApiResult.Error -> {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
                 }
             }
         }
+    }
+
+    private fun validateForm(state: LoginUiState): String? {
+        return AuthValidators.validateEmail(state.email)
+            ?: AuthValidators.validatePassword(state.password)
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.codelegends.travelbook.model.AuthRole
+import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.ui.components.TravelBookBrandLogo
 import com.codelegends.travelbook.ui.components.TravelBookPasswordField
 import com.codelegends.travelbook.ui.components.TravelBookTextField
@@ -65,7 +66,7 @@ private val roleIcons: List<ImageVector> = listOf(
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit,
+    onNavigateToHome: (UserSession) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
@@ -75,7 +76,7 @@ fun RegisterScreen(
         viewModel.events.collect { event ->
             when (event) {
                 RegisterEvent.NavigateToLogin -> onNavigateToLogin()
-                RegisterEvent.NavigateToHome -> onNavigateToHome()
+                is RegisterEvent.NavigateToHome -> onNavigateToHome(event.session)
                 RegisterEvent.NavigateBack -> onNavigateBack()
             }
         }
@@ -186,6 +187,8 @@ fun RegisterScreen(
                     val selectedRole = AuthRole.entries[uiState.selectedRoleIndex]
                     if (selectedRole == AuthRole.COMPANY) {
                         CompanyRegisterForm(uiState = uiState, viewModel = viewModel)
+                    } else if (selectedRole == AuthRole.GUIDE) {
+                        GuideRegisterForm(uiState = uiState, viewModel = viewModel)
                     } else {
                         ComingSoonRoleForm(roleName = selectedRole.displayName)
                     }
@@ -194,7 +197,7 @@ fun RegisterScreen(
 
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading && selectedRole == AuthRole.COMPANY,
+                        enabled = !uiState.isLoading && (selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE),
                         onClick = viewModel::submit,
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(vertical = 14.dp),
@@ -299,6 +302,106 @@ private fun CompanyRegisterForm(
             label = "Açıklama",
             singleLine = false,
             minLines = 3
+        )
+    }
+}
+
+@Composable
+private fun GuideRegisterForm(
+    uiState: RegisterUiState,
+    viewModel: RegisterViewModel
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        TravelBookTextField(
+            value = uiState.firstName,
+            onValueChange = viewModel::onFirstNameChanged,
+            label = "Ad",
+            placeholder = "Adınızı girin"
+        )
+        TravelBookTextField(
+            value = uiState.lastName,
+            onValueChange = viewModel::onLastNameChanged,
+            label = "Soyad",
+            placeholder = "Soyadınızı girin"
+        )
+        TravelBookTextField(
+            value = uiState.email,
+            onValueChange = viewModel::onEmailChanged,
+            label = "E-posta Adresi",
+            placeholder = "ornek@email.com",
+            keyboardType = KeyboardType.Email
+        )
+        TravelBookPasswordField(
+            value = uiState.password,
+            onValueChange = viewModel::onPasswordChanged,
+            label = "Şifre",
+            isVisible = uiState.isPasswordVisible,
+            onVisibilityToggle = viewModel::onPasswordVisibilityToggled
+        )
+        TravelBookPasswordField(
+            value = uiState.confirmPassword,
+            onValueChange = viewModel::onConfirmPasswordChanged,
+            label = "Şifreyi Onayla",
+            isVisible = uiState.isPasswordVisible,
+            onVisibilityToggle = viewModel::onPasswordVisibilityToggled
+        )
+        TravelBookTextField(
+            value = uiState.phone,
+            onValueChange = viewModel::onPhoneChanged,
+            label = "Telefon (İsteğe bağlı)",
+            placeholder = "+90 555 123 4567",
+            keyboardType = KeyboardType.Phone
+        )
+        TravelBookTextField(
+            value = uiState.biography,
+            onValueChange = viewModel::onBiographyChanged,
+            label = "Biyografi (İsteğe bağlı)",
+            placeholder = "Kendinizden bahsedin...",
+            singleLine = false,
+            minLines = 3,
+            maxLines = 5
+        )
+        TravelBookTextField(
+            value = uiState.languages,
+            onValueChange = viewModel::onLanguagesChanged,
+            label = "Diller (İsteğe bağlı)",
+            placeholder = "Türkçe, İngilizce...",
+            helperText = "Virgülle ayırarak yazın"
+        )
+        TravelBookTextField(
+            value = uiState.expertRoutes,
+            onValueChange = viewModel::onExpertRoutesChanged,
+            label = "Uzman Rotalar (İsteğe bağlı)",
+            placeholder = "Kapadokya, Efes...",
+            helperText = "Virgülle ayırarak yazın"
+        )
+        TravelBookTextField(
+            value = uiState.experienceYears,
+            onValueChange = viewModel::onExperienceYearsChanged,
+            label = "Deneyim Yılı (İsteğe bağlı)",
+            placeholder = "Örn: 5",
+            keyboardType = KeyboardType.Number
+        )
+
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Sosyal Medya (İsteğe bağlı)",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        TravelBookTextField(
+            value = uiState.instagram,
+            onValueChange = viewModel::onInstagramChanged,
+            label = "Instagram",
+            placeholder = "username"
+        )
+        TravelBookTextField(
+            value = uiState.linkedin,
+            onValueChange = viewModel::onLinkedinChanged,
+            label = "LinkedIn",
+            placeholder = "username/profile"
         )
     }
 }

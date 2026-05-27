@@ -29,11 +29,24 @@ fun TravelBookApp(
         return
     }
 
-    val startRoute = if (AppRoute.isCompanyRole(entryState.session?.role)) {
-        AppRoute.CompanyShell.route
-    } else {
-        AppRoute.PublicShell.route
+    val sessionRole = entryState.session?.role
+    android.util.Log.d("TravelBookApp", "Current session role: $sessionRole")
+
+    val startRoute = when {
+        AppRoute.isCompanyRole(sessionRole) -> {
+            android.util.Log.d("TravelBookApp", "Matching as Company role")
+            AppRoute.CompanyShell.route
+        }
+        AppRoute.isGuideRole(sessionRole) -> {
+            android.util.Log.d("TravelBookApp", "Matching as Guide role")
+            AppRoute.GuideShell.route
+        }
+        else -> {
+            android.util.Log.d("TravelBookApp", "Defaulting to Public shell")
+            AppRoute.PublicShell.route
+        }
     }
+    android.util.Log.d("TravelBookApp", "Final start route: $startRoute")
 
     AppNavGraph(
         startDestination = startRoute

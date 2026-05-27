@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -66,12 +67,19 @@ import com.codelegends.travelbook.ui.screens.CompanyProfileScreen
 import com.codelegends.travelbook.ui.screens.CompanyTourDetailScreen
 import com.codelegends.travelbook.ui.screens.CompanyToursScreen
 import com.codelegends.travelbook.ui.screens.CreateTourScreen
+import com.codelegends.travelbook.ui.screens.GuideDashboardScreen
+import com.codelegends.travelbook.ui.screens.GuideCompaniesScreen
+import com.codelegends.travelbook.ui.screens.GuideMyCompaniesScreen
+import com.codelegends.travelbook.ui.screens.GuideMyToursScreen
+import com.codelegends.travelbook.ui.screens.GuideHomeScreen
+import com.codelegends.travelbook.ui.screens.GuideProfileScreen
 import com.codelegends.travelbook.ui.screens.LoginScreen
 import com.codelegends.travelbook.ui.screens.PublicAboutScreen
 import com.codelegends.travelbook.ui.screens.PublicHomeScreen
 import com.codelegends.travelbook.ui.screens.PublicToursScreen
 import com.codelegends.travelbook.ui.screens.RegisterScreen
 import com.codelegends.travelbook.viewmodel.CompanyShellViewModel
+import com.codelegends.travelbook.viewmodel.GuideShellViewModel
 
 /**
  * Height of the floating bottom nav bar provided by the active shell.
@@ -116,8 +124,15 @@ fun AppNavGraph(
                             launchSingleTop = true
                         }
                     },
-                    onNavigateToHome = {
-                        navController.navigate(AppRoute.CompanyShell.route) {
+                    onNavigateToHome = { session ->
+                        android.util.Log.d("TravelBookNav", "Navigating to home. Role: ${session.role}")
+                        val route = when {
+                            AppRoute.isCompanyRole(session.role) -> AppRoute.CompanyShell.route
+                            AppRoute.isGuideRole(session.role) -> AppRoute.GuideShell.route
+                            else -> AppRoute.PublicShell.route
+                        }
+                        android.util.Log.d("TravelBookNav", "Calculated route: $route")
+                        navController.navigate(route) {
                             popUpTo(AppRoute.AuthGraph.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -138,8 +153,15 @@ fun AppNavGraph(
                             launchSingleTop = true
                         }
                     },
-                    onNavigateToHome = {
-                        navController.navigate(AppRoute.CompanyShell.route) {
+                    onNavigateToHome = { session ->
+                        android.util.Log.d("TravelBookNav", "Navigating to home. Role: ${session.role}")
+                        val route = when {
+                            AppRoute.isCompanyRole(session.role) -> AppRoute.CompanyShell.route
+                            AppRoute.isGuideRole(session.role) -> AppRoute.GuideShell.route
+                            else -> AppRoute.PublicShell.route
+                        }
+                        android.util.Log.d("TravelBookNav", "Calculated route: $route")
+                        navController.navigate(route) {
                             popUpTo(AppRoute.AuthGraph.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -159,6 +181,17 @@ fun AppNavGraph(
                 onLoggedOut = {
                     navController.navigate(AppRoute.PublicShell.route) {
                         popUpTo(AppRoute.CompanyShell.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(AppRoute.GuideShell.route) {
+            GuideAppShell(
+                onLoggedOut = {
+                    navController.navigate(AppRoute.PublicShell.route) {
+                        popUpTo(AppRoute.GuideShell.route) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
@@ -489,6 +522,223 @@ private fun CompanyAppShell(
                 }
             }
         } // CompositionLocalProvider
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GuideAppShell(
+    onLoggedOut: () -> Unit,
+    viewModel: GuideShellViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val shellNavController = rememberNavController()
+    val navBackStackEntry by shellNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = AppRoute.guideTabRoutes.contains(currentRoute)
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val tabs = listOf(
+        TravelBookNavItem(AppRoute.GuideCompanies.route, "Firmalar", Icons.Default.Business),
+        TravelBookNavItem(AppRoute.GuideDashboard.route, "Panel", Icons.Default.Dashboard),
+        TravelBookNavItem(
+            route = AppRoute.GuideHome.route,
+            label = "",
+            icon = Icons.Default.Home,
+            contentDescription = "Ana Sayfa",
+            isHome = true
+        ),
+        TravelBookNavItem(AppRoute.GuideMyTours.route, "Turlar", Icons.Default.Map),
+        TravelBookNavItem(AppRoute.GuideProfile.route, "Profilim", Icons.Default.Person)
+    )
+
+    val density = LocalDensity.current
+    var navBarHeightPx by remember { mutableIntStateOf(0) }
+    val navBarHeightDp = with(density) { navBarHeightPx.toDp() }
+
+    Scaffold(
+        topBar = {
+            if (showBottomBar) TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TravelBookBrandLogo(
+                            iconSize = 24.dp,
+                            textStyle = MaterialTheme.typography.titleMedium,
+                            textColor = MaterialTheme.colorScheme.onSurface,
+                            spacing = 6.dp
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "REHBER PANELİ",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                letterSpacing = 0.6.sp
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Menü"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(text = uiState.session?.email.orEmpty()) },
+                            onClick = {},
+                            enabled = false
+                        )
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null
+                                )
+                            },
+                            text = { Text("Hakkımızda") },
+                            onClick = {
+                                menuExpanded = false
+                                shellNavController.navigate(AppRoute.PublicAbout.route) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = null
+                                )
+                            },
+                            text = { Text("Çıkış Yap") },
+                            enabled = !uiState.isLoggingOut,
+                            onClick = {
+                                menuExpanded = false
+                                viewModel.logout(onLoggedOut)
+                            }
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        bottomBar = {
+            if (showBottomBar) {
+                AppBottomNavBar(
+                    items = tabs,
+                    currentRoute = currentRoute,
+                    onRouteSelected = { route ->
+                        if (currentRoute != route) shellNavController.navigateToTopLevel(route)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { navBarHeightPx = it.height }
+                )
+            }
+        }
+    ) { innerPadding ->
+        CompositionLocalProvider(LocalNavBarHeight provides if (showBottomBar) navBarHeightDp else 0.dp) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding())
+            ) {
+                NavHost(
+                    navController = shellNavController,
+                    startDestination = AppRoute.GuideHome.route,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable(AppRoute.GuideHome.route) {
+                        GuideHomeScreen(
+                            onOpenDashboard = {
+                                shellNavController.navigate(AppRoute.GuideDashboard.route) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onOpenCompanies = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideCompanies.route)
+                            },
+                            onOpenMyCompanies = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideMyCompanies.route)
+                            },
+                            onOpenMyTours = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideMyTours.route)
+                            },
+                            onOpenProfile = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideProfile.route)
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.GuideDashboard.route) {
+                        GuideDashboardScreen(
+                            onOpenCompanies = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideCompanies.route)
+                            },
+                            onOpenMyCompanies = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideMyCompanies.route)
+                            },
+                            onOpenMyTours = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideMyTours.route)
+                            },
+                            onOpenProfile = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideProfile.route)
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.GuideCompanies.route) {
+                        GuideCompaniesScreen()
+                    }
+
+                    composable(AppRoute.GuideMyCompanies.route) {
+                        GuideMyCompaniesScreen(
+                            onNavigateBack = { shellNavController.popBackStack() },
+                            onExploreCompanies = {
+                                shellNavController.navigateToTopLevel(AppRoute.GuideCompanies.route)
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.GuideMyTours.route) {
+                        GuideMyToursScreen(
+                            onNavigateBack = { shellNavController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppRoute.GuideProfile.route) {
+                        GuideProfileScreen(onAccountDeleted = onLoggedOut)
+                    }
+
+                    composable(AppRoute.PublicAbout.route) {
+                        PublicAboutScreen()
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceholderScreen(title: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "$title Yakında Eklenecek", style = MaterialTheme.typography.titleLarge)
     }
 }
 

@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.AuthRole
 import com.codelegends.travelbook.model.CompanyRegisterInput
+import com.codelegends.travelbook.model.GuideRegisterInput
+import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.usecase.CompanyRegisterUseCase
+import com.codelegends.travelbook.usecase.GuideRegisterUseCase
 import com.codelegends.travelbook.util.AuthValidators
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,13 +23,25 @@ import javax.inject.Inject
 
 data class RegisterUiState(
     val selectedRoleIndex: Int = 1,
-    val name: String = "",
+    // Common
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
     val phone: String = "",
+    // Company
+    val name: String = "",
     val address: String = "",
     val description: String = "",
+    // Guide
+    val firstName: String = "",
+    val lastName: String = "",
+    val biography: String = "",
+    val languages: String = "",
+    val expertRoutes: String = "",
+    val experienceYears: String = "",
+    val instagram: String = "",
+    val linkedin: String = "",
+
     val isPasswordVisible: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
@@ -34,13 +49,14 @@ data class RegisterUiState(
 
 sealed interface RegisterEvent {
     data object NavigateToLogin : RegisterEvent
-    data object NavigateToHome : RegisterEvent
+    data class NavigateToHome(val session: UserSession) : RegisterEvent
     data object NavigateBack : RegisterEvent
 }
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val companyRegisterUseCase: CompanyRegisterUseCase
+    private val companyRegisterUseCase: CompanyRegisterUseCase,
+    private val guideRegisterUseCase: GuideRegisterUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -69,6 +85,16 @@ class RegisterViewModel @Inject constructor(
     fun onDescriptionChanged(v: String) =
         _uiState.update { it.copy(description = v, errorMessage = null) }
 
+    // Guide Handlers
+    fun onFirstNameChanged(v: String) = _uiState.update { it.copy(firstName = v, errorMessage = null) }
+    fun onLastNameChanged(v: String) = _uiState.update { it.copy(lastName = v, errorMessage = null) }
+    fun onBiographyChanged(v: String) = _uiState.update { it.copy(biography = v, errorMessage = null) }
+    fun onLanguagesChanged(v: String) = _uiState.update { it.copy(languages = v, errorMessage = null) }
+    fun onExpertRoutesChanged(v: String) = _uiState.update { it.copy(expertRoutes = v, errorMessage = null) }
+    fun onExperienceYearsChanged(v: String) = _uiState.update { it.copy(experienceYears = v, errorMessage = null) }
+    fun onInstagramChanged(v: String) = _uiState.update { it.copy(instagram = v, errorMessage = null) }
+    fun onLinkedinChanged(v: String) = _uiState.update { it.copy(linkedin = v, errorMessage = null) }
+
     fun onPasswordVisibilityToggled() =
         _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
 
@@ -80,13 +106,18 @@ class RegisterViewModel @Inject constructor(
         val state = _uiState.value
         val role = AuthRole.entries[state.selectedRoleIndex]
 
-        if (role != AuthRole.COMPANY) {
-            _uiState.update {
-                it.copy(errorMessage = "Bu rol için kayıt desteği yakında eklenecek")
+        when (role) {
+            AuthRole.COMPANY -> submitCompany(state)
+            AuthRole.GUIDE -> submitGuide(state)
+            else -> {
+                _uiState.update {
+                    it.copy(errorMessage = "Bu rol için kayıt desteği yakında eklenecek")
+                }
             }
-            return
         }
+    }
 
+    private fun submitCompany(state: RegisterUiState) {
         val validationError = validateCompanyForm(state)
         if (validationError != null) {
             _uiState.update { it.copy(errorMessage = validationError) }
@@ -95,30 +126,69 @@ class RegisterViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (
-                val result = companyRegisterUseCase(
-                    CompanyRegisterInput(
-                        name = state.name.trim(),
-                        email = state.email.trim(),
-                        password = state.password,
-                        phone = state.phone.trim(),
-                        address = state.address.trim(),
-                        description = state.description.trim()
-                    )
+            val result = companyRegisterUseCase(
+                CompanyRegisterInput(
+                    name = state.name.trim(),
+                    email = state.email.trim(),
+                    password = state.password,
+                    phone = state.phone.trim(),
+                    address = state.address.trim(),
+                    description = state.description.trim()
                 )
-            ) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false) }
-                    _events.emit(RegisterEvent.NavigateToHome)
-                }
+            )
+            handleResult(result)
+        }
+    }
 
-                is ApiResult.Error -> {
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = result.message)
-                    }
+    private fun submitGuide(state: RegisterUiState) {
+        val validationError = validateGuideForm(state)
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = guideRegisterUseCase(
+                GuideRegisterInput(
+                    firstName = state.firstName.trim(),
+                    lastName = state.lastName.trim(),
+                    email = state.email.trim(),
+                    password = state.password,
+                    phone = state.phone.trim().ifBlank { null },
+                    biography = state.biography.trim().ifBlank { null },
+                    languages = state.languages.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                    expertRoutes = state.expertRoutes.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                    experienceYears = state.experienceYears.toIntOrNull() ?: 0,
+                    instagram = state.instagram.trim().ifBlank { null },
+                    linkedin = state.linkedin.trim().ifBlank { null }
+                )
+            )
+            handleResult(result)
+        }
+    }
+
+    private suspend fun handleResult(result: ApiResult<UserSession>) {
+        when (result) {
+            is ApiResult.Success -> {
+                _uiState.update { it.copy(isLoading = false) }
+                _events.emit(RegisterEvent.NavigateToHome(result.data))
+            }
+            is ApiResult.Error -> {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = result.message)
                 }
             }
         }
+    }
+
+    private fun validateGuideForm(state: RegisterUiState): String? {
+        if (state.firstName.isBlank()) return "Ad zorunludur"
+        if (state.lastName.isBlank()) return "Soyad zorunludur"
+        AuthValidators.validateEmail(state.email)?.let { return it }
+        AuthValidators.validatePassword(state.password)?.let { return it }
+        if (state.password != state.confirmPassword) return "Şifreler eşleşmiyor"
+        return null
     }
 
     private fun validateCompanyForm(state: RegisterUiState): String? {

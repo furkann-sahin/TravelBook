@@ -8,6 +8,8 @@ import com.codelegends.travelbook.repository.AuthRepository
 import com.codelegends.travelbook.repository.AuthRepositoryImpl
 import com.codelegends.travelbook.repository.CompanyTourRepository
 import com.codelegends.travelbook.repository.CompanyTourRepositoryImpl
+import com.codelegends.travelbook.repository.GuideRepository
+import com.codelegends.travelbook.repository.GuideRepositoryImpl
 import com.codelegends.travelbook.repository.PublicTourRepository
 import com.codelegends.travelbook.repository.PublicTourRepositoryImpl
 import dagger.Binds
@@ -50,4 +52,10 @@ abstract class BindingModule {
     abstract fun bindPublicTourRepository(
         implementation: PublicTourRepositoryImpl
     ): PublicTourRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGuideRepository(
+        implementation: GuideRepositoryImpl
+    ): GuideRepository
 }
