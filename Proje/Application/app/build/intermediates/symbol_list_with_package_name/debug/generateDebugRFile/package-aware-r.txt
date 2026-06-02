@@ -1,0 +1,10 @@
+com.codelegends.travelbook
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable ic_launcher_foreground_image
+font poppins
+mipmap ic_launcher
+string app_name
+style Theme_TravelBook
+xml backup_rules
+xml data_extraction_rules

@@ -1,0 +1,11 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable ic_launcher_foreground_image
+font poppins
+mipmap ic_launcher
+string app_name
+style Theme.TravelBook
+xml backup_rules
+xml data_extraction_rules
