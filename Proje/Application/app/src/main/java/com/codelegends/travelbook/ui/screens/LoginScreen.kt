@@ -222,6 +222,16 @@ fun LoginScreen(
                         )
                     }
 
+                    if (!isRoleSupported) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "${selectedRole.displayName} girişi yakında eklenecek.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
                     Spacer(Modifier.height(12.dp))
 
                     Row(

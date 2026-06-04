@@ -7,14 +7,29 @@ const { createResponse } = require("../utils/create-response");
 const listGuideTours = async (req, res) => {
   try {
     if (req.payload.id !== req.params.guideId) {
-      return createResponse(res, 403, { status: "error", message: "Yalnızca kendi turlarınızı görüntüleyebilirsiniz" });
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı görüntüleyebilirsiniz",
+      });
     }
 
-    const guide = await Guide.findById(req.params.guideId).populate("registeredTours");
-    if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
-    createResponse(res, 200, { status: "success", data: guide.registeredTours });
+    const guide = await Guide.findById(req.params.guideId).populate(
+      "registeredTours",
+    );
+    if (!guide)
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Rehber bulunamadı",
+      });
+    createResponse(res, 200, {
+      status: "success",
+      data: guide.registeredTours,
+    });
   } catch (error) {
-    createResponse(res, 500, { status: "error", message: "Turlar listelenirken hata oluştu" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Turlar listelenirken hata oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -22,33 +37,60 @@ const listGuideTours = async (req, res) => {
 const assignGuideToTour = async (req, res) => {
   try {
     if (req.payload.id !== req.params.guideId) {
-      return createResponse(res, 403, { status: "error", message: "Yalnızca kendi turlarınızı yönetebilirsiniz" });
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı yönetebilirsiniz",
+      });
     }
 
     const { tourId } = req.body;
 
     if (!tourId || !mongoose.Types.ObjectId.isValid(tourId)) {
-      return createResponse(res, 400, { status: "error", message: "Geçerli bir tur ID gereklidir" });
+      return createResponse(res, 400, {
+        status: "error",
+        message: "Geçerli bir tur ID gereklidir",
+      });
     }
 
     const tour = await Tour.findById(tourId);
-    if (!tour) return createResponse(res, 404, { status: "error", message: "Tur bulunamadı" });
+    if (!tour)
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Tur bulunamadı",
+      });
 
     const guide = await Guide.findById(req.params.guideId);
 
-    if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
-    if (!guide.registeredCompanies.some(id => id.equals(tour.companyId))) {
-      return createResponse(res, 403, { status: "error", message: "Bu tura atanabilmek için turun sahibi firmaya kayıtlı olmalısınız" });
+    if (!guide)
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Rehber bulunamadı",
+      });
+    if (!guide.registeredCompanies.some((id) => id.equals(tour.companyId))) {
+      return createResponse(res, 403, {
+        status: "error",
+        message:
+          "Bu tura atanabilmek için turun sahibi firmaya kayıtlı olmalısınız",
+      });
     }
     if (guide.registeredTours.includes(tourId)) {
-      return createResponse(res, 409, { status: "error", message: "Rehber zaten bu tura kayıtlı" });
+      return createResponse(res, 409, {
+        status: "error",
+        message: "Rehber zaten bu tura kayıtlı",
+      });
     }
 
     guide.registeredTours.push(tourId);
     await guide.save();
-    createResponse(res, 201, { status: "success", message: "Rehber tura başarıyla atandı" });
+    createResponse(res, 201, {
+      status: "success",
+      message: "Rehber tura başarıyla atandı",
+    });
   } catch (error) {
-    createResponse(res, 500, { status: "error", message: "Tura atanırken hata oluştu" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Tura atanılırken hata oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -58,24 +100,39 @@ const removeGuideFromTour = async (req, res) => {
     const { guideId, tourId } = req.params;
 
     if (req.payload.id !== guideId) {
-      return createResponse(res, 403, { status: "error", message: "Yalnızca kendi turlarınızı yönetebilirsiniz" });
+      return createResponse(res, 403, {
+        status: "error",
+        message: "Yalnızca kendi turlarınızı yönetebilirsiniz",
+      });
     }
 
     const guide = await Guide.findById(guideId);
 
-    if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+    if (!guide)
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Rehber bulunamadı",
+      });
 
     const tourObjectId = new mongoose.Types.ObjectId(tourId);
-    if (!guide.registeredTours.some(id => id.equals(tourObjectId))) {
-      return createResponse(res, 404, { status: "error", message: "Bu tur kaydınızda bulunamadı" });
+    if (!guide.registeredTours.some((id) => id.equals(tourObjectId))) {
+      return createResponse(res, 404, {
+        status: "error",
+        message: "Bu tur kaydınızda bulunamadı",
+      });
     }
 
     guide.registeredTours.pull(tourObjectId);
     await guide.save();
-    createResponse(res, 200, { status: "success", message: "Tur kaydınız başarıyla silinmiştir" });
+    createResponse(res, 200, {
+      status: "success",
+      message: "Tur kaydınız başarıyla silinmiştir",
+    });
   } catch (error) {
-    console.error("Turdan ayrılma hatası:", error);
-    createResponse(res, 500, { status: "error", message: "Turdan ayrılırken hata oluştu" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Turdan ayrılırken hata oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 

@@ -19,25 +19,10 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { getImageUrl } from "../services/api";
+import { formatDate, getRouteLabel } from "../utils/tour-formatters";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600";
-
-export function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-}
-
-function getRouteLabel(tour) {
-  if (tour.departureLocation && tour.arrivalLocation) {
-    return `${tour.departureLocation} → ${tour.arrivalLocation}`;
-  }
-  return tour.location || "";
-}
 
 export default function TourCard({
   tour,
@@ -120,12 +105,7 @@ export default function TourCard({
               mb: 1.5,
             }}
           >
-            <Rating
-              value={tour.rating}
-              precision={0.5}
-              size="small"
-              readOnly
-            />
+            <Rating value={tour.rating} precision={0.5} size="small" readOnly />
             <Typography variant="body2" color="text.secondary">
               ({tour.rating})
             </Typography>
@@ -221,7 +201,12 @@ export default function TourCard({
       {onDetail ? (
         <CardActionArea
           onClick={() => onDetail(tour)}
-          sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+          }}
         >
           {cardContent}
         </CardActionArea>
@@ -232,16 +217,16 @@ export default function TourCard({
       )}
 
       {hasActions && (
-        <CardActions sx={{ px: 2.5, pb: 2, pt: 0, flexDirection: "column", gap: 0.5 }}>
+        <CardActions
+          sx={{ px: 2.5, pb: 2, pt: 0, flexDirection: "column", gap: 0.5 }}
+        >
           {onToggleFavorite && (
             <Button
               variant={isFavorite ? "contained" : "outlined"}
               color="error"
               fullWidth
               size="small"
-              startIcon={
-                isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />
-              }
+              startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
               onClick={() => onToggleFavorite(tour)}
               disabled={favoriteLoading === tour.id}
               sx={{ borderRadius: 2 }}

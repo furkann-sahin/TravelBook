@@ -72,6 +72,16 @@ const guideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    bannerImageUrl: {
+      type: String,
+      default: null,
+    },
+    galleryImageUrls: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     instagram: {
       type: String,
       trim: true,
@@ -84,11 +94,11 @@ const guideSchema = new mongoose.Schema(
     },
     registeredTours: [{ // Tura katılma gereksinimi için
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Tour'
+      ref: "Tour",
     }],
     registeredCompanies: [{ // Rehberin kayıt olduğu tur firmaları
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Company'
+      ref: "Company",
     }]
   },
   {
@@ -97,7 +107,7 @@ const guideSchema = new mongoose.Schema(
   }
 );
 
-// 🔐 Password işlemleri
+// Password işlemleri
 guideSchema.methods.setPassword = function (password) {
   this.salt = crypto.randomBytes(16).toString("hex");
   this.passwordHash = crypto
@@ -112,7 +122,7 @@ guideSchema.methods.validatePassword = function (password) {
   return this.passwordHash === hash;
 };
 
-// 🎟 JWT oluşturma
+// JWT oluşturma
 guideSchema.methods.generateJWT = function () {
   return jwt.sign(
     {

@@ -21,9 +21,11 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import BusinessIcon from "@mui/icons-material/Business";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
 import PersonIcon from "@mui/icons-material/Person";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
+import BrandLogo from "../components/BrandLogo";
 import { useAuth } from "../hooks/useAuth";
+import { getErrorMessage } from "../utils/getErrorMessage";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
 // Define user roles for registration
 const roles = [
@@ -99,21 +101,21 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { confirmPassword, ...data } = form;
+      const { confirmPassword: _CONFIRM_PASSWORD, ...data } = form;
 
       // Convert comma-separated strings to arrays for guide role
       if (selectedRole === "guide") {
         data.languages = data.languages
           ? data.languages
-            .split(",")
-            .map((l) => l.trim())
-            .filter(Boolean)
+              .split(",")
+              .map((l) => l.trim())
+              .filter(Boolean)
           : [];
         data.expertRoutes = data.expertRoutes
           ? data.expertRoutes
-            .split(",")
-            .map((r) => r.trim())
-            .filter(Boolean)
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
           : [];
         data.experienceYears = data.experienceYears
           ? Number(data.experienceYears)
@@ -121,17 +123,9 @@ export default function RegisterPage() {
       }
 
       await register(selectedRole, data);
-      navigate(
-        selectedRole === "user" ?
-          "/user/tours"
-          : selectedRole === "guide" ?
-            "/guide"
-            : selectedRole === "company" ?
-              "/company"
-              : "/"
-      );
+      navigate(getDefaultRouteForRole(selectedRole));
     } catch (err) {
-      setError(err.message || "Kayıt başarısız oldu.");
+      setError(getErrorMessage(err, "Kayıt başarısız oldu."));
     } finally {
       setLoading(false);
     }
@@ -364,23 +358,13 @@ export default function RegisterPage() {
             textAlign: "center",
           }}
         >
-          <Box
-            component={RouterLink}
+          <BrandLogo
             to="/"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-              mb: 1,
-              textDecoration: "none",
-            }}
-          >
-            <DirectionsBusIcon sx={{ fontSize: 36, color: "primary.main" }} />
-            <Typography variant="h4" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+            iconSize={36}
+            textVariant="h4"
+            textColor="primary.main"
+            sx={{ justifyContent: "center", mb: 1 }}
+          />
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
             Hesap oluştur

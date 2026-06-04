@@ -346,7 +346,7 @@
 
 ### UI Bileşenleri:
 - Brand bölümü: DirectionsBusIcon + "TravelBook" + açıklama metni
-- Rehber Linkleri: "Panel" (`/guide`), "Turlarım" (`/guide/tours`), "Profilim" (`/guide/profile`)
+- Rehber Linkleri: "Panel" (`/guide`), "Turlarım" (`/guide/my-tours`), "Profilim" (`/guide/profile`)
 - Genel Linkler: "Ana Sayfa" (`/`), "Hakkımızda" (`/about`)
 - GitHub ikonu (GitHubIcon)
 - Telif hakkı metni: "© 2025 TravelBook. Tüm hakları saklıdır."

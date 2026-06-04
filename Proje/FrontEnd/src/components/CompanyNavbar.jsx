@@ -20,16 +20,16 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MapIcon from "@mui/icons-material/Map";
-import GroupsIcon from "@mui/icons-material/Groups";
+import GroupIcon from "@mui/icons-material/Group";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
-import InfoIcon from "@mui/icons-material/Info";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
+import { getImageUrl } from "../services/api";
 
 export default function CompanyNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -39,11 +39,31 @@ export default function CompanyNavbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
-    { label: "Ana Sayfa", path: "/", icon: <HomeIcon />, key: "home" },
-    { label: "Turlarım", path: "/company/tours", icon: <MapIcon />, key: "tours" },
-    { label: "Rehberlerim", path: "/company/guides", icon: <GroupsIcon />, key: "guides" },
-    { label: "Profilim", path: "/company/profile", icon: <PersonIcon />, key: "profile" },
-    { label: "Hakkımızda", path: "/about", icon: <InfoIcon />, key: "about" },
+    { label: "Ana Sayfa", path: "/company", icon: <HomeIcon />, key: "home" },
+    {
+      label: "Dashboard",
+      path: "/company/dashboard",
+      icon: <DashboardIcon />,
+      key: "dashboard",
+    },
+    {
+      label: "Turlarım",
+      path: "/company/tours",
+      icon: <MapIcon />,
+      key: "tours",
+    },
+    {
+      label: "Rehberler",
+      path: "/company/guides",
+      icon: <GroupIcon />,
+      key: "guides",
+    },
+    {
+      label: "Profil",
+      path: "/company/profile",
+      icon: <PersonIcon />,
+      key: "profile",
+    },
   ];
 
   const handleLogout = () => {
@@ -53,8 +73,8 @@ export default function CompanyNavbar() {
   };
 
   const getActiveKey = (pathname) => {
-    if (pathname === "/") return "home";
-    if (pathname === "/about") return "about";
+    if (pathname === "/company") return "home";
+    if (pathname.startsWith("/company/dashboard")) return "dashboard";
     if (pathname.startsWith("/company/tours")) return "tours";
     if (pathname.startsWith("/company/guides")) return "guides";
     if (pathname.startsWith("/company/profile")) return "profile";
@@ -64,6 +84,7 @@ export default function CompanyNavbar() {
 
   const activeKey = getActiveKey(location.pathname);
   const isActive = (key) => activeKey === key;
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   return (
     <>
@@ -78,29 +99,11 @@ export default function CompanyNavbar() {
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
             {/* Brand */}
-            <Box
-              component={RouterLink}
+            <BrandLogo
               to="/company"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textDecoration: "none",
-              }}
+              iconSize={32}
+              textColor="primary.main"
             >
-              <DirectionsBusIcon
-                sx={{ fontSize: 32, color: "secondary.main" }}
-              />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: "primary.main",
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                TravelBook
-              </Typography>
               <Typography
                 variant="caption"
                 sx={{
@@ -118,7 +121,7 @@ export default function CompanyNavbar() {
               >
                 Firma Paneli
               </Typography>
-            </Box>
+            </BrandLogo>
 
             {/* Desktop nav links */}
             <Box
@@ -165,6 +168,7 @@ export default function CompanyNavbar() {
                 sx={{ ml: 1 }}
               >
                 <Avatar
+                  src={avatarSrc || undefined}
                   sx={{
                     width: 34,
                     height: 34,
@@ -189,6 +193,17 @@ export default function CompanyNavbar() {
                   </Typography>
                 </MenuItem>
                 <Divider />
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    navigate("/company/dashboard");
+                  }}
+                >
+                  <ListItemIcon>
+                    <DashboardIcon fontSize="small" />
+                  </ListItemIcon>
+                  Dashboard
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
@@ -230,14 +245,13 @@ export default function CompanyNavbar() {
         onClose={() => setDrawerOpen(false)}
       >
         <Box sx={{ width: 280, pt: 2 }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 1 }}
-          >
-            <DirectionsBusIcon color="secondary" />
-            <Typography variant="h6" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+          <BrandLogo
+            to="/company"
+            iconSize={24}
+            textVariant="h6"
+            textColor="primary.main"
+            sx={{ px: 2, mb: 1 }}
+          />
           <Box sx={{ px: 2, mb: 2 }}>
             <Typography variant="caption" color="text.secondary">
               Firma Paneli – {user?.name}
@@ -269,6 +283,17 @@ export default function CompanyNavbar() {
               gap: 1,
             }}
           >
+            <Button
+              component={RouterLink}
+              to="/company/profile"
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              onClick={() => setDrawerOpen(false)}
+            >
+              Profilim
+            </Button>
+
             <Button
               variant="outlined"
               color="primary"

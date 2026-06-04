@@ -32,7 +32,7 @@ class GuideRepositoryImpl @Inject constructor(
         val fName = this.firstName ?: this.name?.substringBefore(" ") ?: ""
         val lName = this.lastName ?: this.name?.substringAfter(" ", "") ?: ""
         val full = this.name ?: "$fName $lName".trim()
-        
+
         return GuideProfileSummary(
             id = this.id ?: this.objectId ?: "",
             firstName = fName,

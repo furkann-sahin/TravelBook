@@ -1,12 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { userAuth, companyAuth, guideAuth } from "../../services/api";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 
 // Helper function to decode JWT token
 function decodeToken(token) {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(window.atob(base64));
+    const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const binary = window.atob(paddedBase64);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const json = new TextDecoder("utf-8").decode(bytes);
+    return JSON.parse(json);
   } catch {
     return null;
   }
@@ -16,6 +21,13 @@ function decodeToken(token) {
 function loadSession() {
   const token = localStorage.getItem("tb_token");
   if (!token) return { user: null, token: null };
+
+  let persistedUser = null;
+  try {
+    persistedUser = JSON.parse(localStorage.getItem("tb_user") || "null");
+  } catch {
+    persistedUser = null;
+  }
 
   const payload = decodeToken(token);
   if (!payload) return { user: null, token: null };
@@ -34,6 +46,7 @@ function loadSession() {
       name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
       email: payload.email,
       role: payload.role,
+      profileImageUrl: persistedUser?.id === payload.id ? persistedUser.profileImageUrl || null : null,
     },
   };
 }
@@ -54,7 +67,9 @@ export const loginThunk = createAsyncThunk(
       const data = await endpoint.login(email, password);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err.message || "Giriş başarısız");
+      return rejectWithValue({
+        message: getErrorMessage(err, "Giriş başarısız"),
+      });
     }
   },
 );
@@ -69,7 +84,9 @@ export const registerThunk = createAsyncThunk(
       const data = await endpoint.register(formData);
       return { token: data.token, role };
     } catch (err) {
-      return rejectWithValue(err.message || "Kayıt başarısız");
+      return rejectWithValue({
+        message: getErrorMessage(err, "Kayıt başarısız"),
+      });
     }
   },
 );
@@ -79,12 +96,16 @@ function setSessionFromToken(state, token, fallbackRole) {
   const payload = decodeToken(token);
   if (!payload) return;
 
+  const currentUser = state.user;
+
   state.token = token;
   state.user = {
     id: payload.id,
     name: payload.name || `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
     email: payload.email,
     role: payload.role || fallbackRole,
+    profileImageUrl:
+      currentUser?.id === payload.id ? currentUser.profileImageUrl || null : null,
   };
 
   localStorage.setItem("tb_token", token);
@@ -112,6 +133,11 @@ const authSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    updateUser(state, action) {
+      if (!state.user) return;
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem("tb_user", JSON.stringify(state.user));
+    },
   },
   extraReducers: (builder) => {
     // Login
@@ -126,7 +152,8 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error =
+          action.payload?.message || action.error?.message || "Giriş başarısız";
       });
 
     // Register
@@ -141,10 +168,11 @@ const authSlice = createSlice({
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error =
+          action.payload?.message || action.error?.message || "Kayıt başarısız";
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, updateUser } = authSlice.actions;
 export default authSlice.reducer;

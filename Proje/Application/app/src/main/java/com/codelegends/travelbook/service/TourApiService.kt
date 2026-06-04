@@ -16,6 +16,7 @@ interface TourApiService {
         @Query("maxPrice") maxPrice: Double? = null,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null
+
     ): Response<PublicTourListResponseDto>
 
     @GET("tours/stats")
