@@ -1,7 +1,19 @@
-const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "/api").replace(/\/+$/, "");
 
 // Derive backend origin from the API URL (strip /api suffix) for static assets
-const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
+const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, "") || (import.meta.env.DEV ? "http://localhost:3000" : "");
+
+function resolveErrorMessage(payload, fallbackMessage) {
+  if (typeof payload?.message === "string" && payload.message.trim()) {
+    return payload.message;
+  }
+
+  if (typeof payload?.error === "string" && payload.error.trim()) {
+    return payload.error;
+  }
+
+  return fallbackMessage;
+}
 
 export function getImageUrl(path) {
   if (!path) return null;
@@ -9,10 +21,128 @@ export function getImageUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
+function pickFirstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+  }
+  return "";
+}
+
+function toNonEmptyArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function normalizeTour(tour) {
+  if (!tour || typeof tour !== "object") return tour;
+
+  const normalizedId = tour.id || tour._id || tour.tourId || null;
+  const normalizedName = pickFirstString(tour.name, tour.title);
+  const normalizedTitle = pickFirstString(tour.title, normalizedName);
+
+  const existingImages = toNonEmptyArray(tour.images);
+  const normalizedImageUrl =
+    tour.imageUrl || tour.image || existingImages[0] || null;
+  const normalizedImages =
+    existingImages.length > 0
+      ? existingImages
+      : normalizedImageUrl
+        ? [normalizedImageUrl]
+        : [];
+
+  const normalizedLocation =
+    pickFirstString(
+      tour.location,
+      [tour.departureLocation, tour.arrivalLocation].filter(Boolean).join(" -> "),
+    );
+
+  return {
+    ...tour,
+    id: normalizedId,
+    _id: tour._id || normalizedId,
+    name: normalizedName,
+    title: normalizedTitle,
+    imageUrl: normalizedImageUrl,
+    images: normalizedImages,
+    location: normalizedLocation,
+  };
+}
+
+function normalizePurchase(purchase) {
+  if (!purchase || typeof purchase !== "object") return purchase;
+
+  return {
+    ...purchase,
+    tour: normalizeTour(purchase.tour),
+  };
+}
+
+function mapApiPayload(response, mapper) {
+  if (Array.isArray(response)) {
+    return response.map(mapper);
+  }
+
+  if (!response || typeof response !== "object") {
+    return response;
+  }
+
+  if (Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: response.data.map(mapper),
+    };
+  }
+
+  if (response.data && typeof response.data === "object") {
+    return {
+      ...response,
+      data: mapper(response.data),
+    };
+  }
+
+  return mapper(response);
+}
+
+function normalizeTourResponse(response) {
+  return mapApiPayload(response, normalizeTour);
+}
+
+function normalizePurchasesResponse(response) {
+  return mapApiPayload(response, normalizePurchase);
+}
+
+function withTourNormalization(promise) {
+  return promise.then(normalizeTourResponse);
+}
+
+function withPurchasesNormalization(promise) {
+  return promise.then(normalizePurchasesResponse);
+}
+
+async function uploadImage(endpoint, file, fieldName = "image") {
+  // Centralized multipart upload helper used by profile/banner/gallery operations.
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const token = localStorage.getItem("tb_token");
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(resolveErrorMessage(data, "Resim yüklenemedi"));
+  return data;
+}
+
 // Helper function
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem("tb_token");
+  const isAuthEndpoint = /\/(users|companies|guides)\/auth\/(login|register)$/.test(endpoint);
 
   const headers = {
     "Content-Type": "application/json",
@@ -25,15 +155,23 @@ async function request(endpoint, options = {}) {
 
   if (!res.ok) {
     if (res.status === 401) {
+      // Force fresh auth flow when the token is expired/invalid.
       localStorage.removeItem("tb_token");
       localStorage.removeItem("tb_user");
-      window.location.href = "/login";
-      return;
+      if (!isAuthEndpoint && window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+
+      const body = await res.json().catch(() => ({}));
+      const unauthorizedError = new Error(
+        resolveErrorMessage(body, "Oturum süresi doldu. Lütfen tekrar giriş yapın."),
+      );
+      unauthorizedError.status = 401;
+      unauthorizedError.data = body;
+      throw unauthorizedError;
     }
     const body = await res.json().catch(() => ({}));
-    const error = new Error(
-      body.message || body.error || `Request failed (${res.status})`,
-    );
+    const error = new Error(resolveErrorMessage(body, `Request failed (${res.status})`));
     error.status = res.status;
     error.data = body;
     throw error;
@@ -92,9 +230,11 @@ export const userApi = {
   getProfile: (userId) => request(`/users/${userId}`),
 
   getPurchases: (userId, status) =>
-    request(
-      `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""
-      }`,
+    withPurchasesNormalization(
+      request(
+        `/users/${userId}/purchases${status ? `?status=${encodeURIComponent(status)}` : ""
+        }`,
+      ),
     ),
 
   updateProfile: (userId, data) =>
@@ -123,17 +263,24 @@ export const companyApi = {
       body: JSON.stringify(data),
     }),
 
+  uploadProfileImage: (companyId, file) =>
+    uploadImage(`/companies/${companyId}/profile-image`, file),
+
+  uploadBannerImage: (companyId, file) =>
+    uploadImage(`/companies/${companyId}/banner-image`, file),
+
   deleteAccount: (companyId) =>
     request(`/companies/${companyId}`, { method: "DELETE" }),
 };
 
 export const companyTourApi = {
-  listTours: (companyId) => request(`/companies/${companyId}/tours`),
+  listTours: (companyId) =>
+    withTourNormalization(request(`/companies/${companyId}/tours`)),
 
   listGuides: (companyId) => request(`/companies/${companyId}/guides`),
 
   getTourDetail: (companyId, tourId) =>
-    request(`/companies/${companyId}/tours/${tourId}`),
+    withTourNormalization(request(`/companies/${companyId}/tours/${tourId}`)),
 
   updateTour: (companyId, tourId, data) =>
     request(`/companies/${companyId}/tours/${tourId}`, {
@@ -147,6 +294,7 @@ export const companyTourApi = {
     }),
 
   createTour: (companyId, formData) => {
+    // Tour creation uses multipart because image upload and scalar fields are sent together.
     const url = `${API_BASE}/companies/${companyId}/tours`;
     const token = localStorage.getItem("tb_token");
     const headers = {};
@@ -179,12 +327,15 @@ export const tourApi = {
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
     if (filters.date) params.append("date", filters.date);
+    if (filters.page) params.append("page", filters.page);
+    if (filters.limit) params.append("limit", filters.limit);
 
     const query = params.toString();
-    return request(`/tours${query ? `?${query}` : ""}`);
+    return withTourNormalization(request(`/tours${query ? `?${query}` : ""}`));
   },
 
-  getTourDetail: (tourId) => request(`/tours/${tourId}`),
+  getTourDetail: (tourId) =>
+    withTourNormalization(request(`/tours/${tourId}`)),
 
   getStats: () => request("/tours/stats"),
 };
@@ -237,19 +388,20 @@ export const guideApi = {
   deleteAccount: (guideId) =>
     request(`/guides/${guideId}`, { method: "DELETE" }),
 
-  uploadProfileImage: async (guideId, file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    const token = localStorage.getItem("tb_token");
-    const res = await fetch(`${API_BASE}/guides/${guideId}/profile-image`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Resim yüklenemedi");
-    return data;
-  },
+  uploadProfileImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/profile-image`, file),
+
+  uploadBannerImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/banner-image`, file),
+
+  uploadGalleryImage: (guideId, file) =>
+    uploadImage(`/guides/${guideId}/gallery-images`, file),
+
+  removeGalleryImage: (guideId, imageUrl) =>
+    request(`/guides/${guideId}/gallery-images`, {
+      method: "DELETE",
+      body: JSON.stringify({ imageUrl }),
+    }),
 
   listCompanies: () => request("/guides/companies"),
 
@@ -264,7 +416,8 @@ export const guideApi = {
   removeFromCompany: (guideId, companyId) =>
     request(`/guides/${guideId}/companies/${companyId}`, { method: "DELETE" }),
 
-  listTours: (guideId) => request(`/guides/${guideId}/tours`),
+  listTours: (guideId) =>
+    withTourNormalization(request(`/guides/${guideId}/tours`)),
 
   assignTour: (guideId, tourId) =>
     request(`/guides/${guideId}/tours`, {
@@ -280,7 +433,8 @@ export const guideApi = {
 
 // FAVORITES
 export const favoriteApi = {
-  getFavorites: (userId) => request(`/users/${userId}/favorites`),
+  getFavorites: (userId) =>
+    withTourNormalization(request(`/users/${userId}/favorites`)),
 
   addFavorite: (userId, tourId) =>
     request(`/users/${userId}/favorites`, {

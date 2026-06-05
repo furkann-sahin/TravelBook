@@ -36,4 +36,6 @@ const reviewSchema = new mongoose.Schema(
   },
 );
 
+reviewSchema.index({ userId: 1 });
+
 module.exports = mongoose.model("Review", reviewSchema, "reviews");

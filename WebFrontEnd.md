@@ -17,14 +17,13 @@
 
 ### Rehber Panel Sayfaları
 
-| #   | Sayfa                  | Route                 | Açıklama                                                                                     |
-| --- | ---------------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| 1   | `GuideDashboardPage`   | `/guide`              | Rehber kontrol paneli — hızlı erişim butonları (firmalar, profil, kayıtlı firmalar, turlar). |
-| 2   | `GuideCompaniesPage`   | `/guide/companies`    | Sistemdeki tüm tur firmalarını listeleme ve firmaya kayıt olma işlemleri.                    |
-| 3   | `GuideToursPage`       | `/guide/tours`        | Kayıtlı firmaların turlarını listeleme ve tura kayıt olma işlemleri.                         |
-| 4   | `GuideMyCompaniesPage` | `/guide/my-companies` | Rehberin kayıtlı olduğu firmaların listesi ve firmadan ayrılma işlemi.                       |
-| 5   | `GuideMyToursPage`     | `/guide/my-tours`     | Rehberin kayıtlı olduğu turların listesi ve turdan ayrılma işlemi.                           |
-| 6   | `GuideProfilePage`     | `/guide/profile`      | Rehber profil görüntüleme/güncelleme, profil resmi yükleme ve hesap silme.                   |
+| #   | Sayfa                  | Route                 | Açıklama                                                                                                      |
+| --- | ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | `GuideDashboardPage`   | `/guide`              | Rehber kontrol paneli — hızlı erişim butonları (firmalar, profil, kayıtlı firmalar, turlar).                  |
+| 2   | `GuideCompaniesPage`   | `/guide/companies`    | Sistemdeki tüm tur firmalarını listeleme ve firmaya kayıt olma işlemleri.                                     |
+| 3   | `GuideMyCompaniesPage` | `/guide/my-companies` | Rehberin kayıtlı olduğu firmaların listesi ve firmadan ayrılma işlemi.                                        |
+| 4   | `GuideMyToursPage`     | `/guide/my-tours`     | Rehberin kayıtlı olduğu turların listesi ve turdan ayrılma işlemi (`/guide/tours` eski yolundan yönlendirme). |
+| 5   | `GuideProfilePage`     | `/guide/profile`      | Rehber profil görüntüleme/güncelleme, profil resmi yükleme ve hesap silme.                                    |
 
 ### Rehber Panel Bileşenleri
 
@@ -41,7 +40,7 @@
 | 10  | `LoginPage` (Rehber sekmesi)    | `/login`    | Giriş sayfasındaki rehber giriş sekmesi. |
 | 11  | `RegisterPage` (Rehber sekmesi) | `/register` | Kayıt sayfasındaki rehber kayıt sekmesi. |
 
-> **Toplam: 6 sayfa + 2 ortak sekme + 3 bileşen**
+> **Toplam: 5 sayfa + 2 ortak sekme + 3 bileşen**
 
 ---
 

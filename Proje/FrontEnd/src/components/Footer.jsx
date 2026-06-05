@@ -10,32 +10,53 @@ import {
   IconButton,
   Divider,
 } from "@mui/material";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
 export default function Footer() {
   const { isAuthenticated, user } = useAuth();
-  const isCompany = isAuthenticated && user?.role === "company";
+  const role = user?.role;
+  const isCompany = isAuthenticated && role === "company";
+  const isGuide = isAuthenticated && role === "guide";
+  const isUser = isAuthenticated && role === "user";
+  const homePath = isAuthenticated ? getDefaultRouteForRole(role) : "/";
+  const dashboardPath =
+    role === "company"
+      ? "/company/dashboard"
+      : role === "guide"
+        ? "/guide/dashboard"
+        : role === "user"
+          ? "/user/dashboard"
+          : null;
+  const purchasesPath = "/user/purchases?status=past";
 
   const quickLinks = [
-    { label: "Ana Sayfa", path: "/" },
+    { label: "Ana Sayfa", path: homePath },
     { label: "Hakkımızda", path: "/about" },
+    ...(dashboardPath ? [{ label: "Dashboard", path: dashboardPath }] : []),
     ...(isCompany
       ? [
-          { label: "Dashboard", path: "/company" },
           { label: "Turlarım", path: "/company/tours" },
+          { label: "Rehberlerim", path: "/company/guides" },
           { label: "Profil", path: "/company/profile" },
         ]
       : []),
-    ...(isAuthenticated && !isCompany
+    ...(isUser
       ? [
           { label: "Turlar", path: "/user/tours" },
-          { label: "Seyahatlerim", path: "/user/purchases" },
-          { label: "Rehberler", path: "/guides" },
+          { label: "Seyahatlerim", path: purchasesPath },
           { label: "Favorilerim", path: "/user/favorites" },
           { label: "Profil", path: "/user/profile" },
+        ]
+      : []),
+    ...(isGuide
+      ? [
+          { label: "Firmalarım", path: "/guide/my-companies" },
+          { label: "Turlarım", path: "/guide/my-tours" },
+          { label: "Profil", path: "/guide/profile" },
         ]
       : []),
     ...(!isAuthenticated
@@ -59,14 +80,13 @@ export default function Footer() {
         <Grid container spacing={4}>
           {/* Brand */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-              <DirectionsBusIcon
-                sx={{ color: "secondary.light", fontSize: 28 }}
-              />
-              <Typography variant="h5" fontWeight={800} color="#fff">
-                TravelBook
-              </Typography>
-            </Box>
+            <BrandLogo
+              to={homePath}
+              iconSize={28}
+              textVariant="h5"
+              textColor="#fff"
+              sx={{ mb: 2 }}
+            />
 
             {/* Social Media Icons */}
             <Box sx={{ display: "flex", gap: 0.5 }}>

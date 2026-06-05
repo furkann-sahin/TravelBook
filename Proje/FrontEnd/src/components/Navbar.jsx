@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 
 // Material-UI components and icons
@@ -22,27 +22,25 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import PersonIcon from "@mui/icons-material/Person";
 
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../hooks/useAuth";
+import { getImageUrl } from "../services/api";
+import { getDefaultRouteForRole } from "../utils/authRoutes";
 
-// Navbar component with responsive design, scroll-triggered styling, and authentication-aware menu
-const navLinks = [
-  { label: "Ana Sayfa", path: "/" },
-  { label: "Turlar", path: "/user/tours" },
-  { label: "Rehberler", path: "/guides" },
-  { label: "Favorilerim", path: "/user/favorites" },
-  { label: "Hakkımızda", path: "/about" },
+const publicNavLinks = [
+  { key: "home", label: "Ana Sayfa", path: "/" },
+  { key: "about", label: "Hakkımızda", path: "/about" },
 ];
 
-// Main navigation bar component
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const avatarSrc = getImageUrl(user?.profileImageUrl);
 
   const trigger = useScrollTrigger({
     disableHysteresis: true,
@@ -50,18 +48,24 @@ export default function Navbar() {
   });
 
   const isHome = location.pathname === "/";
-  const isPurchasesPage = location.pathname.includes("/purchases");
   const textColor = trigger || !isHome ? "text.primary" : "#fff";
   const brandColor = trigger || !isHome ? "primary.main" : "#fff";
-  const purchasesPath = user?.id
-    ? `/users/${user.id}/purchases?status=past`
-    : "/login";
+  const roleHomePath = getDefaultRouteForRole(user?.role);
 
   const handleLogout = () => {
     setAnchorEl(null);
     logout();
     navigate("/");
   };
+
+  const profilePath =
+    user?.role === "user"
+      ? "/user/profile"
+      : user?.role === "guide"
+        ? "/guide/profile"
+        : user?.role === "company"
+          ? "/company/profile"
+          : roleHomePath;
 
   return (
     <>
@@ -77,30 +81,8 @@ export default function Navbar() {
       >
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-            <Box
-              component={RouterLink}
-              to="/"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textDecoration: "none",
-              }}
-            >
-              <DirectionsBusIcon sx={{ fontSize: 32, color: brandColor }} />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: brandColor,
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                TravelBook
-              </Typography>
-            </Box>
+            <BrandLogo to="/" iconSize={32} textColor={brandColor} />
 
-            {/* Desktop Nav */}
             <Box
               sx={{
                 display: { xs: "none", md: "flex" },
@@ -108,103 +90,57 @@ export default function Navbar() {
                 gap: 1,
               }}
             >
-              {navLinks.map((link) => (
-                <Fragment key={link.path}>
-                  <Button
-                    component={RouterLink}
-                    to={link.path}
-                    sx={{
-                      color: textColor,
-                      fontWeight: location.pathname === link.path ? 700 : 500,
-                      position: "relative",
-                      "&::after": {
-                        content: '""',
-                        position: "absolute",
-                        bottom: 4,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: location.pathname === link.path ? "60%" : 0,
-                        height: 2,
-                        bgcolor: "secondary.main",
-                        borderRadius: 1,
-                        transition: "width 0.25s",
-                      },
-                      "&:hover::after": { width: "60%" },
-                    }}
-                  >
-                    {link.label}
-                  </Button>
-
-                  {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
-                    <Button
-                      component={RouterLink}
-                      to={purchasesPath}
-                      sx={{
-                        color: textColor,
-                        fontWeight: isPurchasesPage ? 700 : 500,
-                        position: "relative",
-                        "&::after": {
-                          content: '""',
-                          position: "absolute",
-                          bottom: 4,
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          width: isPurchasesPage ? "60%" : 0,
-                          height: 2,
-                          bgcolor: "secondary.main",
-                          borderRadius: 1,
-                          transition: "width 0.25s",
-                        },
-                        "&:hover::after": { width: "60%" },
-                      }}
-                    >
-                      Seyahatlerim
-                    </Button>
-                  )}
-                </Fragment>
+              {publicNavLinks.map((link) => (
+                <Button
+                  key={link.key}
+                  component={RouterLink}
+                  to={link.path}
+                  sx={{
+                    color: textColor,
+                    fontWeight: location.pathname === link.path ? 700 : 500,
+                    position: "relative",
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      bottom: 4,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: location.pathname === link.path ? "60%" : 0,
+                      height: 2,
+                      bgcolor: "secondary.main",
+                      borderRadius: 1,
+                      transition: "width 0.25s",
+                    },
+                    "&:hover::after": { width: "60%" },
+                  }}
+                >
+                  {link.label}
+                </Button>
               ))}
 
               {isAuthenticated ? (
                 <>
-                  {user?.role === "company" && (
-                    <Button
-                      component={RouterLink}
-                      to="/company"
-                      sx={{
-                        color: textColor,
-                        fontWeight: 600,
-                        border: "1px solid",
-                        borderColor: "secondary.main",
-                        borderRadius: 2,
-                        px: 2,
-                        "&:hover": { bgcolor: "secondary.main", color: "#fff" },
-                      }}
-                    >
-                      Firma Paneli
-                    </Button>
-                  )}
-                  {user?.role === "guide" && (
-                    <Button
-                      component={RouterLink}
-                      to="/guide"
-                      sx={{
-                        color: textColor,
-                        fontWeight: 600,
-                        border: "1px solid",
-                        borderColor: "secondary.main",
-                        borderRadius: 2,
-                        px: 2,
-                        "&:hover": { bgcolor: "secondary.main", color: "#fff" },
-                      }}
-                    >
-                      Rehber Paneli
-                    </Button>
-                  )}
+                  <Button
+                    component={RouterLink}
+                    to={roleHomePath}
+                    sx={{
+                      color: textColor,
+                      fontWeight: 600,
+                      border: "1px solid",
+                      borderColor: "secondary.main",
+                      borderRadius: 2,
+                      px: 2,
+                      "&:hover": { bgcolor: "secondary.main", color: "#fff" },
+                    }}
+                  >
+                    Uygulamaya Dön
+                  </Button>
                   <IconButton
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     sx={{ ml: 1 }}
                   >
                     <Avatar
+                      src={avatarSrc || undefined}
                       sx={{
                         width: 34,
                         height: 34,
@@ -231,15 +167,7 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         setAnchorEl(null);
-                        navigate(
-                          user?.role === "user" ? 
-                          "/user/profile" 
-                          : user?.role === "guide" ?
-                          "/guide/profile"
-                          : user?.role === "company" ?
-                          "/company/profile"
-                          : "/"
-                        );
+                        navigate(profilePath);
                       }}
                     >
                       Profilim
@@ -269,7 +197,6 @@ export default function Navbar() {
               )}
             </Box>
 
-            {/* Mobile Menu Icon */}
             <IconButton
               sx={{ display: { xs: "flex", md: "none" }, color: textColor }}
               onClick={() => setDrawerOpen(true)}
@@ -280,48 +207,31 @@ export default function Navbar() {
         </Container>
       </AppBar>
 
-      {/* Mobile Drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
         <Box sx={{ width: 260, pt: 2 }}>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
-          >
-            <DirectionsBusIcon color="primary" />
-            <Typography variant="h6" fontWeight={800} color="primary">
-              TravelBook
-            </Typography>
-          </Box>
+          <BrandLogo
+            to="/"
+            iconSize={24}
+            textVariant="h6"
+            textColor="primary.main"
+            sx={{ px: 2, mb: 2 }}
+          />
           <List>
-            {navLinks.map((link) => (
-              <Fragment key={link.path}>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    component={RouterLink}
-                    to={link.path}
-                    onClick={() => setDrawerOpen(false)}
-                    selected={location.pathname === link.path}
-                  >
-                    <ListItemText primary={link.label} />
-                  </ListItemButton>
-                </ListItem>
-
-                {link.path === "/user/tours" && isAuthenticated && user?.role === "user" && (
-                  <ListItem disablePadding>
-                    <ListItemButton
-                      component={RouterLink}
-                      to={purchasesPath}
-                      onClick={() => setDrawerOpen(false)}
-                      selected={isPurchasesPage}
-                    >
-                      <ListItemText primary="Seyahatlerim" />
-                    </ListItemButton>
-                  </ListItem>
-                )}
-              </Fragment>
+            {publicNavLinks.map((link) => (
+              <ListItem key={link.key} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={link.path}
+                  onClick={() => setDrawerOpen(false)}
+                  selected={location.pathname === link.path}
+                >
+                  <ListItemText primary={link.label} />
+                </ListItemButton>
+              </ListItem>
             ))}
           </List>
           <Box
@@ -335,47 +245,25 @@ export default function Navbar() {
           >
             {isAuthenticated ? (
               <>
-                {user?.role === "company" && (
-                  <Button
-                    component={RouterLink}
-                    to="/company"
-                    variant="contained"
-                    color="secondary"
-                    fullWidth
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    Firma Paneli
-                  </Button>
-                )}
-                {user?.role === "guide" && (
-                  <Button
-                    component={RouterLink}
-                    to="/guide"
-                    variant="contained"
-                    color="secondary"
-                    fullWidth
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    Rehber Paneli
-                  </Button>
-                )}
                 <Button
                   component={RouterLink}
-                  to={
-                    user?.role === "user"
-                      ? "/user/profile"
-                      : user?.role === "company"
-                      ? "/company/profile"
-                      : user?.role === "guide"
-                      ? "/guide/profile"
-                      : "/"
-                  }
+                  to={profilePath}
                   variant="outlined"
                   color="secondary"
                   fullWidth
                   onClick={() => setDrawerOpen(false)}
                 >
                   Profilim
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to={roleHomePath}
+                  variant="outlined"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Uygulamaya Dön
                 </Button>
                 <Button
                   variant="outlined"
@@ -416,7 +304,6 @@ export default function Navbar() {
         </Box>
       </Drawer>
 
-      {/* Toolbar spacer - only on non-home pages */}
       {!isHome && <Toolbar />}
     </>
   );

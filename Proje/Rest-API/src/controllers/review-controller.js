@@ -108,10 +108,9 @@ const createTourReview = async (req, res) => {
       data: mapReview(review),
     });
   } catch (error) {
-    console.error("Yorum eklenirken hata oluştu:", error);
     return createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Yorum eklenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -192,10 +191,9 @@ const updateReview = async (req, res) => {
       data: mapReview(updatedReview),
     });
   } catch (error) {
-    console.error("Yorum güncellenirken hata oluştu:", error);
     return createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Yorum güncellenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -241,10 +239,9 @@ const deleteReview = async (req, res) => {
       message: "Yorum başarıyla silindi",
     });
   } catch (error) {
-    console.error("Yorum silinirken hata oluştu:", error);
     return createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Yorum silinirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };

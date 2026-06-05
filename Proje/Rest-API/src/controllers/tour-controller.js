@@ -20,23 +20,6 @@ const endOfDay = (value) => {
   return date;
 };
 
-const mapTourListItem = (tour) => ({
-  id: tour.id || tour._id,
-  name: tour.title || tour.name,
-  title: tour.title || tour.name,
-  location: tour.location,
-  price: tour.price,
-  startDate: tour.date || tour.startDate,
-  endDate: tour.endDate || tour.date || tour.startDate,
-  date: tour.date || tour.startDate,
-  imageUrl:
-    Array.isArray(tour.images) && tour.images.length > 0
-      ? tour.images[0]
-      : null,
-  companyName: tour.companyName || null,
-  rating: tour.rating || 0,
-});
-
 const mapReview = (review) => ({
   id: review.id || review._id,
   tourId: review.tourId,
@@ -71,15 +54,35 @@ const mapTourDetail = (tour, reviews = []) => ({
   reviews: reviews.map(mapReview),
 });
 
+const decrementTourCapacitySafely = async (tourId, amount = 1) => {
+  if (!mongoose.Types.ObjectId.isValid(tourId) || amount <= 0) return;
+
+  await Tour.findOneAndUpdate(
+    {
+      _id: tourId,
+      filledCapacity: { $gte: amount },
+    },
+    { $inc: { filledCapacity: -amount } },
+    { new: false },
+  );
+};
+
 // GET TOURS
 const getTours = async (req, res) => {
   try {
-    const { title, price, location, date, minPrice, maxPrice } = req.query;
+    const { title, price, location, date, minPrice, maxPrice, page, limit } =
+      req.query;
 
+    // Validate pagination parameters
+    const currentPage = Number(page) || 1;
+    const pageSize = Number(limit) || 20;
+    const skip = (currentPage - 1) * pageSize;
+
+    // Build query incrementally so optional filters can be combined safely.
     const andFilters = [];
 
     if (location) {
-      const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       andFilters.push({ location: { $regex: escapedLocation, $options: "i" } });
     }
 
@@ -92,13 +95,14 @@ const getTours = async (req, res) => {
     }
 
     if (title) {
-      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedTitle, "i");
       andFilters.push({ $or: [{ title: regex }, { name: regex }] });
     }
 
     if (date) {
       const queryDate = new Date(date);
+      // Support both legacy `date` and newer `startDate` fields.
       andFilters.push({
         $or: [
           {
@@ -119,12 +123,21 @@ const getTours = async (req, res) => {
 
     const query = andFilters.length ? { $and: andFilters } : {};
 
-    const tours = await Tour.find(query)
-      .select("name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places")
-      .sort({ startDate: 1 })
-      .populate("companyId", "name")
-      .populate("guideId", "firstName lastName");
-    
+    // Execute count and find in parallel for efficiency.
+    const [totalCount, tours] = await Promise.all([
+      Tour.countDocuments(query),
+      Tour.find(query)
+        .select(
+          "name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places",
+        )
+        .sort({ startDate: 1 })
+        .skip(skip)
+        .limit(pageSize)
+        .populate("companyId", "name")
+        .populate("guideId", "firstName lastName"),
+    ]);
+
+    // Normalize tour documents into the compact list response shape.
     const tourList = tours.map((tour) => ({
       id: tour._id,
       name: tour.name,
@@ -147,13 +160,15 @@ const getTours = async (req, res) => {
     createResponse(res, 200, {
       status: "success",
       results: tourList.length,
+      total: totalCount,
+      page: currentPage,
+      totalPages: Math.ceil(totalCount / pageSize),
       data: tourList,
     });
   } catch (error) {
-    console.error("Turlar listelenirken hata oluştu:", error);
     createResponse(res, 500, {
       status: "error",
-      message: "Sunucu hatası oluştu",
+      message: `Turlar listelenirken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
     });
   }
 };
@@ -189,8 +204,10 @@ const getTourDetail = async (req, res) => {
       data: mapTourDetail(tour, reviews),
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Tur detayı alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -207,24 +224,9 @@ const purchaseTour = async (req, res) => {
       });
     }
 
-    const tour = await Tour.findById(tourId);
-    if (!tour) {
-      return createResponse(res, 404, {
-        status: "error",
-        message: "Tur bulunamadı",
-      });
-    }
-
-    // Kapasite kontrolü
-    if (tour.filledCapacity >= tour.totalCapacity) {
-      return createResponse(res, 409, {
-        status: "error",
-        message: "Tur kapasitesi dolu",
-      });
-    }
-
-    // Mükerrer satın alma kontrolü
-    const existingPurchase = await Purchase.findOne({ userId, tourId });
+    const existingPurchase = await Purchase.findOne({ userId, tourId }).select(
+      "_id",
+    );
     if (existingPurchase) {
       return createResponse(res, 409, {
         status: "error",
@@ -232,10 +234,46 @@ const purchaseTour = async (req, res) => {
       });
     }
 
-    const purchase = await Purchase.create({ userId, tourId });
+    const reservedTour = await Tour.findOneAndUpdate(
+      {
+        _id: tourId,
+        $expr: { $lt: ["$filledCapacity", "$totalCapacity"] },
+      },
+      { $inc: { filledCapacity: 1 } },
+      { new: false },
+    );
 
-    // Kapasiteyi atomik olarak artır
-    await Tour.findByIdAndUpdate(tourId, { $inc: { filledCapacity: 1 } });
+    if (!reservedTour) {
+      const tourExists = await Tour.exists({ _id: tourId });
+
+      if (!tourExists) {
+        return createResponse(res, 404, {
+          status: "error",
+          message: "Tur bulunamadı",
+        });
+      }
+
+      return createResponse(res, 409, {
+        status: "error",
+        message: "Tur kapasitesi dolu",
+      });
+    }
+
+    let purchase;
+    try {
+      purchase = await Purchase.create({ userId, tourId });
+    } catch (error) {
+      await decrementTourCapacitySafely(tourId);
+
+      if (error?.code === 11000) {
+        return createResponse(res, 409, {
+          status: "error",
+          message: "Bu turu zaten satın aldınız",
+        });
+      }
+
+      throw error;
+    }
 
     createResponse(res, 201, {
       status: "success",
@@ -243,8 +281,10 @@ const purchaseTour = async (req, res) => {
       data: purchase,
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Satın alma işlemi sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -254,33 +294,42 @@ const cancelPurchase = async (req, res) => {
     const { purchaseId } = req.params;
     const userId = req.payload?.id;
 
-    const purchase = await Purchase.findById(purchaseId);
+    if (!userId) {
+      return createResponse(res, 401, {
+        status: "error",
+        message: "İşlem için giriş yapmalısınız",
+      });
+    }
+
+    const purchase = await Purchase.findOneAndDelete({ _id: purchaseId, userId });
+
     if (!purchase) {
+      const existingPurchase = await Purchase.findById(purchaseId).select("_id");
+
+      if (existingPurchase) {
+        return createResponse(res, 403, {
+          status: "error",
+          message: "Yetkisiz işlem",
+        });
+      }
+
       return createResponse(res, 404, {
         status: "error",
         message: "Kayıt bulunamadı",
       });
     }
 
-    if (purchase.userId.toString() !== userId) {
-      return createResponse(res, 403, {
-        status: "error",
-        message: "Yetkisiz işlem",
-      });
-    }
-
-    // Kapasiteyi atomik olarak azalt
-    await Tour.findByIdAndUpdate(purchase.tourId, { $inc: { filledCapacity: -1 } });
-
-    await purchase.deleteOne();
+    await decrementTourCapacitySafely(purchase.tourId);
 
     createResponse(res, 200, {
       status: "success",
       message: "Satın alma iptal edildi",
     });
   } catch (error) {
-    console.error(error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Satın alma iptali sırasında sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 
@@ -299,8 +348,10 @@ const getStats = async (_req, res) => {
       data: { userCount, tourCount, companyCount, guideCount },
     });
   } catch (error) {
-    console.error("İstatistikler alınırken hata:", error);
-    createResponse(res, 500, { status: "error", message: "Sunucu hatası" });
+    createResponse(res, 500, {
+      status: "error",
+      message: `Platform istatistikleri alınırken sunucu hatası oluştu. Detay: ${error?.message || "Bilinmeyen hata"}`,
+    });
   }
 };
 

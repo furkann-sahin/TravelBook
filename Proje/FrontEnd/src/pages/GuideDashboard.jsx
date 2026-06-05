@@ -35,8 +35,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
+import BrandLogo from "../components/BrandLogo";
 import { useAuth } from "../hooks/useAuth";
 import { guideApi } from "../services/api";
 
@@ -559,17 +559,16 @@ export default function GuideDashboard() {
                             justifyContent: "space-between",
                         }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <DirectionsBusIcon sx={{ fontSize: 36 }} />
-                            <Box>
-                                <Typography variant="h4" fontWeight={800}>
-                                    TravelBook
-                                </Typography>
-                                <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                                    Rehber Paneli
-                                </Typography>
-                            </Box>
-                        </Box>
+                        <BrandLogo
+                            to="/guide"
+                            iconSize={36}
+                            textVariant="h4"
+                            textColor="#fff"
+                        >
+                            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                Rehber Paneli
+                            </Typography>
+                        </BrandLogo>
                         <Button
                             variant="outlined"
                             startIcon={<LogoutIcon />}

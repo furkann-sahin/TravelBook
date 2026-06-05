@@ -34,6 +34,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
+import BusinessIcon from "@mui/icons-material/Business";
 import MapIcon from "@mui/icons-material/Map";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import EditIcon from "@mui/icons-material/Edit";
@@ -47,7 +48,6 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import LinkIcon from "@mui/icons-material/Link";
-import GroupsIcon from "@mui/icons-material/Groups";
 import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -56,11 +56,17 @@ import { guideApi } from "../services/api";
 
 export default function GuideProfilePage() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
 
     const [guide, setGuide] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [stats, setStats] = useState({
+        totalTours: 0,
+        totalCompanies: 0,
+        experienceYears: 0,
+        rating: 0,
+    });
 
     // Edit mode state
     const [editing, setEditing] = useState(false);
@@ -81,35 +87,58 @@ export default function GuideProfilePage() {
 
     // NEW — Banner (cover) image
     const bannerInputRef = useRef(null);
-    const [bannerUrl, setBannerUrl] = useState(null);
     const [uploadingBanner, setUploadingBanner] = useState(false);
+    const [uploadingGallery, setUploadingGallery] = useState(false);
 
     // NEW — Availability status
     const [available, setAvailable] = useState(true);
 
     // NEW — Gallery
     const galleryInputRef = useRef(null);
-    const [galleryImages, setGalleryImages] = useState([
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop",
-    ]);
-
-
+    const galleryImages = guide?.galleryImageUrls ?? [];
 
     const fetchProfile = useCallback(async () => {
         if (!user?.id) return;
         try {
             setLoading(true);
             setError(null);
-            const res = await guideApi.getDetail(user.id);
-            setGuide(res.data ?? res);
+            const [profileResult, companiesResult, toursResult] = await Promise.allSettled([
+                guideApi.getDetail(user.id),
+                guideApi.listMyCompanies(user.id),
+                guideApi.listTours(user.id),
+            ]);
+
+            if (profileResult.status === "rejected") {
+                throw profileResult.reason;
+            }
+
+            const profile = profileResult.value?.data ?? profileResult.value ?? {};
+            const companies =
+                companiesResult.status === "fulfilled"
+                    ? companiesResult.value?.data ?? companiesResult.value ?? []
+                    : [];
+            const tours =
+                toursResult.status === "fulfilled"
+                    ? toursResult.value?.data ?? toursResult.value ?? []
+                    : [];
+
+            setGuide(profile);
+            updateUser({
+                name: `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || user?.name,
+                profileImageUrl: profile.profileImageUrl || null,
+            });
+            setStats({
+                totalTours: Array.isArray(tours) ? tours.length : 0,
+                totalCompanies: Array.isArray(companies) ? companies.length : 0,
+                experienceYears: profile?.experienceYears ?? 0,
+                rating: profile?.rating ?? 0,
+            });
         } catch (err) {
             setError(err.message || "Profil bilgileri yüklenirken bir hata oluştu.");
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [updateUser, user?.id, user?.name]);
 
     useEffect(() => {
         fetchProfile();
@@ -132,11 +161,11 @@ export default function GuideProfilePage() {
             Array.isArray(guide.languages) && guide.languages.length > 0,
             Array.isArray(guide.expertRoutes) && guide.expertRoutes.length > 0,
             guide.experienceYears > 0,
-            galleryImages.length > 0,
+            Array.isArray(guide.galleryImageUrls) && guide.galleryImageUrls.length > 0,
         ];
         const filled = fields.filter(Boolean).length;
         return Math.round((filled / fields.length) * 100);
-    }, [guide, galleryImages]);
+    }, [guide]);
 
     const handleEdit = () => {
         setEditing(true);
@@ -221,7 +250,9 @@ export default function GuideProfilePage() {
         try {
             setUploading(true);
             const res = await guideApi.uploadProfileImage(user.id, file);
-            setGuide((prev) => ({ ...prev, profileImageUrl: res.data?.profileImageUrl || res.profileImageUrl }));
+            const profileImageUrl = res.data?.profileImageUrl || res.profileImageUrl || null;
+            setGuide((prev) => ({ ...prev, profileImageUrl }));
+            updateUser({ profileImageUrl });
             setSnackbar({ open: true, message: "Profil resmi güncellendi" });
         } catch (err) {
             setSnackbar({ open: true, message: err.message || "Resim yüklenirken hata oluştu" });
@@ -231,36 +262,55 @@ export default function GuideProfilePage() {
         }
     };
 
-    // Banner upload (local only)
-    const handleBannerUpload = (e) => {
+    const handleBannerUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setUploadingBanner(true);
-        const reader = new FileReader();
-        reader.onload = () => {
-            setBannerUrl(reader.result);
-            setUploadingBanner(false);
+        try {
+            setUploadingBanner(true);
+            const res = await guideApi.uploadBannerImage(user.id, file);
+            setGuide((prev) => ({
+                ...prev,
+                bannerImageUrl: res.data?.bannerImageUrl || res.bannerImageUrl,
+            }));
             setSnackbar({ open: true, message: "Kapak fotoğrafı güncellendi" });
-        };
-        reader.readAsDataURL(file);
-        if (bannerInputRef.current) bannerInputRef.current.value = "";
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Kapak fotoğrafı yüklenirken hata oluştu" });
+        } finally {
+            setUploadingBanner(false);
+            if (bannerInputRef.current) bannerInputRef.current.value = "";
+        }
     };
 
-    // Gallery add (local only)
-    const handleGalleryAdd = (e) => {
+    const handleGalleryAdd = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            setGalleryImages((prev) => [...prev, reader.result]);
+        try {
+            setUploadingGallery(true);
+            const res = await guideApi.uploadGalleryImage(user.id, file);
+            setGuide((prev) => ({
+                ...prev,
+                galleryImageUrls: res.data?.galleryImageUrls || prev.galleryImageUrls || [],
+            }));
             setSnackbar({ open: true, message: "Fotoğraf galeriye eklendi" });
-        };
-        reader.readAsDataURL(file);
-        if (galleryInputRef.current) galleryInputRef.current.value = "";
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Galeri fotoğrafı yüklenirken hata oluştu" });
+        } finally {
+            setUploadingGallery(false);
+            if (galleryInputRef.current) galleryInputRef.current.value = "";
+        }
     };
 
-    const handleGalleryRemove = (index) => {
-        setGalleryImages((prev) => prev.filter((_, i) => i !== index));
+    const handleGalleryRemove = async (imageUrl) => {
+        try {
+            const res = await guideApi.removeGalleryImage(user.id, imageUrl);
+            setGuide((prev) => ({
+                ...prev,
+                galleryImageUrls: res.data?.galleryImageUrls || [],
+            }));
+            setSnackbar({ open: true, message: "Fotoğraf galeriden kaldırıldı" });
+        } catch (err) {
+            setSnackbar({ open: true, message: err.message || "Galeri fotoğrafı silinirken hata oluştu" });
+        }
     };
 
     const getImageSrc = (url) => {
@@ -317,7 +367,7 @@ export default function GuideProfilePage() {
         day: "numeric",
     });
 
-    const totalTours = guide.registeredTours?.length ?? 0;
+    const bannerImageSrc = getImageSrc(guide.bannerImageUrl);
 
     return (
         <Box sx={{ bgcolor: "background.default", minHeight: "80vh", py: 6 }}>
@@ -338,8 +388,8 @@ export default function GuideProfilePage() {
                     <Box
                         sx={{
                             height: { xs: 160, md: 220 },
-                            background: bannerUrl
-                                ? `url(${bannerUrl}) center/cover no-repeat`
+                            background: bannerImageSrc
+                                ? `url(${bannerImageSrc}) center/cover no-repeat`
                                 : "linear-gradient(135deg, #2D3436 0%, #636e72 40%, #D35400 100%)",
                             position: "relative",
                         }}
@@ -879,26 +929,30 @@ export default function GuideProfilePage() {
                         <Box
                             sx={{
                                 display: "grid",
-                                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
+                                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr 1fr" },
                                 gap: 3,
                                 mt: 2,
                             }}
                         >
                             <StatCard
                                 icon={<MapIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={totalTours}
+                                value={stats.totalTours}
                                 label="Toplam Tur"
                             />
                             <StatCard
+                                icon={<BusinessIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={stats.totalCompanies}
+                                label="Kayıtlı Firma"
+                            />
+                            <StatCard
                                 icon={<WorkHistoryIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={guide.experienceYears ?? "—"}
+                                value={stats.experienceYears}
                                 label="Deneyim (Yıl)"
                             />
                             <StatCard
-                                icon={<CalendarMonthIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
-                                value={memberSince}
-                                label="Üyelik Tarihi"
-                                small
+                                icon={<StarIcon sx={{ fontSize: 32, color: "secondary.main" }} />}
+                                value={stats.rating > 0 ? Number(stats.rating).toFixed(1) : "0.0"}
+                                label="Ortalama Puan"
                             />
                         </Box>
                     </Paper>
@@ -923,8 +977,13 @@ export default function GuideProfilePage() {
                                 <IconButton
                                     color="secondary"
                                     onClick={() => galleryInputRef.current?.click()}
+                                    disabled={uploadingGallery}
                                 >
-                                    <AddPhotoAlternateIcon />
+                                    {uploadingGallery ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : (
+                                        <AddPhotoAlternateIcon />
+                                    )}
                                 </IconButton>
                             </Tooltip>
                             <input
@@ -967,7 +1026,7 @@ export default function GuideProfilePage() {
                             >
                                 {galleryImages.map((img, idx) => (
                                     <Box
-                                        key={idx}
+                                        key={img}
                                         sx={{
                                             position: "relative",
                                             paddingTop: "75%",
@@ -978,7 +1037,7 @@ export default function GuideProfilePage() {
                                     >
                                         <Box
                                             component="img"
-                                            src={img}
+                                            src={getImageSrc(img)}
                                             alt={`Galeri ${idx + 1}`}
                                             sx={{
                                                 position: "absolute",
@@ -1007,7 +1066,7 @@ export default function GuideProfilePage() {
                                         >
                                             <IconButton
                                                 size="small"
-                                                onClick={() => handleGalleryRemove(idx)}
+                                                onClick={() => handleGalleryRemove(img)}
                                                 sx={{ color: "#fff", bgcolor: "rgba(244,67,54,0.8)", "&:hover": { bgcolor: "error.main" } }}
                                             >
                                                 <CloseIcon sx={{ fontSize: 18 }} />

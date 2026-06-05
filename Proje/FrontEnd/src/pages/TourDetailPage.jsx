@@ -28,7 +28,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { tourApi, reviewApi, getImageUrl } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
-import { formatDate } from "../components/TourCard";
+import { formatDate } from "../utils/tour-formatters";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200";

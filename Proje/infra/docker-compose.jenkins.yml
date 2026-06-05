@@ -1,0 +1,36 @@
+# Jenkins CI/CD — TravelBook
+# Kullanım: docker compose -f infra/docker-compose.jenkins.yml up -d
+
+name: travelbook-jenkins
+
+services:
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    image: travelbook-jenkins:lts-jdk21-tools
+    container_name: travelbook-jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root                         # Docker socket erişimi için
+    ports:
+      - "9090:8080"                    # Jenkins UI  → http://localhost:9090
+      - "50000:50000"                  # Jenkins agent bağlantı portu
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Host Docker'ı Jenkins içinden kullanmak için (Docker-in-Docker yerine)
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # İlk kurulumda şifre sorusunu atlamak istersen:
+      # JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  jenkins_home:
+    name: travelbook-jenkins-home

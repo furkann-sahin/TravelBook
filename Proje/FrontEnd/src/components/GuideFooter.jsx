@@ -8,12 +8,13 @@ import {
     IconButton,
     Divider,
 } from "@mui/material";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import BrandLogo from "./BrandLogo";
 
 const guideLinks = [
-    { label: "Panel", path: "/guide" },
-    { label: "Turlarım", path: "/guide/tours" },
+    { label: "Ana Sayfa", path: "/guide" },
+    { label: "Dashboard", path: "/guide/dashboard" },
+    { label: "Turlarım", path: "/guide/my-tours" },
     { label: "Profilim", path: "/guide/profile" },
 ];
 
@@ -37,14 +38,13 @@ export default function GuideFooter() {
                 <Grid container spacing={4}>
                     {/* Brand */}
                     <Grid size={{ xs: 12, md: 4 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                            <DirectionsBusIcon
-                                sx={{ color: "secondary.light", fontSize: 28 }}
-                            />
-                            <Typography variant="h5" fontWeight={800} color="#fff">
-                                TravelBook
-                            </Typography>
-                        </Box>
+                        <BrandLogo
+                            to="/guide"
+                            iconSize={28}
+                            textVariant="h5"
+                            textColor="#fff"
+                            sx={{ mb: 2 }}
+                        />
 
                         <Box sx={{ display: "flex", gap: 0.5 }}>
                             <IconButton

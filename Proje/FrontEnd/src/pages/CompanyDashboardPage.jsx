@@ -116,14 +116,28 @@ export default function CompanyDashboardPage() {
     <Box sx={{ bgcolor: "background.default", minHeight: "80vh", py: 6 }}>
       <Container maxWidth="lg">
         {/* Welcome Section */}
-        <Box sx={{ mb: 5 }}>
-          <Typography variant="h3" fontWeight={800} gutterBottom>
-            Hoş geldiniz, {user?.name}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Firma panelinizden turlarınızı yönetebilir ve istatistiklerinizi
-            takip edebilirsiniz.
-          </Typography>
+        <Box
+          sx={{
+            mb: 5,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="h3" fontWeight={800} gutterBottom>
+              Firma Dashboard
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Hoş geldiniz, {user?.name}. Yönetim metriklerinizi ve operasyon
+              ekranlarını buradan takip edebilirsiniz.
+            </Typography>
+          </Box>
+          <Button variant="outlined" color="secondary" onClick={() => navigate("/company")}>
+            Ana Sayfa
+          </Button>
         </Box>
 
         {/* Statistics */}

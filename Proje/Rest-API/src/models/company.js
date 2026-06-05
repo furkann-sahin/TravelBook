@@ -73,7 +73,7 @@ const companySchema = new mongoose.Schema(
     },
     registeredGuides: [{ // Firmaya kayıt olan rehberler
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Guide'
+      ref: "Guide",
     }],
   },
   {
