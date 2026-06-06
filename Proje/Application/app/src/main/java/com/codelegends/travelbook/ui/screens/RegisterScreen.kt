@@ -45,11 +45,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.codelegends.travelbook.model.AuthRole
 import com.codelegends.travelbook.model.UserSession
+import com.codelegends.travelbook.ui.theme.TravelBookTheme
 import com.codelegends.travelbook.ui.components.TravelBookBrandLogo
 import com.codelegends.travelbook.ui.components.TravelBookPasswordField
 import com.codelegends.travelbook.ui.components.TravelBookTextField
@@ -189,6 +191,8 @@ fun RegisterScreen(
                         CompanyRegisterForm(uiState = uiState, viewModel = viewModel)
                     } else if (selectedRole == AuthRole.GUIDE) {
                         GuideRegisterForm(uiState = uiState, viewModel = viewModel)
+                    } else if (selectedRole == AuthRole.USER) {
+                        UserRegisterForm(uiState = uiState, viewModel = viewModel)
                     } else {
                         ComingSoonRoleForm(roleName = selectedRole.displayName)
                     }
@@ -197,7 +201,7 @@ fun RegisterScreen(
 
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading && (selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE),
+                        enabled = !uiState.isLoading && (selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE || selectedRole == AuthRole.USER),
                         onClick = viewModel::submit,
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(vertical = 14.dp),
@@ -331,6 +335,13 @@ private fun GuideRegisterForm(
             placeholder = "ornek@email.com",
             keyboardType = KeyboardType.Email
         )
+        TravelBookTextField(
+            value = uiState.phone,
+            onValueChange = viewModel::onPhoneChanged,
+            label = "Telefon Numarası",
+            placeholder = "05xx xxx xxxx",
+            keyboardType = KeyboardType.Phone
+        )
         TravelBookPasswordField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChanged,
@@ -407,6 +418,55 @@ private fun GuideRegisterForm(
 }
 
 @Composable
+private fun UserRegisterForm(
+    uiState: RegisterUiState,
+    viewModel: RegisterViewModel
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        TravelBookTextField(
+            value = uiState.firstName,
+            onValueChange = viewModel::onFirstNameChanged,
+            label = "Ad",
+            placeholder = "Adınızı girin"
+        )
+        TravelBookTextField(
+            value = uiState.lastName,
+            onValueChange = viewModel::onLastNameChanged,
+            label = "Soyad",
+            placeholder = "Soyadınızı girin"
+        )
+        TravelBookTextField(
+            value = uiState.email,
+            onValueChange = viewModel::onEmailChanged,
+            label = "E-posta Adresi",
+            placeholder = "ornek@email.com",
+            keyboardType = KeyboardType.Email
+        )
+        TravelBookTextField(
+            value = uiState.phone,
+            onValueChange = viewModel::onPhoneChanged,
+            label = "Telefon Numarası",
+            placeholder = "05xx xxx xxxx",
+            keyboardType = KeyboardType.Phone
+        )
+        TravelBookPasswordField(
+            value = uiState.password,
+            onValueChange = viewModel::onPasswordChanged,
+            label = "Şifre",
+            isVisible = uiState.isPasswordVisible,
+            onVisibilityToggle = viewModel::onPasswordVisibilityToggled
+        )
+        TravelBookPasswordField(
+            value = uiState.confirmPassword,
+            onValueChange = viewModel::onConfirmPasswordChanged,
+            label = "Şifreyi Onayla",
+            isVisible = uiState.isPasswordVisible,
+            onVisibilityToggle = viewModel::onPasswordVisibilityToggled
+        )
+    }
+}
+
+@Composable
 private fun ComingSoonRoleForm(roleName: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -419,6 +479,18 @@ private fun ComingSoonRoleForm(roleName: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RegisterScreenPreview() {
+    TravelBookTheme {
+        RegisterScreen(
+            onNavigateToLogin = {},
+            onNavigateToHome = {},
+            onNavigateBack = {}
         )
     }
 }

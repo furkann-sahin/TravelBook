@@ -5,6 +5,7 @@ sealed class AppRoute(val route: String) {
     data object AuthGraph : AppRoute("graph/auth")
     data object CompanyShell : AppRoute("shell/company")
     data object GuideShell : AppRoute("shell/guide")
+    data object UserShell : AppRoute("shell/user")
 
     data object PublicHome : AppRoute("public/home")
     data object PublicTours : AppRoute("public/tours")
@@ -31,6 +32,11 @@ sealed class AppRoute(val route: String) {
     data object GuideMyTours : AppRoute("guide/my-tours")
     data object GuideProfile : AppRoute("guide/profile")
 
+    data object UserHome : AppRoute("user/home")
+    data object UserTours : AppRoute("user/tours")
+    data object UserGuides : AppRoute("user/guides")
+    data object UserProfile : AppRoute("user/profile")
+
     companion object {
         val companyTabRoutes: Set<String> = setOf(
             CompanyHome.route,
@@ -49,12 +55,23 @@ sealed class AppRoute(val route: String) {
             GuideProfile.route
         )
 
+        val userTabRoutes: Set<String> = setOf(
+            UserHome.route,
+            UserTours.route,
+            UserGuides.route,
+            UserProfile.route
+        )
+
         fun isCompanyRole(role: String?): Boolean {
             return role.equals("company", ignoreCase = true)
         }
 
         fun isGuideRole(role: String?): Boolean {
             return role.equals("guide", ignoreCase = true)
+        }
+
+        fun isUserRole(role: String?): Boolean {
+            return role.equals("user", ignoreCase = true)
         }
     }
 }

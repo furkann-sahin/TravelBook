@@ -34,6 +34,38 @@ class PublicTourRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getFilteredTours(
+        location: String?,
+        minPrice: Double?,
+        maxPrice: Double?,
+        startDate: String?,
+        endDate: String?
+    ): ApiResult<List<FeaturedTourSummary>> {
+        return try {
+            val response = tourApiService.getTours(
+                location = location,
+                minPrice = minPrice,
+                maxPrice = maxPrice,
+                startDate = startDate,
+                endDate = endDate
+            )
+            if (!response.isSuccessful) {
+                val message = ApiErrorParser.parse(
+                    rawBody = response.errorBody()?.string(),
+                    fallbackMessage = "Turlar yüklenemedi"
+                )
+                return ApiResult.Error(message = message, code = response.code())
+            }
+
+            val tours = response.body()?.data.orEmpty().map(::mapTour)
+            ApiResult.Success(tours)
+        } catch (_: IOException) {
+            ApiResult.Error("Bağlantı hatası. Lütfen internetinizi kontrol edin")
+        } catch (exception: Exception) {
+            ApiResult.Error(exception.message ?: "Turlar yüklenemedi")
+        }
+    }
+
     override suspend fun getPlatformStats(): ApiResult<PlatformStatsSummary> {
         return try {
             val response = tourApiService.getStats()

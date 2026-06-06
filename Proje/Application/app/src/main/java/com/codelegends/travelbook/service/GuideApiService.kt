@@ -13,6 +13,9 @@ import retrofit2.http.*
 
 interface GuideApiService {
 
+    @GET("guides")
+    suspend fun getAllGuides(): Response<ApiListEnvelope<com.codelegends.travelbook.model.UserGuideProfileDto>>
+
     @GET("guides/{guideId}")
     suspend fun getGuideDetail(
         @Path("guideId") guideId: String
