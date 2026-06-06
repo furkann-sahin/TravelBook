@@ -6,7 +6,9 @@ import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.AuthRole
 import com.codelegends.travelbook.model.CompanyLoginInput
 import com.codelegends.travelbook.model.GuideLoginInput
+import com.codelegends.travelbook.model.UserLoginInput
 import com.codelegends.travelbook.model.UserSession
+import com.codelegends.travelbook.repository.UserRepository
 import com.codelegends.travelbook.usecase.CompanyLoginUseCase
 import com.codelegends.travelbook.usecase.GuideLoginUseCase
 import com.codelegends.travelbook.util.AuthValidators
@@ -38,6 +40,7 @@ sealed interface LoginEvent {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+    private val userRepository: UserRepository,
     private val companyLoginUseCase: CompanyLoginUseCase,
     private val guideLoginUseCase: GuideLoginUseCase
 ) : ViewModel() {
@@ -69,13 +72,28 @@ class LoginViewModel @Inject constructor(
         val role = AuthRole.entries[state.selectedRoleIndex]
 
         when (role) {
+            AuthRole.USER -> submitUser(state)
             AuthRole.COMPANY -> submitCompany(state)
             AuthRole.GUIDE -> submitGuide(state)
-            else -> {
-                _uiState.update {
-                    it.copy(errorMessage = "Bu rol için giriş desteği yakında eklenecek")
-                }
-            }
+        }
+    }
+
+    private fun submitUser(state: LoginUiState) {
+        val validationError = validateForm(state)
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = userRepository.loginUser(
+                UserLoginInput(
+                    email = state.email.trim(),
+                    password = state.password
+                )
+            )
+            handleResult(result)
         }
     }
 

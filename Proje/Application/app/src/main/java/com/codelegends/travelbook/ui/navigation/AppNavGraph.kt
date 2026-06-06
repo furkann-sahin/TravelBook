@@ -78,8 +78,12 @@ import com.codelegends.travelbook.ui.screens.PublicAboutScreen
 import com.codelegends.travelbook.ui.screens.PublicHomeScreen
 import com.codelegends.travelbook.ui.screens.PublicToursScreen
 import com.codelegends.travelbook.ui.screens.RegisterScreen
+import com.codelegends.travelbook.ui.screens.TourListingScreen
+import com.codelegends.travelbook.ui.screens.UserGuideListScreen
+import com.codelegends.travelbook.ui.screens.UserHomeScreen
 import com.codelegends.travelbook.viewmodel.CompanyShellViewModel
 import com.codelegends.travelbook.viewmodel.GuideShellViewModel
+import com.codelegends.travelbook.viewmodel.UserShellViewModel
 
 /**
  * Height of the floating bottom nav bar provided by the active shell.
@@ -129,6 +133,7 @@ fun AppNavGraph(
                         val route = when {
                             AppRoute.isCompanyRole(session.role) -> AppRoute.CompanyShell.route
                             AppRoute.isGuideRole(session.role) -> AppRoute.GuideShell.route
+                            AppRoute.isUserRole(session.role) -> AppRoute.UserShell.route
                             else -> AppRoute.PublicShell.route
                         }
                         android.util.Log.d("TravelBookNav", "Calculated route: $route")
@@ -158,6 +163,7 @@ fun AppNavGraph(
                         val route = when {
                             AppRoute.isCompanyRole(session.role) -> AppRoute.CompanyShell.route
                             AppRoute.isGuideRole(session.role) -> AppRoute.GuideShell.route
+                            AppRoute.isUserRole(session.role) -> AppRoute.UserShell.route
                             else -> AppRoute.PublicShell.route
                         }
                         android.util.Log.d("TravelBookNav", "Calculated route: $route")
@@ -196,6 +202,188 @@ fun AppNavGraph(
                     }
                 }
             )
+        }
+
+        composable(AppRoute.UserShell.route) {
+            UserAppShell(
+                onLoggedOut = {
+                    navController.navigate(AppRoute.PublicShell.route) {
+                        popUpTo(AppRoute.UserShell.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UserAppShell(
+    onLoggedOut: () -> Unit,
+    viewModel: UserShellViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val shellNavController = rememberNavController()
+    val navBackStackEntry by shellNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = AppRoute.userTabRoutes.contains(currentRoute)
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val tabs = listOf(
+        TravelBookNavItem(AppRoute.UserTours.route, "Turlar", Icons.Default.Map),
+        TravelBookNavItem(AppRoute.UserGuides.route, "Rehberler", Icons.Default.People),
+        TravelBookNavItem(
+            route = AppRoute.UserHome.route,
+            label = "",
+            icon = Icons.Default.Home,
+            contentDescription = "Ana Sayfa",
+            isHome = true
+        ),
+        TravelBookNavItem(AppRoute.UserProfile.route, "Profilim", Icons.Default.Person)
+    )
+
+    val density = LocalDensity.current
+    var navBarHeightPx by remember { mutableIntStateOf(0) }
+    val navBarHeightDp = with(density) { navBarHeightPx.toDp() }
+
+    Scaffold(
+        topBar = {
+            if (showBottomBar) TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TravelBookBrandLogo(
+                            iconSize = 24.dp,
+                            textStyle = MaterialTheme.typography.titleMedium,
+                            textColor = MaterialTheme.colorScheme.onSurface,
+                            spacing = 6.dp
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "KULLANICI PANELİ",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                letterSpacing = 0.6.sp
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Menü"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(text = uiState.session?.email.orEmpty()) },
+                            onClick = {},
+                            enabled = false
+                        )
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null
+                                )
+                            },
+                            text = { Text("Hakkımızda") },
+                            onClick = {
+                                menuExpanded = false
+                                shellNavController.navigate(AppRoute.PublicAbout.route) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = null
+                                )
+                            },
+                            text = { Text("Çıkış Yap") },
+                            enabled = !uiState.isLoggingOut,
+                            onClick = {
+                                menuExpanded = false
+                                viewModel.logout(onLoggedOut)
+                            }
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        bottomBar = {
+            if (showBottomBar) {
+                AppBottomNavBar(
+                    items = tabs,
+                    currentRoute = currentRoute,
+                    onRouteSelected = { route ->
+                        if (currentRoute != route) shellNavController.navigateToTopLevel(route)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { navBarHeightPx = it.height }
+                )
+            }
+        }
+    ) { innerPadding ->
+        CompositionLocalProvider(LocalNavBarHeight provides if (showBottomBar) navBarHeightDp else 0.dp) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding())
+            ) {
+                NavHost(
+                    navController = shellNavController,
+                    startDestination = AppRoute.UserHome.route,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable(AppRoute.UserHome.route) {
+                        UserHomeScreen(
+                            onExploreTours = {
+                                shellNavController.navigateToTopLevel(AppRoute.UserTours.route)
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.UserTours.route) {
+                        TourListingScreen(
+                            onTourClick = { /* TODO: Open Detail */ }
+                        )
+                    }
+
+                    composable(AppRoute.UserGuides.route) {
+                        UserGuideListScreen(
+                            onGuideClick = { /* TODO: Open Detail */ }
+                        )
+                    }
+
+                    composable(AppRoute.UserProfile.route) {
+                        PlaceholderScreen("Profil")
+                    }
+
+                    composable(AppRoute.PublicAbout.route) {
+                        PublicAboutScreen()
+                    }
+                }
+            }
         }
     }
 }

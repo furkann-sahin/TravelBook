@@ -6,7 +6,9 @@ import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.AuthRole
 import com.codelegends.travelbook.model.CompanyRegisterInput
 import com.codelegends.travelbook.model.GuideRegisterInput
+import com.codelegends.travelbook.model.UserRegisterInput
 import com.codelegends.travelbook.model.UserSession
+import com.codelegends.travelbook.repository.UserRepository
 import com.codelegends.travelbook.usecase.CompanyRegisterUseCase
 import com.codelegends.travelbook.usecase.GuideRegisterUseCase
 import com.codelegends.travelbook.util.AuthValidators
@@ -55,6 +57,7 @@ sealed interface RegisterEvent {
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
+    private val userRepository: UserRepository,
     private val companyRegisterUseCase: CompanyRegisterUseCase,
     private val guideRegisterUseCase: GuideRegisterUseCase
 ) : ViewModel() {
@@ -107,13 +110,31 @@ class RegisterViewModel @Inject constructor(
         val role = AuthRole.entries[state.selectedRoleIndex]
 
         when (role) {
+            AuthRole.USER -> submitUser(state)
             AuthRole.COMPANY -> submitCompany(state)
             AuthRole.GUIDE -> submitGuide(state)
-            else -> {
-                _uiState.update {
-                    it.copy(errorMessage = "Bu rol için kayıt desteği yakında eklenecek")
-                }
-            }
+        }
+    }
+
+    private fun submitUser(state: RegisterUiState) {
+        val validationError = validateUserForm(state)
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = userRepository.registerUser(
+                UserRegisterInput(
+                    firstName = state.firstName.trim(),
+                    lastName = state.lastName.trim(),
+                    email = state.email.trim(),
+                    password = state.password,
+                    phone = state.phone.trim()
+                )
+            )
+            handleResult(result)
         }
     }
 
@@ -188,6 +209,16 @@ class RegisterViewModel @Inject constructor(
         AuthValidators.validateEmail(state.email)?.let { return it }
         AuthValidators.validatePassword(state.password)?.let { return it }
         if (state.password != state.confirmPassword) return "Şifreler eşleşmiyor"
+        return null
+    }
+
+    private fun validateUserForm(state: RegisterUiState): String? {
+        if (state.firstName.isBlank()) return "Ad zorunludur"
+        if (state.lastName.isBlank()) return "Soyad zorunludur"
+        AuthValidators.validateEmail(state.email)?.let { return it }
+        AuthValidators.validatePassword(state.password)?.let { return it }
+        if (state.password != state.confirmPassword) return "Şifreler eşleşmiyor"
+        if (state.phone.isBlank()) return "Telefon numarası zorunludur"
         return null
     }
 

@@ -4,6 +4,7 @@ import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.*
 
 interface GuideRepository {
+    suspend fun getAllGuides(): ApiResult<List<GuideProfileSummary>>
     suspend fun getProfile(guideId: String): ApiResult<GuideProfileSummary>
     suspend fun updateProfile(guideId: String, request: GuideProfileUpdateRequest): ApiResult<GuideProfileSummary>
     suspend fun deleteAccount(guideId: String): ApiResult<Unit>

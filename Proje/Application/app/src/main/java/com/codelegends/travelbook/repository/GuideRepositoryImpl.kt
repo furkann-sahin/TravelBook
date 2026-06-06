@@ -14,6 +14,47 @@ class GuideRepositoryImpl @Inject constructor(
     private val guideApiService: GuideApiService
 ) : GuideRepository {
 
+    override suspend fun getAllGuides(): ApiResult<List<GuideProfileSummary>> {
+        return try {
+            val response = guideApiService.getAllGuides()
+            if (response.isSuccessful) {
+                val data = response.body()?.data.orEmpty()
+                ApiResult.Success(data.map { it.toUserSummary() })
+            } else {
+                ApiResult.Error(ApiErrorParser.parse(response.errorBody()?.string(), "Rehberler yüklenemedi"))
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("Bağlantı hatası")
+        }
+    }
+
+    private fun UserGuideProfileDto.toUserSummary(): GuideProfileSummary {
+        val fName = this.firstName ?: this.name?.substringBefore(" ") ?: ""
+        val lName = this.lastName ?: this.name?.substringAfter(" ", "") ?: ""
+        val full = this.name ?: "$fName $lName".trim()
+
+        return GuideProfileSummary(
+            id = this.id ?: this.objectId ?: "",
+            firstName = fName,
+            lastName = lName,
+            fullName = full.ifBlank { "İsimsiz Rehber" },
+            email = this.email.orEmpty(),
+            phone = this.phone.orEmpty(),
+            biography = this.biography.orEmpty(),
+            profileImageUrl = this.profileImageUrl,
+            bannerImageUrl = null,
+            languages = this.languages ?: emptyList(),
+            expertRoutes = this.expertRoutes ?: emptyList(),
+            experienceYears = this.experienceYears ?: 0,
+            rating = this.rating ?: 0.0,
+            available = this.available ?: true,
+            instagram = "",
+            linkedin = "",
+            galleryImages = emptyList(),
+            createdAt = null
+        )
+    }
+
     override suspend fun getProfile(guideId: String): ApiResult<GuideProfileSummary> {
         return try {
             val response = guideApiService.getGuideDetail(guideId)

@@ -41,6 +41,10 @@ fun TravelBookApp(
             android.util.Log.d("TravelBookApp", "Matching as Guide role")
             AppRoute.GuideShell.route
         }
+        AppRoute.isUserRole(sessionRole) -> {
+            android.util.Log.d("TravelBookApp", "Matching as User role")
+            AppRoute.UserShell.route
+        }
         else -> {
             android.util.Log.d("TravelBookApp", "Defaulting to Public shell")
             AppRoute.PublicShell.route

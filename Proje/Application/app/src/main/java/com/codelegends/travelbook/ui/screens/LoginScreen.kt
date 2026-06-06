@@ -203,7 +203,7 @@ fun LoginScreen(
                     Spacer(Modifier.height(20.dp))
 
                     val selectedRole = AuthRole.entries[uiState.selectedRoleIndex]
-                    val isRoleSupported = selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE
+                    val isRoleSupported = selectedRole == AuthRole.COMPANY || selectedRole == AuthRole.GUIDE || selectedRole == AuthRole.USER
 
                     Button(
                         modifier = Modifier.fillMaxWidth(),
