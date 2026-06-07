@@ -4,6 +4,8 @@ const Company = mongoose.model("Company");
 const Tour = mongoose.model("Tour");
 const { createResponse } = require("../utils/create-response");
 const { persistUploadedImage } = require("../utils/image-storage");
+const { redisClient } = require("../utils/redisClient");
+const { publishToQueue } = require("../utils/rabbitmqClient");
 
 // Rehber Tüm Tur Firmalarını Listeleme (GET /api/companies)
 const listCompanies = async (req, res) => {
@@ -56,6 +58,10 @@ const updateGuideProfile = async (req, res) => {
     if (!updatedGuide) {
       return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
     }
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+
     createResponse(res, 200, { status: "success", data: updatedGuide });
   } catch (error) {
     createResponse(res, 500, {
@@ -97,6 +103,14 @@ const deleteGuide = async (req, res) => {
       Guide.findByIdAndDelete(guide._id),
     ]);
 
+    // RabbitMQ: Guide Deletion
+    await publishToQueue("guide_deletion_queue", { guideId: req.params.guideId });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}/companies`);
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}/tours`);
+
     createResponse(res, 200, { status: "success", message: "Kaydınız başarıyla silinmiştir" });
   } catch (error) {
     createResponse(res, 500, {
@@ -120,6 +134,10 @@ const uploadProfileImage = async (req, res) => {
       { new: true },
     );
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+
     createResponse(res, 200, { status: "success", data: { profileImageUrl: imageUrl } });
   } catch (error) {
     createResponse(res, 500, {
@@ -143,6 +161,10 @@ const uploadBannerImage = async (req, res) => {
     );
 
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+
     createResponse(res, 200, { status: "success", data: { bannerImageUrl: imageUrl } });
   } catch (error) {
     createResponse(res, 500, {
@@ -166,6 +188,10 @@ const uploadGalleryImage = async (req, res) => {
     );
 
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+
     createResponse(res, 200, {
       status: "success",
       data: {
@@ -197,6 +223,10 @@ const removeGalleryImage = async (req, res) => {
     );
 
     if (!guide) return createResponse(res, 404, { status: "error", message: "Rehber bulunamadı" });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}`);
+
     createResponse(res, 200, {
       status: "success",
       data: { galleryImageUrls: guide.galleryImageUrls },

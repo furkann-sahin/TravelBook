@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Guide = mongoose.model("Guide");
 const { createResponse } = require("../utils/create-response");
 const passport = require("passport");
+const { publishToQueue } = require("../utils/rabbitmqClient");
 
 // Rehber Kayıt (Register)
 const register = async (req, res) => {
@@ -42,6 +43,15 @@ const register = async (req, res) => {
 
         guide.setPassword(password);
         await guide.save();
+
+        // RabbitMQ'ya mesaj gönder
+        await publishToQueue("guide_registration_queue", {
+            id: guide._id,
+            firstName: guide.firstName,
+            lastName: guide.lastName,
+            email: guide.email,
+            registeredAt: new Date(),
+        });
 
         const token = guide.generateJWT();
 

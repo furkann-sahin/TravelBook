@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Guide = mongoose.model("Guide");
 const Tour = mongoose.model("Tour");
 const { createResponse } = require("../utils/create-response");
+const { redisClient } = require("../utils/redisClient");
+const { publishToQueue } = require("../utils/rabbitmqClient");
 
 // Rehberin Kayıtlı Olduğu Turları Listeleme
 const listGuideTours = async (req, res) => {
@@ -82,6 +84,10 @@ const assignGuideToTour = async (req, res) => {
 
     guide.registeredTours.push(tourId);
     await guide.save();
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}/tours`);
+
     createResponse(res, 201, {
       status: "success",
       message: "Rehber tura başarıyla atandı",
@@ -124,6 +130,13 @@ const removeGuideFromTour = async (req, res) => {
 
     guide.registeredTours.pull(tourObjectId);
     await guide.save();
+
+    // RabbitMQ: Tour Silme (Rehber Turdan Ayrıldı)
+    await publishToQueue("tour_deletion_queue", { guideId, tourId });
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${guideId}/tours`);
+
     createResponse(res, 200, {
       status: "success",
       message: "Tur kaydınız başarıyla silinmiştir",
