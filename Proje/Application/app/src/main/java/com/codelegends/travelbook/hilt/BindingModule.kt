@@ -8,6 +8,8 @@ import com.codelegends.travelbook.repository.AuthRepository
 import com.codelegends.travelbook.repository.AuthRepositoryImpl
 import com.codelegends.travelbook.repository.CompanyTourRepository
 import com.codelegends.travelbook.repository.CompanyTourRepositoryImpl
+import com.codelegends.travelbook.repository.FavoriteRepository
+import com.codelegends.travelbook.repository.FavoriteRepositoryImpl
 import com.codelegends.travelbook.repository.GuideRepository
 import com.codelegends.travelbook.repository.GuideRepositoryImpl
 import com.codelegends.travelbook.repository.PublicTourRepository
@@ -66,4 +68,10 @@ abstract class BindingModule {
     abstract fun bindReviewRepository(
         implementation: ReviewRepositoryImpl
     ): ReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFavoriteRepository(
+        implementation: FavoriteRepositoryImpl
+    ): FavoriteRepository
 }

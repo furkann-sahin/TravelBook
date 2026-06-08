@@ -34,6 +34,7 @@ sealed class AppRoute(val route: String) {
 
     data object UserHome : AppRoute("user/home")
     data object UserTours : AppRoute("user/tours")
+    data object UserFavorites : AppRoute("user/favorites")
     data object UserGuides : AppRoute("user/guides")
     data object UserProfile : AppRoute("user/profile")
     data object UserTourDetail : AppRoute("user/tours/{tourId}") {
@@ -61,6 +62,7 @@ sealed class AppRoute(val route: String) {
         val userTabRoutes: Set<String> = setOf(
             UserHome.route,
             UserTours.route,
+            UserFavorites.route,
             UserGuides.route,
             UserProfile.route
         )

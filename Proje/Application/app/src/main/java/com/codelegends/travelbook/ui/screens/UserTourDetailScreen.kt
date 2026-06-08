@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +22,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -147,7 +152,12 @@ private fun UserTourDetailContent(
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         // Hero Section
-        UserTourHeroSection(tour = tour, onNavigateBack = onNavigateBack)
+        UserTourHeroSection(
+            tour = tour,
+            uiState = uiState,
+            viewModel = viewModel,
+            onNavigateBack = onNavigateBack
+        )
 
         AnimatedVisibility(
             visible = contentVisible,
@@ -206,6 +216,8 @@ private fun UserTourDetailContent(
 @Composable
 private fun UserTourHeroSection(
     tour: UserTourDetailDto,
+    uiState: com.codelegends.travelbook.viewmodel.UserTourDetailUiState,
+    viewModel: UserTourDetailViewModel,
     onNavigateBack: () -> Unit
 ) {
     val imageUrl = tour.images?.firstOrNull()?.let { AppConfig.resolveImageUrl(it) }
@@ -248,6 +260,25 @@ private fun UserTourHeroSection(
             }
         }
 
+        IconButton(
+            onClick = { tour.id?.let { viewModel.toggleFavorite(it) } ?: tour.objectId?.let { viewModel.toggleFavorite(it) } },
+            enabled = !uiState.isTogglingFavorite,
+            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+        ) {
+            Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.4f)) {
+                if (uiState.isTogglingFavorite) {
+                    CircularProgressIndicator(modifier = Modifier.padding(8.dp).size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favori",
+                        tint = if (uiState.isFavorite) Color.Red else Color.White,
+                        modifier = Modifier.padding(8.dp).size(20.dp)
+                    )
+                }
+            }
+        }
+
         Column(
             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -266,6 +297,26 @@ private fun UserTourHeroSection(
                     }
                 }
                 Text(text = "${tour.reviewCount ?: 0} Değerlendirme", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                
+                Spacer(Modifier.width(8.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { tour.id?.let { viewModel.toggleFavorite(it) } ?: tour.objectId?.let { viewModel.toggleFavorite(it) } }
+                ) {
+                    Icon(
+                        imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (uiState.isFavorite) Color.Red else Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = if (uiState.isFavorite) "Favorilere eklendi" else "Favorilere ekle",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }

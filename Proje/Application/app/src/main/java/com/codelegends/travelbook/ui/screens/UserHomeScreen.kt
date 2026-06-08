@@ -34,7 +34,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun UserHomeScreen(
-    onExploreTours: () -> Unit
+    onExploreTours: () -> Unit,
+    onNavigateToFavorites: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun UserHomeScreen(
                 title = "Favorilerim",
                 icon = Icons.Default.Star,
                 modifier = Modifier.weight(1f),
-                onClick = { /* TODO */ }
+                onClick = onNavigateToFavorites
             )
         }
 
