@@ -81,6 +81,8 @@ import com.codelegends.travelbook.ui.screens.RegisterScreen
 import com.codelegends.travelbook.ui.screens.TourListingScreen
 import com.codelegends.travelbook.ui.screens.UserGuideListScreen
 import com.codelegends.travelbook.ui.screens.UserHomeScreen
+import com.codelegends.travelbook.ui.screens.UserProfileScreen
+import com.codelegends.travelbook.ui.screens.UserPurchasesScreen
 import com.codelegends.travelbook.ui.screens.UserTourDetailScreen
 import com.codelegends.travelbook.viewmodel.CompanyShellViewModel
 import com.codelegends.travelbook.viewmodel.GuideShellViewModel
@@ -394,8 +396,20 @@ private fun UserAppShell(
                     }
 
                     composable(AppRoute.UserProfile.route) {
-                        com.codelegends.travelbook.ui.screens.UserProfileScreen(
-                            onAccountDeleted = onLoggedOut
+                        UserProfileScreen(
+                            onAccountDeleted = onLoggedOut,
+                            onNavigateToPurchases = {
+                                shellNavController.navigate(AppRoute.UserPurchases.route)
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.UserPurchases.route) {
+                        UserPurchasesScreen(
+                            onNavigateBack = { shellNavController.popBackStack() },
+                            onNavigateToTourDetail = { tourId ->
+                                shellNavController.navigate(AppRoute.UserTourDetail.createRoute(tourId))
+                            }
                         )
                     }
 

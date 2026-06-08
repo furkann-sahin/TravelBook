@@ -8,6 +8,7 @@ import com.codelegends.travelbook.model.UpdatePasswordRequestDto
 import com.codelegends.travelbook.model.UpdateProfileRequestDto
 import com.codelegends.travelbook.model.UserLoginInput
 import com.codelegends.travelbook.model.UserLoginRequestDto
+import com.codelegends.travelbook.model.UserPurchaseDto
 import com.codelegends.travelbook.model.UserProfileDto
 import com.codelegends.travelbook.model.UserRegisterInput
 import com.codelegends.travelbook.model.UserRegisterRequestDto
@@ -163,6 +164,29 @@ class UserRepositoryImpl @Inject constructor(
             ApiResult.Error("Bağlantı hatası. Lütfen internetinizi kontrol edin")
         } catch (exception: Exception) {
             ApiResult.Error(exception.message ?: "Beklenmeyen bir hata oluştu")
+        }
+    }
+
+    override suspend fun getUserPurchases(
+        userId: String,
+        status: String?
+    ): ApiResult<List<UserPurchaseDto>> {
+        return try {
+            val response = userApiService.getUserPurchases(userId, status)
+            if (response.isSuccessful) {
+                val purchases = response.body()?.data.orEmpty()
+                ApiResult.Success(purchases)
+            } else {
+                val message = ApiErrorParser.parse(
+                    rawBody = response.errorBody()?.string(),
+                    fallbackMessage = "Seyahat geçmişi alınamadı"
+                )
+                ApiResult.Error(message, response.code())
+            }
+        } catch (e: IOException) {
+            ApiResult.Error("Bağlantı hatası")
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Beklenmeyen bir hata oluştu")
         }
     }
 
