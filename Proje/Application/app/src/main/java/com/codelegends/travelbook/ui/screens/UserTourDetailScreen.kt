@@ -171,7 +171,8 @@ private fun UserTourDetailContent(
                 PurchaseActionSection(
                     tour = tour,
                     uiState = uiState,
-                    onPurchase = { viewModel.purchaseTour(tour.id ?: tour.objectId ?: "") }
+                    onPurchase = { viewModel.purchaseTour(tour.id ?: tour.objectId ?: "") },
+                    onCancel = { viewModel.cancelPurchase(tour.id ?: tour.objectId ?: "") }
                 )
 
                 // Description
@@ -567,9 +568,11 @@ private fun RatingBar(rating: Int, onRatingChange: (Int) -> Unit) {
 private fun PurchaseActionSection(
     tour: UserTourDetailDto,
     uiState: com.codelegends.travelbook.viewmodel.UserTourDetailUiState,
-    onPurchase: () -> Unit
+    onPurchase: () -> Unit,
+    onCancel: () -> Unit
 ) {
     var showPurchaseDialog by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     if (showPurchaseDialog) {
         androidx.compose.material3.AlertDialog(
@@ -586,6 +589,27 @@ private fun PurchaseActionSection(
             },
             dismissButton = {
                 TextButton(onClick = { showPurchaseDialog = false }) {
+                    Text("Vazgeç")
+                }
+            }
+        )
+    }
+
+    if (showCancelDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Satın Alma İptali") },
+            text = { Text("Bu satın alma işlemini iptal etmek istiyor musunuz?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onCancel()
+                    showCancelDialog = false
+                }) {
+                    Text("Satın Almayı İptal Et", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
                     Text("Vazgeç")
                 }
             }
@@ -615,17 +639,22 @@ private fun PurchaseActionSection(
             }
             
             if (uiState.isPurchased) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(8.dp)
+                Button(
+                    onClick = { showCancelDialog = true },
+                    enabled = !uiState.isPurchasing,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
-                        Text("Satın Alındı", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                        if (uiState.isPurchasing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                            Text("Satın Alındı", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             } else {

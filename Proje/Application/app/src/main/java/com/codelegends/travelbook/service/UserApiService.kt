@@ -1,8 +1,10 @@
 package com.codelegends.travelbook.service
 
 import com.codelegends.travelbook.model.ApiObjectEnvelope
+import com.codelegends.travelbook.model.ApiListEnvelope
 import com.codelegends.travelbook.model.UpdatePasswordRequestDto
 import com.codelegends.travelbook.model.UpdateProfileRequestDto
+import com.codelegends.travelbook.model.UserPurchaseDto
 import com.codelegends.travelbook.model.UserProfileDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -10,12 +12,19 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface UserApiService {
     @GET("users/{userId}")
     suspend fun getUserProfile(
         @Path("userId") userId: String
     ): Response<ApiObjectEnvelope<UserProfileDto>>
+
+    @GET("users/{userId}/purchases")
+    suspend fun getUserPurchases(
+        @Path("userId") userId: String,
+        @Query("status") status: String? = null
+    ): Response<ApiListEnvelope<UserPurchaseDto>>
 
     @PUT("users/{userId}")
     suspend fun updateUserProfile(

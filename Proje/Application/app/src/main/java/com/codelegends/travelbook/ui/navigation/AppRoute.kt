@@ -35,6 +35,7 @@ sealed class AppRoute(val route: String) {
     data object UserHome : AppRoute("user/home")
     data object UserTours : AppRoute("user/tours")
     data object UserGuides : AppRoute("user/guides")
+    data object UserPurchases : AppRoute("user/purchases")
     data object UserProfile : AppRoute("user/profile")
     data object UserTourDetail : AppRoute("user/tours/{tourId}") {
         fun createRoute(tourId: String) = "user/tours/$tourId"

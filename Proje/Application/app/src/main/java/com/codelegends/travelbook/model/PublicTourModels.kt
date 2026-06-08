@@ -127,3 +127,20 @@ data class PurchaseDataDto(
     val id: String?
         get() = purchaseId ?: objectId
 }
+
+data class UserPurchaseTourDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("departureLocation") val departureLocation: String? = null,
+    @SerializedName("arrivalLocation") val arrivalLocation: String? = null,
+    @SerializedName("price") val price: Double? = null,
+    @SerializedName("startDate") val startDate: String? = null,
+    @SerializedName("endDate") val endDate: String? = null,
+    @SerializedName("imageUrl") val imageUrl: String? = null
+)
+
+data class UserPurchaseDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("purchaseDate") val purchaseDate: String? = null,
+    @SerializedName("tour") val tour: UserPurchaseTourDto? = null
+)

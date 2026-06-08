@@ -224,4 +224,32 @@ class UserTourDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun cancelPurchase(tourId: String) {
+        val purchaseId = _uiState.value.purchaseId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPurchasing = true) } // Reuse purchasing state for loading
+            when (val result = publicTourRepository.cancelPurchase(purchaseId)) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            isPurchased = false,
+                            purchaseId = null,
+                            snackbarMessage = "Satın alma iptal edildi"
+                        )
+                    }
+                    loadTourDetail(tourId)
+                }
+                is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            snackbarMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
