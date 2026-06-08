@@ -6,7 +6,7 @@ const passport = require("passport");
 // User registration controller
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { firstName, lastName, name, email, password, phone } = req.body;
 
     if (!name || !email || !password) {
       return createResponse(res, 400, {
@@ -26,7 +26,9 @@ const register = async (req, res) => {
     }
 
     const user = new User({
-      name,
+      firstName: firstName || "",
+      lastName: lastName || "",
+      name: (firstName && lastName) ? `${firstName} ${lastName}`.trim() : name,
       email,
       phone: phone || "",
     });

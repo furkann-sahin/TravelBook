@@ -1,6 +1,8 @@
 const { Joi, email, password } = require("./common-schemas");
 
 const userRegisterSchema = Joi.object({
+  firstName: Joi.string().trim().min(2).max(60).required(),
+  lastName: Joi.string().trim().min(2).max(60).required(),
   name: Joi.string().trim().min(2).max(120).required(),
   email: email.required(),
   password: password.required(),

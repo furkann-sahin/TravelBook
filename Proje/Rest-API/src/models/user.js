@@ -9,6 +9,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
+    firstName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    lastName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     email: {
       type: String,
       trim: true,
@@ -60,10 +70,14 @@ userSchema.methods.validatePassword = function (password) {
 };
 
 userSchema.methods.generateJWT = function () {
+  const displayName = this.firstName && this.lastName
+    ? `${this.firstName} ${this.lastName}`.trim()
+    : this.name;
+
   return jwt.sign(
     {
       id: this._id,
-      name: this.name,
+      name: displayName,
       email: this.email,
       role: "user",
     },

@@ -23,26 +23,49 @@ data class UserRegisterInput(
 )
 
 data class UserRegisterRequestDto(
-    val name: String,
-    val email: String,
-    val password: String,
-    val phone: String
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("phone") val phone: String
 )
 
 // DTO for listing guides from user panel
 data class UserGuideProfileDto(
     @SerializedName("id") val id: String? = null,
     @SerializedName("_id") val objectId: String? = null,
-    val firstName: String? = null,
-    val lastName: String? = null,
-    val name: String? = null, // Fallback for single name field
-    val email: String? = null,
-    val phone: String? = null,
-    val biography: String? = null,
-    val profileImageUrl: String? = null,
-    val languages: List<String>? = null,
-    val expertRoutes: List<String>? = null,
-    val experienceYears: Int? = null,
-    val rating: Double? = null,
-    val available: Boolean? = null
+    @SerializedName("firstName") val firstName: String? = null,
+    @SerializedName("lastName") val lastName: String? = null,
+    @SerializedName("name") val name: String? = null, // Fallback for single name field
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("phone") val phone: String? = null,
+    @SerializedName("biography") val biography: String? = null,
+    @SerializedName("profileImageUrl") val profileImageUrl: String? = null,
+    @SerializedName("languages") val languages: List<String>? = null,
+    @SerializedName("expertRoutes") val expertRoutes: List<String>? = null,
+    @SerializedName("experienceYears") val experienceYears: Int? = null,
+    @SerializedName("rating") val rating: Double? = null,
+    @SerializedName("available") val available: Boolean? = null
+)
+
+data class UserProfileDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("firstName") val firstName: String? = null,
+    @SerializedName("lastName") val lastName: String? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("phone") val phone: String? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+data class UpdateProfileRequestDto(
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("phone") val phone: String
+)
+
+data class UpdatePasswordRequestDto(
+    val currentPassword: String,
+    val newPassword: String
 )

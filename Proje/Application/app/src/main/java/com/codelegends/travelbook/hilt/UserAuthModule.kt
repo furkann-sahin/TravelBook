@@ -2,6 +2,7 @@ package com.codelegends.travelbook.hilt
 
 import com.codelegends.travelbook.repository.UserRepository
 import com.codelegends.travelbook.repository.UserRepositoryImpl
+import com.codelegends.travelbook.service.UserApiService
 import com.codelegends.travelbook.service.UserAuthApiService
 import dagger.Binds
 import dagger.Module
@@ -26,6 +27,12 @@ abstract class UserAuthModule {
         @Singleton
         fun provideUserAuthApiService(retrofit: Retrofit): UserAuthApiService {
             return retrofit.create(UserAuthApiService::class.java)
+        }
+
+        @Provides
+        @Singleton
+        fun provideUserApiService(retrofit: Retrofit): UserApiService {
+            return retrofit.create(UserApiService::class.java)
         }
     }
 }

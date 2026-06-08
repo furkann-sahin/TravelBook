@@ -44,9 +44,9 @@ const getUserDetail = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId).select(
-      "name email phone createdAt updatedAt",
-    );
+    const user = await User.findById(userId)
+      .select("firstName lastName name email phone createdAt updatedAt")
+      .lean();
 
     if (!user) {
       return createResponse(res, 404, {
@@ -55,13 +55,25 @@ const getUserDetail = async (req, res) => {
       });
     }
 
+    let firstName = user.firstName || "";
+    let lastName = user.lastName || "";
+
+    // If both are empty, try to derive from 'name'
+    if (!firstName && !lastName && user.name) {
+      const nameParts = user.name.trim().split(/\s+/);
+      firstName = nameParts[0] || "";
+      lastName = nameParts.slice(1).join(" ") || "";
+    }
+
     createResponse(res, 200, {
       status: "success",
       data: {
-        id: user._id,
-        name: user.name,
+        id: user._id.toString(),
+        firstName: firstName || "",
+        lastName: lastName || "",
+        name: user.name || "",
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || "",
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -86,12 +98,19 @@ const updateUser = async (req, res) => {
       });
     }
 
-    const allowedFields = ["name", "phone"];
+    const allowedFields = ["name", "firstName", "lastName", "phone"];
     const updates = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
+    }
+
+    if (updates.firstName !== undefined || updates.lastName !== undefined) {
+      const existingUser = await User.findById(userId).select("firstName lastName name");
+      const fName = updates.firstName !== undefined ? updates.firstName : existingUser.firstName;
+      const lName = updates.lastName !== undefined ? updates.lastName : existingUser.lastName;
+      updates.name = `${fName} ${lName}`.trim();
     }
 
     if (Object.keys(updates).length === 0) {
@@ -119,6 +138,8 @@ const updateUser = async (req, res) => {
       data: {
         id: user._id,
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         phone: user.phone,
         createdAt: user.createdAt,
