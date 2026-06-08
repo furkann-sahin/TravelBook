@@ -90,7 +90,9 @@ const createTour = async (req, res) => {
     const end = new Date(req.body.endDate);
 
     // Business rule: başlangıç tarihi geçmişte olamaz
-    if (start < new Date()) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start < today) {
       return createResponse(res, 400, {
         status: "error",
         message: "Başlangıç tarihi geçmiş bir tarih olamaz",

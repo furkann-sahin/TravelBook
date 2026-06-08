@@ -44,7 +44,13 @@ import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useAuth } from "../hooks/useAuth";
-import { companyApi, companyTourApi } from "../services/api";
+import { companyApi, companyTourApi, getImageUrl } from "../services/api";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  createImagePreviewUrl,
+  revokeImagePreviewUrl,
+  validateImageFile,
+} from "../utils/image-upload";
 
 export default function CompanyProfilePage() {
   const navigate = useNavigate();
@@ -75,13 +81,15 @@ export default function CompanyProfilePage() {
   const bannerInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState(null);
 
   const getImageSrc = (url) => {
-    if (!url) return undefined;
-    if (url.startsWith("http") || url.startsWith("data:")) return url;
-    const base = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/, "");
-    return `${base}${url}`;
+    return getImageUrl(url) || undefined;
   };
+
+  useEffect(() => () => {
+    revokeImagePreviewUrl(profileImagePreviewUrl);
+  }, [profileImagePreviewUrl]);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -188,6 +196,16 @@ export default function CompanyProfilePage() {
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setSnackbar({ open: true, message: validationError });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setProfileImagePreviewUrl((prev) => {
+      revokeImagePreviewUrl(prev);
+      return createImagePreviewUrl(file);
+    });
     try {
       setUploading(true);
       const res = await companyApi.uploadProfileImage(user.id, file);
@@ -197,8 +215,16 @@ export default function CompanyProfilePage() {
         profileImageUrl,
       }));
       updateUser({ profileImageUrl });
+      setProfileImagePreviewUrl((prev) => {
+        revokeImagePreviewUrl(prev);
+        return null;
+      });
       setSnackbar({ open: true, message: "Profil resmi güncellendi" });
     } catch (err) {
+      setProfileImagePreviewUrl((prev) => {
+        revokeImagePreviewUrl(prev);
+        return null;
+      });
       setSnackbar({
         open: true,
         message: err.message || "Resim yüklenirken hata oluştu",
@@ -213,6 +239,12 @@ export default function CompanyProfilePage() {
   const handleBannerUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setSnackbar({ open: true, message: validationError });
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
+      return;
+    }
     try {
       setUploadingBanner(true);
       const res = await companyApi.uploadBannerImage(user.id, file);
@@ -330,7 +362,7 @@ export default function CompanyProfilePage() {
             <input
               ref={bannerInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept={IMAGE_UPLOAD_ACCEPT}
               hidden
               onChange={handleBannerUpload}
             />
@@ -350,7 +382,7 @@ export default function CompanyProfilePage() {
               {/* Avatar with camera button */}
               <Box sx={{ position: "relative", display: "inline-flex" }}>
                 <Avatar
-                  src={getImageSrc(company.profileImageUrl)}
+                  src={profileImagePreviewUrl || getImageSrc(company.profileImageUrl)}
                   sx={{
                     width: 110,
                     height: 110,
@@ -390,7 +422,7 @@ export default function CompanyProfilePage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept={IMAGE_UPLOAD_ACCEPT}
                   hidden
                   onChange={handleImageUpload}
                 />

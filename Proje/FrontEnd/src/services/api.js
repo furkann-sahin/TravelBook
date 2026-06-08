@@ -122,21 +122,63 @@ function withPurchasesNormalization(promise) {
 }
 
 async function uploadImage(endpoint, file, fieldName = "image") {
-  // Centralized multipart upload helper used by profile/banner/gallery operations.
-  const formData = new FormData();
-  formData.append(fieldName, file);
+  return requestMultipart(endpoint, {
+    method: "POST",
+    files: { [fieldName]: file },
+    fallbackMessage: "Resim yüklenemedi",
+  });
+}
 
+function appendMultipartField(formData, key, value) {
+  if (value === undefined || value === null || value === "") return;
+
+  if (Array.isArray(value) || (typeof value === "object" && !(value instanceof Date))) {
+    formData.append(key, JSON.stringify(value));
+    return;
+  }
+
+  formData.append(key, String(value));
+}
+
+function createMultipartFormData({ fields = {}, files = {} } = {}) {
+  const formData = new FormData();
+
+  for (const [key, value] of Object.entries(fields)) {
+    appendMultipartField(formData, key, value);
+  }
+
+  for (const [key, file] of Object.entries(files)) {
+    if (file) formData.append(key, file);
+  }
+
+  return formData;
+}
+
+async function requestMultipart(endpoint, options = {}) {
+  const {
+    method = "POST",
+    fields = {},
+    files = {},
+    fallbackMessage = "İstek başarısız oldu",
+  } = options;
   const token = localStorage.getItem("tb_token");
   const res = await fetch(`${API_BASE}${endpoint}`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
+    method,
+    headers: token ? { Authorization: ["Bearer", token].join(" ") } : {},
+    body: createMultipartFormData({ fields, files }),
   });
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(resolveErrorMessage(data, "Resim yüklenemedi"));
-  return data;
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(resolveErrorMessage(body, `${fallbackMessage} (${res.status})`));
+    error.status = res.status;
+    error.data = body;
+    throw error;
+  }
+
+  return body;
 }
+
 
 // Helper function
 async function request(endpoint, options = {}) {
@@ -293,28 +335,26 @@ export const companyTourApi = {
       method: "DELETE",
     }),
 
-  createTour: (companyId, formData) => {
-    // Tour creation uses multipart because image upload and scalar fields are sent together.
-    const url = `${API_BASE}/companies/${companyId}/tours`;
-    const token = localStorage.getItem("tb_token");
-    const headers = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    return fetch(url, {
+  createTour: (companyId, payload) =>
+    requestMultipart(`/companies/${companyId}/tours`, {
       method: "POST",
-      headers,
-      body: formData, // FormData – browser sets Content-Type with boundary
-    }).then(async (res) => {
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const error = new Error(body.message || `Request failed (${res.status})`);
-        error.status = res.status;
-        error.data = body;
-        throw error;
-      }
-      return body;
-    });
-  },
+      fields: {
+        name: payload.name,
+        description: payload.description,
+        location: payload.location,
+        price: payload.price,
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        totalCapacity: payload.totalCapacity,
+        departureLocation: payload.departureLocation,
+        arrivalLocation: payload.arrivalLocation,
+        services: payload.services,
+        places: payload.places,
+        guideId: payload.guideId,
+      },
+      files: { image: payload.imageFile },
+      fallbackMessage: "Tur oluşturulamadı",
+    }),
 };
 
 // TOURS

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/tr";
 
 // Material-UI components and icons
 import {
@@ -19,6 +21,9 @@ import {
   MenuItem,
   CircularProgress,
 } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -27,6 +32,12 @@ import AddIcon from "@mui/icons-material/Add";
 
 import { useAuth } from "../hooks/useAuth";
 import { companyTourApi } from "../services/api";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  createImagePreviewUrl,
+  revokeImagePreviewUrl,
+  validateImageFile,
+} from "../utils/image-upload";
 
 const initialForm = {
   name: "",
@@ -67,6 +78,10 @@ export default function CreateTourPage() {
       .finally(() => setGuidesLoading(false));
   }, [user?.id]);
 
+  useEffect(() => () => {
+    revokeImagePreviewUrl(imagePreview);
+  }, [imagePreview]);
+
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -75,24 +90,23 @@ export default function CreateTourPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type
-    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(file.type)) {
-      setError("Yalnızca JPEG, PNG, WebP ve GIF formatları desteklenir.");
-      return;
-    }
-    // Validate size (5 MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Dosya boyutu en fazla 5 MB olmalıdır.");
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview((prev) => {
+      revokeImagePreviewUrl(prev);
+      return createImagePreviewUrl(file);
+    });
     setError("");
   };
 
   const removeImage = () => {
+    revokeImagePreviewUrl(imagePreview);
     setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -165,30 +179,21 @@ export default function CreateTourPage() {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("name", form.name.trim());
-      formData.append("description", form.description.trim());
-      formData.append("location", `${form.departureLocation.trim()} → ${form.arrivalLocation.trim()}`);
-      formData.append("price", Number(form.price));
-      formData.append("startDate", form.startDate);
-      formData.append("endDate", form.endDate);
-      formData.append("totalCapacity", Number(form.totalCapacity));
-      formData.append("departureLocation", form.departureLocation.trim());
-      formData.append("arrivalLocation", form.arrivalLocation.trim());
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
-      if (services.length > 0) {
-        formData.append("services", JSON.stringify(services));
-      }
-      if (destinations.length > 0) {
-        formData.append("places", JSON.stringify(destinations));
-      }
-      if (selectedGuideId) {
-        formData.append("guideId", selectedGuideId);
-      }
-
-      await companyTourApi.createTour(user.id, formData);
+      await companyTourApi.createTour(user.id, {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        location: `${form.departureLocation.trim()} → ${form.arrivalLocation.trim()}`,
+        price: Number(form.price),
+        startDate: form.startDate,
+        endDate: form.endDate,
+        totalCapacity: Number(form.totalCapacity),
+        departureLocation: form.departureLocation.trim(),
+        arrivalLocation: form.arrivalLocation.trim(),
+        services,
+        places: destinations,
+        guideId: selectedGuideId || undefined,
+        imageFile,
+      });
       navigate("/company/tours");
     } catch (err) {
       setError(err.message || "Tur oluşturulurken bir hata oluştu.");
@@ -369,30 +374,52 @@ export default function CreateTourPage() {
               </Grid>
             </Grid>
 
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Başlangıç Tarihi"
-                  required
-                  fullWidth
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => updateField("startDate", e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <DatePicker
+                    label="Başlangıç Tarihi"
+                    format="DD MMMM YYYY"
+                    minDate={dayjs().startOf("day")}
+                    value={form.startDate ? dayjs(form.startDate) : null}
+                    onChange={(value) =>
+                      updateField(
+                        "startDate",
+                        value && value.isValid() ? value.format("YYYY-MM-DD") : "",
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true,
+                        inputProps: { readOnly: true },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <DatePicker
+                    label="Bitiş Tarihi"
+                    format="DD MMMM YYYY"
+                    minDate={form.startDate ? dayjs(form.startDate) : dayjs().startOf("day")}
+                    value={form.endDate ? dayjs(form.endDate) : null}
+                    onChange={(value) =>
+                      updateField(
+                        "endDate",
+                        value && value.isValid() ? value.format("YYYY-MM-DD") : "",
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true,
+                        inputProps: { readOnly: true },
+                      },
+                    }}
+                  />
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Bitiş Tarihi"
-                  required
-                  fullWidth
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => updateField("endDate", e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
-              </Grid>
-            </Grid>
+            </LocalizationProvider>
 
             {/* Image Upload */}
             <Box>
@@ -402,7 +429,7 @@ export default function CreateTourPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept={IMAGE_UPLOAD_ACCEPT}
                 hidden
                 onChange={handleImageChange}
               />

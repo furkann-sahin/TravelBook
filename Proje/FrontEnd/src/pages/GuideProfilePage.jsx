@@ -52,7 +52,13 @@ import Snackbar from "@mui/material/Snackbar";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useAuth } from "../hooks/useAuth";
-import { guideApi } from "../services/api";
+import { getImageUrl, guideApi } from "../services/api";
+import {
+    IMAGE_UPLOAD_ACCEPT,
+    createImagePreviewUrl,
+    revokeImagePreviewUrl,
+    validateImageFile,
+} from "../utils/image-upload";
 
 export default function GuideProfilePage() {
     const navigate = useNavigate();
@@ -89,6 +95,7 @@ export default function GuideProfilePage() {
     const bannerInputRef = useRef(null);
     const [uploadingBanner, setUploadingBanner] = useState(false);
     const [uploadingGallery, setUploadingGallery] = useState(false);
+    const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState(null);
 
     // NEW — Availability status
     const [available, setAvailable] = useState(true);
@@ -247,14 +254,32 @@ export default function GuideProfilePage() {
     const handleImageUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+            setSnackbar({ open: true, message: validationError });
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+        setProfileImagePreviewUrl((prev) => {
+            revokeImagePreviewUrl(prev);
+            return createImagePreviewUrl(file);
+        });
         try {
             setUploading(true);
             const res = await guideApi.uploadProfileImage(user.id, file);
             const profileImageUrl = res.data?.profileImageUrl || res.profileImageUrl || null;
             setGuide((prev) => ({ ...prev, profileImageUrl }));
             updateUser({ profileImageUrl });
+            setProfileImagePreviewUrl((prev) => {
+                revokeImagePreviewUrl(prev);
+                return null;
+            });
             setSnackbar({ open: true, message: "Profil resmi güncellendi" });
         } catch (err) {
+            setProfileImagePreviewUrl((prev) => {
+                revokeImagePreviewUrl(prev);
+                return null;
+            });
             setSnackbar({ open: true, message: err.message || "Resim yüklenirken hata oluştu" });
         } finally {
             setUploading(false);
@@ -265,6 +290,12 @@ export default function GuideProfilePage() {
     const handleBannerUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+            setSnackbar({ open: true, message: validationError });
+            if (bannerInputRef.current) bannerInputRef.current.value = "";
+            return;
+        }
         try {
             setUploadingBanner(true);
             const res = await guideApi.uploadBannerImage(user.id, file);
@@ -284,6 +315,12 @@ export default function GuideProfilePage() {
     const handleGalleryAdd = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+            setSnackbar({ open: true, message: validationError });
+            if (galleryInputRef.current) galleryInputRef.current.value = "";
+            return;
+        }
         try {
             setUploadingGallery(true);
             const res = await guideApi.uploadGalleryImage(user.id, file);
@@ -314,11 +351,12 @@ export default function GuideProfilePage() {
     };
 
     const getImageSrc = (url) => {
-        if (!url) return undefined;
-        if (url.startsWith("http") || url.startsWith("data:")) return url;
-        const base = (import.meta.env.VITE_API_URL || "").replace(/\/api\/?$/, "");
-        return `${base}${url}`;
+        return getImageUrl(url) || undefined;
     };
+
+    useEffect(() => () => {
+        revokeImagePreviewUrl(profileImagePreviewUrl);
+    }, [profileImagePreviewUrl]);
 
     // Loading state
     if (loading) {
@@ -418,7 +456,7 @@ export default function GuideProfilePage() {
                         <input
                             ref={bannerInputRef}
                             type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            accept={IMAGE_UPLOAD_ACCEPT}
                             hidden
                             onChange={handleBannerUpload}
                         />
@@ -438,7 +476,7 @@ export default function GuideProfilePage() {
                             {/* Avatar */}
                             <Box sx={{ position: "relative", display: "inline-flex" }}>
                                 <Avatar
-                                    src={getImageSrc(guide.profileImageUrl)}
+                                    src={profileImagePreviewUrl || getImageSrc(guide.profileImageUrl)}
                                     sx={{
                                         width: 110,
                                         height: 110,
@@ -478,7 +516,7 @@ export default function GuideProfilePage() {
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp"
+                                    accept={IMAGE_UPLOAD_ACCEPT}
                                     hidden
                                     onChange={handleImageUpload}
                                 />
@@ -989,7 +1027,7 @@ export default function GuideProfilePage() {
                             <input
                                 ref={galleryInputRef}
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp"
+                                accept={IMAGE_UPLOAD_ACCEPT}
                                 hidden
                                 onChange={handleGalleryAdd}
                             />
