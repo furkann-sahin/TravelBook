@@ -759,7 +759,7 @@ private fun GuideAppShell(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Surface(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.secondary,
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
@@ -767,7 +767,7 @@ private fun GuideAppShell(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = MaterialTheme.colorScheme.onSecondary,
                                 letterSpacing = 0.6.sp
                             )
                         }
@@ -892,7 +892,9 @@ private fun GuideAppShell(
                     }
 
                     composable(AppRoute.GuideCompanies.route) {
-                        GuideCompaniesScreen()
+                        GuideCompaniesScreen(
+                            onNavigateBack = { shellNavController.popBackStack() }
+                        )
                     }
 
                     composable(AppRoute.GuideMyCompanies.route) {
