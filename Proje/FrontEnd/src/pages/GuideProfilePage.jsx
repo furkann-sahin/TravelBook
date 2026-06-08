@@ -89,6 +89,7 @@ export default function GuideProfilePage() {
 
     // Image upload
     const fileInputRef = useRef(null);
+    const profileImagePreviewRef = useRef(null);
     const [uploading, setUploading] = useState(false);
 
     // NEW — Banner (cover) image
@@ -354,9 +355,13 @@ export default function GuideProfilePage() {
         return getImageUrl(url) || undefined;
     };
 
-    useEffect(() => () => {
-        revokeImagePreviewUrl(profileImagePreviewUrl);
+    useEffect(() => {
+        profileImagePreviewRef.current = profileImagePreviewUrl;
     }, [profileImagePreviewUrl]);
+
+    useEffect(() => () => {
+        revokeImagePreviewUrl(profileImagePreviewRef.current);
+    }, []);
 
     // Loading state
     if (loading) {

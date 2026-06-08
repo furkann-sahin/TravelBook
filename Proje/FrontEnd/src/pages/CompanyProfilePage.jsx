@@ -79,6 +79,7 @@ export default function CompanyProfilePage() {
   // Image upload refs
   const fileInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+  const profileImagePreviewRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState(null);
@@ -87,9 +88,13 @@ export default function CompanyProfilePage() {
     return getImageUrl(url) || undefined;
   };
 
-  useEffect(() => () => {
-    revokeImagePreviewUrl(profileImagePreviewUrl);
+  useEffect(() => {
+    profileImagePreviewRef.current = profileImagePreviewUrl;
   }, [profileImagePreviewUrl]);
+
+  useEffect(() => () => {
+    revokeImagePreviewUrl(profileImagePreviewRef.current);
+  }, []);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;

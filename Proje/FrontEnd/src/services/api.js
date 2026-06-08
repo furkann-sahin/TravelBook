@@ -132,7 +132,12 @@ async function uploadImage(endpoint, file, fieldName = "image") {
 function appendMultipartField(formData, key, value) {
   if (value === undefined || value === null || value === "") return;
 
-  if (Array.isArray(value) || (typeof value === "object" && !(value instanceof Date))) {
+  if (value instanceof Date) {
+    formData.append(key, value.toISOString());
+    return;
+  }
+
+  if (Array.isArray(value) || typeof value === "object") {
     formData.append(key, JSON.stringify(value));
     return;
   }
@@ -164,13 +169,13 @@ async function requestMultipart(endpoint, options = {}) {
   const token = localStorage.getItem("tb_token");
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
-    headers: token ? { Authorization: ["Bearer", token].join(" ") } : {},
+    headers: token ? { Authorization: "Bearer " + token } : {},
     body: createMultipartFormData({ fields, files }),
   });
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const error = new Error(resolveErrorMessage(body, `${fallbackMessage} (${res.status})`));
+    const error = new Error(resolveErrorMessage(body, fallbackMessage));
     error.status = res.status;
     error.data = body;
     throw error;

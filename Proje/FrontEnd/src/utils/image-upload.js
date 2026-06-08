@@ -5,6 +5,7 @@ export const IMAGE_UPLOAD_MIME_TYPES = [
   "image/gif",
 ];
 
+// All user-facing image upload flows enforce the same 5 MB size cap.
 export const IMAGE_UPLOAD_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_UPLOAD_ACCEPT = IMAGE_UPLOAD_MIME_TYPES.join(",");
@@ -25,7 +26,11 @@ export function validateImageFile(file) {
 
 export function createImagePreviewUrl(file) {
   if (!file) return null;
-  return URL.createObjectURL(file);
+  try {
+    return URL.createObjectURL(file);
+  } catch {
+    return null;
+  }
 }
 
 export function revokeImagePreviewUrl(url) {

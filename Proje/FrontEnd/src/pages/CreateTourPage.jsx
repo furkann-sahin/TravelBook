@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
@@ -63,6 +63,7 @@ export default function CreateTourPage() {
   const [guidesLoading, setGuidesLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const imagePreviewRef = useRef(null);
   const fileInputRef = useRef(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,9 +79,23 @@ export default function CreateTourPage() {
       .finally(() => setGuidesLoading(false));
   }, [user?.id]);
 
-  useEffect(() => () => {
-    revokeImagePreviewUrl(imagePreview);
+  useEffect(() => {
+    imagePreviewRef.current = imagePreview;
   }, [imagePreview]);
+
+  useEffect(() => () => {
+    revokeImagePreviewUrl(imagePreviewRef.current);
+  }, []);
+
+  const today = dayjs().startOf("day");
+  const startDateValue = useMemo(
+    () => (form.startDate ? dayjs(form.startDate) : null),
+    [form.startDate],
+  );
+  const endDateValue = useMemo(
+    () => (form.endDate ? dayjs(form.endDate) : null),
+    [form.endDate],
+  );
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -380,8 +395,8 @@ export default function CreateTourPage() {
                   <DatePicker
                     label="Başlangıç Tarihi"
                     format="DD MMMM YYYY"
-                    minDate={dayjs().startOf("day")}
-                    value={form.startDate ? dayjs(form.startDate) : null}
+                    minDate={today}
+                    value={startDateValue}
                     onChange={(value) =>
                       updateField(
                         "startDate",
@@ -401,8 +416,8 @@ export default function CreateTourPage() {
                   <DatePicker
                     label="Bitiş Tarihi"
                     format="DD MMMM YYYY"
-                    minDate={form.startDate ? dayjs(form.startDate) : dayjs().startOf("day")}
-                    value={form.endDate ? dayjs(form.endDate) : null}
+                    minDate={startDateValue || today}
+                    value={endDateValue}
                     onChange={(value) =>
                       updateField(
                         "endDate",
