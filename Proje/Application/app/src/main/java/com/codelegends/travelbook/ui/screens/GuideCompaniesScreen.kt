@@ -12,22 +12,33 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -47,12 +59,13 @@ import com.codelegends.travelbook.model.CompanyProfileSummary
 import com.codelegends.travelbook.ui.components.TBEmptyState
 import com.codelegends.travelbook.ui.components.TBErrorCard
 import com.codelegends.travelbook.ui.components.TBLoadingContent
-import com.codelegends.travelbook.ui.components.TBRatingRow
 import com.codelegends.travelbook.ui.navigation.LocalNavBarHeight
 import com.codelegends.travelbook.viewmodel.GuideCompaniesViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuideCompaniesScreen(
+    onNavigateBack: () -> Unit = {},
     viewModel: GuideCompaniesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -65,65 +78,67 @@ fun GuideCompaniesScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Business,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "Tur Firmaları",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tur Firmaları", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-                if (uiState.companies.isNotEmpty()) {
-                    Text(
-                        text = "${uiState.companies.size} firma listeleniyor",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                uiState.isLoading -> TBLoadingContent()
+
+                !uiState.errorMessage.isNullOrBlank() -> TBErrorCard(
+                    message = uiState.errorMessage.orEmpty(),
+                    onRetry = viewModel::retry
+                )
+
+                uiState.companies.isEmpty() -> TBEmptyState(
+                    icon = Icons.Default.Business,
+                    title = "Henüz firma bulunmuyor",
+                    subtitle = "Sisteme kayıtlı firmalar burada görünecek."
+                )
+
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 300.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(uiState.companies) { company ->
+                            val isRegistered = uiState.registeredCompanyIds.contains(company.id)
+                            GuideCompanyCard(
+                                company = company,
+                                onRegister = { viewModel.registerToCompany(company.id) },
+                                isRegistering = uiState.isRegistering,
+                                isRegistered = isRegistered
+                            )
+                        }
+                        
+                        item {
+                            Spacer(modifier = Modifier.height(LocalNavBarHeight.current))
+                        }
+                    }
                 }
             }
         }
-
-        when {
-            uiState.isLoading -> TBLoadingContent()
-
-            !uiState.errorMessage.isNullOrBlank() -> TBErrorCard(
-                message = uiState.errorMessage.orEmpty(),
-                onRetry = viewModel::retry
-            )
-
-            uiState.companies.isEmpty() -> TBEmptyState(
-                icon = Icons.Default.Business,
-                title = "Henüz firma bulunmuyor",
-                subtitle = "Sisteme kayıtlı firmalar burada görünecek."
-            )
-
-            else -> {
-                uiState.companies.forEach { company ->
-                    val isRegistered = uiState.registeredCompanyIds.contains(company.id)
-                    GuideCompanyCard(
-                        company = company,
-                        onRegister = { viewModel.registerToCompany(company.id) },
-                        isRegistering = uiState.isRegistering,
-                        isRegistered = isRegistered
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(LocalNavBarHeight.current))
     }
 }
 
@@ -152,56 +167,36 @@ private fun GuideCompanyCard(
                         model = imageUrl,
                         contentDescription = company.name,
                         modifier = Modifier
-                            .size(64.dp)
+                            .size(48.dp)
                             .clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = company.name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                        Icon(
+                            imageVector = Icons.Default.Business,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = company.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    if (company.rating > 0.0) {
-                        TBRatingRow(rating = company.rating)
-                    }
-                }
-            }
-
-            if (company.address.isNotBlank()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = company.address,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = company.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             if (company.description.isNotBlank()) {
@@ -209,32 +204,80 @@ private fun GuideCompanyCard(
                     text = company.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (company.phone.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = company.phone,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-            Button(
-                onClick = onRegister,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isRegistering && !isRegistered,
-                shape = RoundedCornerShape(10.dp),
-                colors = if (isRegistered) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                if (company.address.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp).padding(top = 2.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = company.address,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            if (isRegistered) {
+                AssistChip(
+                    onClick = { },
+                    label = { Text("Kayıt Olundu") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(AssistChipDefaults.IconSize),
+                            tint = Color(0xFF2E7D32)
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        labelColor = Color(0xFF2E7D32)
+                    ),
+                    border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = Color(0xFF2E7D32)),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Button(
+                    onClick = onRegister,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isRegistering,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
-                } else {
-                    ButtonDefaults.buttonColors()
+                ) {
+                    Text(text = if (isRegistering) "Kaydediliyor..." else "Kayıt Ol")
                 }
-            ) {
-                val buttonText = when {
-                    isRegistered -> "Kayıt Olundu"
-                    isRegistering -> "Kaydediliyor..."
-                    else -> "Kayıt Ol"
-                }
-                Text(text = buttonText)
             }
         }
     }

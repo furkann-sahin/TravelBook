@@ -84,6 +84,8 @@ fun GuideProfileScreen(
                         onEdit = viewModel::startEditing,
                         onSave = viewModel::saveProfile,
                         onCancel = viewModel::cancelEditing,
+                        onFirstNameChange = viewModel::onFirstNameChanged,
+                        onLastNameChange = viewModel::onLastNameChanged,
                         onProfileImageClick = { profileImageLauncher.launch("image/*") },
                         onBannerImageClick = { bannerImageLauncher.launch("image/*") },
                         onAvailabilityChange = viewModel::onAvailabilityChanged
@@ -239,6 +241,8 @@ private fun ProfileHeader(
     onEdit: () -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
+    onFirstNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
     onProfileImageClick: () -> Unit,
     onBannerImageClick: () -> Unit,
     onAvailabilityChange: (Boolean) -> Unit
@@ -302,8 +306,8 @@ private fun ProfileHeader(
                     Column(Modifier.weight(1f).padding(bottom = 4.dp)) {
                         if (uiState.isEditing) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                TravelBookTextField(value = uiState.form.firstName, onValueChange = { }, label = "Ad", modifier = Modifier.weight(1f))
-                                TravelBookTextField(value = uiState.form.lastName, onValueChange = { }, label = "Soyad", modifier = Modifier.weight(1f))
+                                TravelBookTextField(value = uiState.form.firstName, onValueChange = onFirstNameChange, label = "Ad", modifier = Modifier.weight(1f))
+                                TravelBookTextField(value = uiState.form.lastName, onValueChange = onLastNameChange, label = "Soyad", modifier = Modifier.weight(1f))
                             }
                         } else {
                             Text(profile.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
