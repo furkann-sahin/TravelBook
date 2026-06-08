@@ -81,6 +81,7 @@ import com.codelegends.travelbook.ui.screens.RegisterScreen
 import com.codelegends.travelbook.ui.screens.TourListingScreen
 import com.codelegends.travelbook.ui.screens.UserGuideListScreen
 import com.codelegends.travelbook.ui.screens.UserHomeScreen
+import com.codelegends.travelbook.ui.screens.UserTourDetailScreen
 import com.codelegends.travelbook.viewmodel.CompanyShellViewModel
 import com.codelegends.travelbook.viewmodel.GuideShellViewModel
 import com.codelegends.travelbook.viewmodel.UserShellViewModel
@@ -365,7 +366,24 @@ private fun UserAppShell(
 
                     composable(AppRoute.UserTours.route) {
                         TourListingScreen(
-                            onTourClick = { /* TODO: Open Detail */ }
+                            onTourClick = { tourId ->
+                                shellNavController.navigate(AppRoute.UserTourDetail.createRoute(tourId))
+                            }
+                        )
+                    }
+
+                    composable(
+                        route = AppRoute.UserTourDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("tourId") {
+                                type = androidx.navigation.NavType.StringType
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val tourId = backStackEntry.arguments?.getString("tourId").orEmpty()
+                        UserTourDetailScreen(
+                            tourId = tourId,
+                            onNavigateBack = { shellNavController.popBackStack() }
                         )
                     }
 

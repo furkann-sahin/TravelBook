@@ -52,3 +52,48 @@ data class PlatformStatsSummary(
     val companyCount: Int,
     val guideCount: Int
 )
+
+data class ReviewDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("_id") val objectId: String? = null,
+    val tourId: String? = null,
+    val userId: String? = null,
+    val userName: String? = null,
+    val comment: String? = null,
+    val rating: Int? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class UserTourDetailDto(
+    @SerializedName("id") val id: String? = null,
+    @SerializedName("_id") val objectId: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val price: Double? = null,
+    val location: String? = null,
+    val departureLocation: String? = null,
+    val arrivalLocation: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val duration: String? = null,
+    val included: List<String>? = null,
+    val services: List<String>? = null,
+    val places: List<String>? = null,
+    val images: List<String>? = null,
+    val rating: Double? = null,
+    val reviewCount: Int? = null,
+    val companyName: String? = null,
+    val guideName: String? = null,
+    val reviews: List<ReviewDto>? = null
+)
+
+data class CreateReviewRequest(
+    val comment: String,
+    val rating: Int
+)
+
+data class UpdateReviewRequest(
+    val comment: String,
+    val rating: Int
+)

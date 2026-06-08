@@ -36,6 +36,9 @@ sealed class AppRoute(val route: String) {
     data object UserTours : AppRoute("user/tours")
     data object UserGuides : AppRoute("user/guides")
     data object UserProfile : AppRoute("user/profile")
+    data object UserTourDetail : AppRoute("user/tours/{tourId}") {
+        fun createRoute(tourId: String) = "user/tours/$tourId"
+    }
 
     companion object {
         val companyTabRoutes: Set<String> = setOf(
