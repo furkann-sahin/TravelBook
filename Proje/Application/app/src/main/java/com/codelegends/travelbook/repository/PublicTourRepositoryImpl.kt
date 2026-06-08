@@ -2,10 +2,12 @@ package com.codelegends.travelbook.repository
 
 import com.codelegends.travelbook.core.network.ApiErrorParser
 import com.codelegends.travelbook.core.network.ApiResult
+import android.util.Log
 import com.codelegends.travelbook.model.FeaturedTourSummary
 import com.codelegends.travelbook.model.PlatformStatsDto
 import com.codelegends.travelbook.model.PlatformStatsSummary
 import com.codelegends.travelbook.model.PublicTourDto
+import com.codelegends.travelbook.model.PurchaseDataDto
 import com.codelegends.travelbook.model.UserTourDetailDto
 import com.codelegends.travelbook.service.TourApiService
 import java.io.IOException
@@ -14,6 +16,10 @@ import javax.inject.Inject
 class PublicTourRepositoryImpl @Inject constructor(
     private val tourApiService: TourApiService
 ) : PublicTourRepository {
+    private val TAG = "PublicTourRepo"
+    
+    // Geçici session bazlı cache: tourId -> purchaseId
+    private val purchaseCache = mutableMapOf<String, String>()
 
     override suspend fun getFeaturedTours(limit: Int): ApiResult<List<FeaturedTourSummary>> {
         return try {
@@ -103,6 +109,7 @@ class PublicTourRepositoryImpl @Inject constructor(
             val detail = response.body()?.data
                 ?: return ApiResult.Error("Tur detayı yüklenemedi")
 
+            Log.d(TAG, "getTourDetail Başarılı. Kapasite: ${detail.remainingCapacity}/${detail.totalCapacity}")
             ApiResult.Success(detail)
         } catch (_: IOException) {
             ApiResult.Error("Bağlantı hatası. Lütfen internetinizi kontrol edin")
@@ -111,10 +118,89 @@ class PublicTourRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun purchaseTour(tourId: String): ApiResult<PurchaseDataDto> {
+        Log.d(TAG, "purchaseTour tetiklendi. tourId: $tourId")
+        return try {
+            val response = tourApiService.purchaseTour(tourId)
+            val request = response.raw().request
+            Log.d(TAG, "Request URL: ${request.url}")
+            Log.d(TAG, "Request Method: ${request.method}")
+            Log.d(TAG, "Has Auth Header: ${request.header("Authorization") != null}")
+            
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "purchaseTour başarısız. Code: ${response.code()}, Body: $errorBody")
+                val message = ApiErrorParser.parse(
+                    rawBody = errorBody,
+                    fallbackMessage = "Tur satın alınamadı"
+                )
+                return ApiResult.Error(message = message, code = response.code())
+            }
+            val data = response.body()?.data ?: return ApiResult.Error("İşlem başarısız")
+            Log.d(TAG, "purchaseTour başarılı.")
+            
+            // Başarılı satın almada cache'e ekle
+            data.purchaseId?.let { pid -> purchaseCache[tourId] = pid }
+            
+            ApiResult.Success(data)
+        } catch (e: IOException) {
+            Log.e(TAG, "purchaseTour IOException: ${e.message}")
+            ApiResult.Error("Bağlantı hatası")
+        } catch (e: Exception) {
+            Log.e(TAG, "purchaseTour Exception: ${e.message}")
+            ApiResult.Error(e.message ?: "Beklenmeyen bir hata oluştu")
+        }
+    }
+
+    override suspend fun cancelPurchase(purchaseId: String): ApiResult<Unit> {
+        Log.d(TAG, "cancelPurchase tetiklendi. purchaseId: $purchaseId")
+        return try {
+            val response = tourApiService.cancelPurchase(purchaseId)
+            val request = response.raw().request
+            Log.d(TAG, "Request URL: ${request.url}")
+            
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "cancelPurchase başarısız. Code: ${response.code()}, Body: $errorBody")
+                val message = ApiErrorParser.parse(
+                    rawBody = errorBody,
+                    fallbackMessage = "Satın alma iptal edilemedi"
+                )
+                return ApiResult.Error(message = message, code = response.code())
+            }
+            Log.d(TAG, "cancelPurchase başarılı.")
+            
+            // Başarılı iptalde cache'den kaldır
+            val tourIdToRemove = purchaseCache.filterValues { it == purchaseId }.keys.firstOrNull()
+            tourIdToRemove?.let { purchaseCache.remove(it) }
+
+            ApiResult.Success(Unit)
+        } catch (e: IOException) {
+            Log.e(TAG, "cancelPurchase IOException: ${e.message}")
+            ApiResult.Error("Bağlantı hatası")
+        } catch (e: Exception) {
+            Log.e(TAG, "cancelPurchase Exception: ${e.message}")
+            ApiResult.Error(e.message ?: "Beklenmeyen bir hata oluştu")
+        }
+    }
+
+    override fun isTourPurchased(tourId: String): Boolean {
+        return purchaseCache.containsKey(tourId)
+    }
+
+    override fun getPurchaseId(tourId: String): String? {
+        return purchaseCache[tourId]
+    }
+
     private fun mapTour(dto: PublicTourDto): FeaturedTourSummary {
         val id = dto.id ?: dto.objectId ?: ""
         val title = dto.name ?: dto.title ?: "Tur"
         val imagePath = dto.imageUrl ?: dto.images?.firstOrNull()
+
+        // Cache kontrolü ekle: Yerel cache'de varsa oradan al, yoksa DTO'dan al
+        val isLocallyPurchased = purchaseCache.containsKey(id)
+        val finalIsPurchased = isLocallyPurchased || (dto.isPurchased ?: false)
+        val finalPurchaseId = if (isLocallyPurchased) purchaseCache[id] else dto.purchaseId
 
         return FeaturedTourSummary(
             id = id,
@@ -127,7 +213,9 @@ class PublicTourRepositoryImpl @Inject constructor(
             endDate = dto.endDate.orEmpty(),
             imagePath = imagePath,
             rating = dto.rating ?: 0.0,
-            companyName = dto.companyName.orEmpty()
+            companyName = dto.companyName.orEmpty(),
+            isPurchased = finalIsPurchased,
+            purchaseId = finalPurchaseId
         )
     }
 

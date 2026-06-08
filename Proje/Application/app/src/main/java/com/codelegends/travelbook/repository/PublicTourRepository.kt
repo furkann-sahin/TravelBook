@@ -3,6 +3,7 @@ package com.codelegends.travelbook.repository
 import com.codelegends.travelbook.core.network.ApiResult
 import com.codelegends.travelbook.model.FeaturedTourSummary
 import com.codelegends.travelbook.model.PlatformStatsSummary
+import com.codelegends.travelbook.model.PurchaseDataDto
 import com.codelegends.travelbook.model.UserTourDetailDto
 
 interface PublicTourRepository {
@@ -19,4 +20,12 @@ interface PublicTourRepository {
     suspend fun getPlatformStats(): ApiResult<PlatformStatsSummary>
 
     suspend fun getTourDetail(tourId: String): ApiResult<UserTourDetailDto>
+
+    suspend fun purchaseTour(tourId: String): ApiResult<PurchaseDataDto>
+
+    suspend fun cancelPurchase(purchaseId: String): ApiResult<Unit>
+
+    fun isTourPurchased(tourId: String): Boolean
+
+    fun getPurchaseId(tourId: String): String?
 }

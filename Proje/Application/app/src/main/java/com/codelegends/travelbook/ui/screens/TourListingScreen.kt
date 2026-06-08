@@ -237,20 +237,41 @@ fun TourItem(
                     contentScale = ContentScale.Crop
                 )
                 
-                Surface(
+                Row(
                     modifier = Modifier
                         .padding(12.dp)
                         .align(Alignment.TopEnd),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    if (tour.isPurchased) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(8.dp),
+                            shadowElevation = 2.dp
+                        ) {
+                            Text(
+                                text = "Satın Alındı",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(8.dp),
+                        shadowElevation = 2.dp
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(4.dp))
-                        Text(text = tour.rating.toString(), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(4.dp))
+                            Text(text = tour.rating.toString(), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
