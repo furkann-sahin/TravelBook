@@ -22,8 +22,15 @@ data class PublicTourDto(
     val imageUrl: String? = null,
     val images: List<String>? = null,
     val rating: Double? = null,
-    val companyName: String? = null
-)
+    val companyName: String? = null,
+    @SerializedName("totalCapacity") val totalCapacity: Int? = null,
+    @SerializedName("filledCapacity") val filledCapacity: Int? = null,
+    @SerializedName("isPurchased") val isPurchased: Boolean? = null,
+    @SerializedName("purchaseId") val purchaseId: String? = null
+) {
+    val remainingCapacity: Int
+        get() = (totalCapacity ?: 0) - (filledCapacity ?: 0)
+}
 
 data class FeaturedTourSummary(
     val id: String,
@@ -36,7 +43,9 @@ data class FeaturedTourSummary(
     val endDate: String,
     val imagePath: String?,
     val rating: Double,
-    val companyName: String
+    val companyName: String,
+    val isPurchased: Boolean = false,
+    val purchaseId: String? = null
 )
 
 data class PlatformStatsDto(
@@ -85,8 +94,18 @@ data class UserTourDetailDto(
     val reviewCount: Int? = null,
     val companyName: String? = null,
     val guideName: String? = null,
-    val reviews: List<ReviewDto>? = null
-)
+    val reviews: List<ReviewDto>? = null,
+    @SerializedName("totalCapacity") val totalCapacity: Int? = null,
+    @SerializedName("filledCapacity") val filledCapacity: Int? = null,
+    val isPurchased: Boolean? = null,
+    val purchaseId: String? = null
+) {
+    val remainingCapacity: Int
+        get() = ((totalCapacity ?: 0) - (filledCapacity ?: 0)).coerceAtLeast(0)
+
+    val isFull: Boolean
+        get() = totalCapacity != null && totalCapacity > 0 && (filledCapacity ?: 0) >= totalCapacity
+}
 
 data class CreateReviewRequest(
     val comment: String,
@@ -97,3 +116,14 @@ data class UpdateReviewRequest(
     val comment: String,
     val rating: Int
 )
+
+data class PurchaseDataDto(
+    @SerializedName("purchaseId") val purchaseId: String? = null,
+    @SerializedName("_id") val objectId: String? = null,
+    @SerializedName("tourId") val tourId: String? = null,
+    @SerializedName("userId") val userId: String? = null,
+    @SerializedName("status") val status: String? = null
+) {
+    val id: String?
+        get() = purchaseId ?: objectId
+}

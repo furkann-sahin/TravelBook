@@ -14,6 +14,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,7 +33,10 @@ data class UserTourDetailUiState(
     val editingReviewId: String? = null,
     val editComment: String = "",
     val editRating: Int = 5,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    val isPurchasing: Boolean = false,
+    val isPurchased: Boolean = false,
+    val purchaseId: String? = null
 )
 
 @HiltViewModel
@@ -55,7 +61,19 @@ class UserTourDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = publicTourRepository.getTourDetail(tourId)) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, tour = result.data) }
+                    // Backend'den veri gelmese bile local cache'den kontrol et
+                    val isLocallyPurchased = publicTourRepository.isTourPurchased(tourId)
+                    val localPurchaseId = publicTourRepository.getPurchaseId(tourId)
+
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            tour = result.data,
+                            isPurchased = (result.data.isPurchased == true) || isLocallyPurchased,
+                            purchaseId = result.data.purchaseId ?: localPurchaseId,
+                            isPurchasing = false
+                        ) 
+                    }
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
@@ -178,5 +196,32 @@ class UserTourDetailViewModel @Inject constructor(
 
     fun dismissSnackbar() {
         _uiState.update { it.copy(snackbarMessage = null) }
+    }
+
+    fun purchaseTour(tourId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPurchasing = true) }
+            when (val result = publicTourRepository.purchaseTour(tourId)) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            isPurchased = true,
+                            purchaseId = result.data.purchaseId,
+                            snackbarMessage = "Tur satın alma işlemi başarılı"
+                        )
+                    }
+                    loadTourDetail(tourId) // Kapasiteyi güncellemek için tekrar yükle
+                }
+                is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            snackbarMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
     }
 }

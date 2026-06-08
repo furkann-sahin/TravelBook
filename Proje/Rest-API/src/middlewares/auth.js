@@ -8,6 +8,13 @@ const requireAuth = expressjwt({
   requestProperty: "payload",
 });
 
+const optionalAuth = expressjwt({
+  secret: process.env.JWT_SECRET,
+  algorithms: ["HS256"],
+  requestProperty: "payload",
+  credentialsRequired: false,
+});
+
 const requireRole = (...allowedRoles) => (req, res, next) => {
   const role = req.payload?.role;
   if (!role || !allowedRoles.includes(role)) {
@@ -22,5 +29,6 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
 
 module.exports = {
   requireAuth,
+  optionalAuth,
   requireRole,
 };

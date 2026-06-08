@@ -23,17 +23,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -51,8 +61,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +80,8 @@ import com.codelegends.travelbook.ui.navigation.LocalNavBarHeight
 import com.codelegends.travelbook.ui.theme.RoadOrange
 import com.codelegends.travelbook.util.FormatUtils
 import com.codelegends.travelbook.viewmodel.UserTourDetailViewModel
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 
 @Composable
 fun UserTourDetailScreen(
@@ -148,14 +162,31 @@ private fun UserTourDetailContent(
                 // Basic Info
                 UserTourInfoCard(tour = tour)
 
+                // Capacity Info
+                if (tour.totalCapacity != null && tour.remainingCapacity != null) {
+                    TourCapacityCard(tour = tour)
+                }
+
+                // Purchase Action
+                PurchaseActionSection(
+                    tour = tour,
+                    uiState = uiState,
+                    onPurchase = { viewModel.purchaseTour(tour.id ?: tour.objectId ?: "") }
+                )
+
                 // Description
                 if (!tour.description.isNullOrBlank()) {
                     TourDescriptionCard(description = tour.description)
                 }
 
                 // Destinations & Services
-                if (!tour.places.isNullOrEmpty() || !tour.services.isNullOrEmpty()) {
+                if (!tour.places.isNullOrEmpty() || !tour.services.isNullOrEmpty() || !tour.included.isNullOrEmpty()) {
                     TourPlacesServicesCard(tour = tour)
+                }
+
+                // Guide
+                if (!tour.guideName.isNullOrBlank()) {
+                    TourGuideCard(name = tour.guideName)
                 }
 
                 // Reviews Section
@@ -262,12 +293,60 @@ private fun UserTourInfoCard(tour: UserTourDetailDto) {
                 }
             }
             HorizontalDivider()
-            TourInfoRow(icon = Icons.Default.LocationOn, label = "Konum", value = tour.location ?: "-")
+            TourInfoRow(
+                icon = Icons.Default.LocationOn,
+                label = "Güzergâh",
+                value = "${tour.departureLocation ?: tour.location ?: "-"} → ${tour.arrivalLocation ?: "-"}"
+            )
             TourInfoRow(
                 icon = Icons.Default.CalendarMonth,
                 label = "Tarih",
                 value = "${FormatUtils.formatDate(tour.startDate.orEmpty())} - ${FormatUtils.formatDate(tour.endDate.orEmpty())}"
             )
+        }
+    }
+}
+
+@Composable
+private fun TourCapacityCard(tour: UserTourDetailDto) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Kapasite Durumu",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "${tour.remainingCapacity ?: 0} / ${tour.totalCapacity ?: 0} Kişi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            val total = tour.totalCapacity ?: 0
+            val filled = tour.filledCapacity ?: 0
+            val fillFraction = if (total > 0) filled.toFloat() / total.toFloat() else 0f
+            Box(modifier = Modifier.width(100.dp)) {
+                LinearProgressIndicator(
+                    progress = { fillFraction.coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    strokeCap = StrokeCap.Round
+                )
+            }
         }
     }
 }
@@ -485,6 +564,89 @@ private fun RatingBar(rating: Int, onRatingChange: (Int) -> Unit) {
 // Re-implementing simplified versions for User context.
 
 @Composable
+private fun PurchaseActionSection(
+    tour: UserTourDetailDto,
+    uiState: com.codelegends.travelbook.viewmodel.UserTourDetailUiState,
+    onPurchase: () -> Unit
+) {
+    var showPurchaseDialog by remember { mutableStateOf(false) }
+
+    if (showPurchaseDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showPurchaseDialog = false },
+            title = { Text("Satın Alma Onayı") },
+            text = { Text("Bu turu satın almak istediğinize emin misiniz?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onPurchase()
+                    showPurchaseDialog = false
+                }) {
+                    Text("Evet")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPurchaseDialog = false }) {
+                    Text("Vazgeç")
+                }
+            }
+        )
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (uiState.isPurchased) "Bu turu satın aldınız" else "Maceraya Katılın",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (uiState.isPurchased) "Turun tadını çıkarın!" else "Hemen yerinizi ayırtın.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            
+            if (uiState.isPurchased) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                        Text("Satın Alındı", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { showPurchaseDialog = true },
+                    enabled = !uiState.isPurchasing && !tour.isFull,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    if (uiState.isPurchasing) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text(if (tour.isFull) "Kontenjan Dolu" else "Satın Al")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
 private fun TourPlacesServicesCard(tour: UserTourDetailDto) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -492,15 +654,84 @@ private fun TourPlacesServicesCard(tour: UserTourDetailDto) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (!tour.places.isNullOrEmpty()) {
-                SectionHeader(icon = Icons.Default.LocationOn, title = "Gezilecek Yerler")
-                Text(tour.places.joinToString(", "), style = MaterialTheme.typography.bodyMedium)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SectionHeader(icon = Icons.Default.Place, title = "Gezilecek Yerler")
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        tour.places.forEach { place ->
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(place) },
+                                leadingIcon = { Icon(Icons.Default.Place, null, modifier = Modifier.size(14.dp)) },
+                                shape = RoundedCornerShape(20.dp),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            )
+                        }
+                    }
+                }
             }
-            if (!tour.services.isNullOrEmpty()) {
+            
+            val allServices = (tour.services.orEmpty() + tour.included.orEmpty()).distinct()
+            if (allServices.isNotEmpty()) {
                 if (!tour.places.isNullOrEmpty()) HorizontalDivider()
-                SectionHeader(icon = Icons.Default.Description, title = "Dahil Hizmetler")
-                Text(tour.services.joinToString(", "), style = MaterialTheme.typography.bodyMedium)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SectionHeader(icon = Icons.Default.CheckCircle, title = "Dahil Hizmetler")
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        allServices.forEach { service ->
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(service) },
+                                leadingIcon = { Icon(Icons.Default.Check, null, modifier = Modifier.size(14.dp)) },
+                                shape = RoundedCornerShape(20.dp),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    labelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TourGuideCard(name: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionHeader(icon = Icons.Default.Person, title = "Rehber Bilgisi")
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f),
+                    modifier = Modifier.size(52.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = name.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+                Text(text = name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             }
         }
     }

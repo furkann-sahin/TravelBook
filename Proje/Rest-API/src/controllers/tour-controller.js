@@ -48,6 +48,8 @@ const mapTourDetail = (tour, reviews = []) => ({
   images: tour.images || [],
   rating: tour.rating || 0,
   reviewCount: tour.reviewCount || 0,
+  totalCapacity: tour.totalCapacity,
+  filledCapacity: tour.filledCapacity,
   companyName: tour.companyId?.name || null,
   guideName: tour.guideId
     ? `${tour.guideId.firstName} ${tour.guideId.lastName}`
@@ -73,6 +75,7 @@ const getTours = async (req, res) => {
   try {
     const { title, price, location, date, minPrice, maxPrice, page, limit } =
       req.query;
+    const userId = req.payload?.id;
 
     // Validate pagination parameters
     const currentPage = Number(page) || 1;
@@ -131,18 +134,21 @@ const getTours = async (req, res) => {
     const query = andFilters.length ? { $and: andFilters } : {};
 
     // Execute count and find in parallel for efficiency.
-    const [totalCount, tours] = await Promise.all([
+    const [totalCount, tours, userPurchases] = await Promise.all([
       Tour.countDocuments(query),
       Tour.find(query)
         .select(
-          "name price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places",
+          "name price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places totalCapacity filledCapacity",
         )
         .sort({ startDate: 1 })
         .skip(skip)
         .limit(pageSize)
         .populate("companyId", "name")
         .populate("guideId", "firstName lastName"),
+      userId ? Purchase.find({ userId }).select("tourId") : [],
     ]);
+
+    const purchasedTourIds = new Set(userPurchases.map((p) => p.tourId.toString()));
 
     // Normalize tour documents into the compact list response shape.
     const tourList = tours.map((tour) => ({
@@ -161,6 +167,9 @@ const getTours = async (req, res) => {
         ? `${tour.guideId.firstName} ${tour.guideId.lastName}`
         : null,
       rating: tour.rating,
+      totalCapacity: tour.totalCapacity,
+      filledCapacity: tour.filledCapacity,
+      isPurchased: purchasedTourIds.has(tour._id.toString()),
     }));
 
     createResponse(res, 200, {
@@ -183,6 +192,7 @@ const getTours = async (req, res) => {
 const getTourDetail = async (req, res) => {
   try {
     const { tourId } = req.params;
+    const userId = req.payload?.id;
 
     if (!mongoose.Types.ObjectId.isValid(tourId)) {
       return createResponse(res, 404, {
@@ -191,11 +201,17 @@ const getTourDetail = async (req, res) => {
       });
     }
 
-    const [tour, reviews] = await Promise.all([
+    const [tour, reviews, userPurchase] = await Promise.all([
       Tour.findById(tourId)
         .populate("companyId", "name")
         .populate("guideId", "firstName lastName"),
       Review.find({ tourId }).sort({ createdAt: -1 }),
+      userId
+        ? Purchase.findOne({
+            userId: new mongoose.Types.ObjectId(userId),
+            tourId: new mongoose.Types.ObjectId(tourId),
+          })
+        : null,
     ]);
 
     if (!tour) {
@@ -205,9 +221,15 @@ const getTourDetail = async (req, res) => {
       });
     }
 
+    const tourDetail = mapTourDetail(tour, reviews);
+    if (userPurchase) {
+      tourDetail.isPurchased = true;
+      tourDetail.purchaseId = userPurchase._id;
+    }
+
     createResponse(res, 200, {
       status: "success",
-      data: mapTourDetail(tour, reviews),
+      data: tourDetail,
     });
   } catch (error) {
     createResponse(res, 500, {
