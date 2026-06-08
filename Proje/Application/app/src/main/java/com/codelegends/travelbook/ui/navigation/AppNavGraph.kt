@@ -208,7 +208,7 @@ fun AppNavGraph(
         composable(AppRoute.UserShell.route) {
             UserAppShell(
                 onLoggedOut = {
-                    navController.navigate(AppRoute.PublicShell.route) {
+                    navController.navigate(AppRoute.Login.route) {
                         popUpTo(AppRoute.UserShell.route) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -394,7 +394,9 @@ private fun UserAppShell(
                     }
 
                     composable(AppRoute.UserProfile.route) {
-                        PlaceholderScreen("Profil")
+                        com.codelegends.travelbook.ui.screens.UserProfileScreen(
+                            onAccountDeleted = onLoggedOut
+                        )
                     }
 
                     composable(AppRoute.PublicAbout.route) {

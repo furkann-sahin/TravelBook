@@ -13,6 +13,8 @@ const updatePasswordBodySchema = Joi.object({
 });
 const updateUserBodySchema = Joi.object({
   name: Joi.string().trim().min(2).max(120),
+  firstName: Joi.string().trim().max(60),
+  lastName: Joi.string().trim().max(60),
   email: Joi.string().email().max(255),
   phone: Joi.string().trim().max(40).allow("", null),
 }).min(1);
