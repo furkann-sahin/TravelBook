@@ -6,6 +6,7 @@ import com.codelegends.travelbook.model.FeaturedTourSummary
 import com.codelegends.travelbook.model.PlatformStatsDto
 import com.codelegends.travelbook.model.PlatformStatsSummary
 import com.codelegends.travelbook.model.PublicTourDto
+import com.codelegends.travelbook.model.UserTourDetailDto
 import com.codelegends.travelbook.service.TourApiService
 import java.io.IOException
 import javax.inject.Inject
@@ -85,6 +86,28 @@ class PublicTourRepositoryImpl @Inject constructor(
             ApiResult.Error("Bağlantı hatası. Lütfen internetinizi kontrol edin")
         } catch (exception: Exception) {
             ApiResult.Error(exception.message ?: "Platform istatistikleri yüklenemedi")
+        }
+    }
+
+    override suspend fun getTourDetail(tourId: String): ApiResult<UserTourDetailDto> {
+        return try {
+            val response = tourApiService.getTourDetail(tourId)
+            if (!response.isSuccessful) {
+                val message = ApiErrorParser.parse(
+                    rawBody = response.errorBody()?.string(),
+                    fallbackMessage = "Tur detayı yüklenemedi"
+                )
+                return ApiResult.Error(message = message, code = response.code())
+            }
+
+            val detail = response.body()?.data
+                ?: return ApiResult.Error("Tur detayı yüklenemedi")
+
+            ApiResult.Success(detail)
+        } catch (_: IOException) {
+            ApiResult.Error("Bağlantı hatası. Lütfen internetinizi kontrol edin")
+        } catch (exception: Exception) {
+            ApiResult.Error(exception.message ?: "Tur detayı yüklenemedi")
         }
     }
 

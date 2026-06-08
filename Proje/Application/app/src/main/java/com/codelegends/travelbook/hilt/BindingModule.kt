@@ -12,6 +12,8 @@ import com.codelegends.travelbook.repository.GuideRepository
 import com.codelegends.travelbook.repository.GuideRepositoryImpl
 import com.codelegends.travelbook.repository.PublicTourRepository
 import com.codelegends.travelbook.repository.PublicTourRepositoryImpl
+import com.codelegends.travelbook.repository.ReviewRepository
+import com.codelegends.travelbook.repository.ReviewRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -58,4 +60,10 @@ abstract class BindingModule {
     abstract fun bindGuideRepository(
         implementation: GuideRepositoryImpl
     ): GuideRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReviewRepository(
+        implementation: ReviewRepositoryImpl
+    ): ReviewRepository
 }

@@ -3,8 +3,10 @@ package com.codelegends.travelbook.service
 import com.codelegends.travelbook.model.ApiObjectEnvelope
 import com.codelegends.travelbook.model.PlatformStatsDto
 import com.codelegends.travelbook.model.PublicTourListResponseDto
+import com.codelegends.travelbook.model.UserTourDetailDto
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TourApiService {
@@ -21,4 +23,9 @@ interface TourApiService {
 
     @GET("tours/stats")
     suspend fun getStats(): Response<ApiObjectEnvelope<PlatformStatsDto>>
+
+    @GET("tours/{tourId}")
+    suspend fun getTourDetail(
+        @Path("tourId") tourId: String
+    ): Response<ApiObjectEnvelope<UserTourDetailDto>>
 }

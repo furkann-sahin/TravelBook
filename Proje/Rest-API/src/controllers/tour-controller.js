@@ -47,6 +47,8 @@ const mapTourDetail = (tour, reviews = []) => ({
   services: tour.services || [],
   places: tour.places || [],
   images: tour.images || [],
+  rating: tour.rating || 0,
+  reviewCount: tour.reviewCount || 0,
   companyName: tour.companyId?.name || null,
   guideName: tour.guideId
     ? `${tour.guideId.firstName} ${tour.guideId.lastName}`
