@@ -322,6 +322,7 @@ class CompanyTourRepositoryImpl @Inject constructor(
             .filterNot { it.isNullOrBlank() }
             .joinToString(" ")
             .ifBlank { null }
+        val imagePath = dto.imageUrl ?: dto.images?.firstOrNull()
 
         return CompanyTourDetail(
             id = id,
@@ -335,7 +336,7 @@ class CompanyTourRepositoryImpl @Inject constructor(
             remainingCapacity = dto.remainingCapacity ?: 0,
             startDate = dto.startDate.orEmpty(),
             endDate = dto.endDate.orEmpty(),
-            imagePath = dto.imageUrl,
+            imagePath = imagePath,
             services = dto.services.orEmpty(),
             rating = dto.rating ?: 0.0,
             reviewCount = dto.reviewCount ?: 0,

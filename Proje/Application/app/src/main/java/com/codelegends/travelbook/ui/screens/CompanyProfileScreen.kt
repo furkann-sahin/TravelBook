@@ -1,8 +1,5 @@
 package com.codelegends.travelbook.ui.screens
 
-import android.content.ContentResolver
-import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -65,9 +62,8 @@ import com.codelegends.travelbook.ui.components.companyprofile.CompanySocialRow
 import com.codelegends.travelbook.ui.components.companyprofile.CompanyStatCard
 import com.codelegends.travelbook.ui.navigation.LocalNavBarHeight
 import com.codelegends.travelbook.viewmodel.CompanyProfileViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.codelegends.travelbook.util.readImagePickerPayload
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -88,9 +84,9 @@ fun CompanyProfileScreen(
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val payload = context.contentResolver.readImageUploadPayload(uri)
+            val payload = context.contentResolver.readImagePickerPayload(uri, "company-profile")
             if (payload == null) {
-                viewModel.showInfoMessage("Görsel okunamadı")
+                viewModel.showInfoMessage("Görsel okunamadı veya 5 MB sınırı aşıldı")
                 return@launch
             }
 
@@ -107,9 +103,9 @@ fun CompanyProfileScreen(
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val payload = context.contentResolver.readImageUploadPayload(uri)
+            val payload = context.contentResolver.readImagePickerPayload(uri, "company-banner")
             if (payload == null) {
-                viewModel.showInfoMessage("Görsel okunamadı")
+                viewModel.showInfoMessage("Görsel okunamadı veya 5 MB sınırı aşıldı")
                 return@launch
             }
 
@@ -569,61 +565,6 @@ fun CompanyProfileScreen(
                     Text(text = "Vazgeç")
                 }
             }
-        )
-    }
-}
-
-private data class ImageUploadPayload(
-    val fileName: String,
-    val mimeType: String,
-    val bytes: ByteArray
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ImageUploadPayload
-
-        if (fileName != other.fileName) return false
-        if (mimeType != other.mimeType) return false
-        if (!bytes.contentEquals(other.bytes)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = fileName.hashCode()
-        result = 31 * result + mimeType.hashCode()
-        result = 31 * result + bytes.contentHashCode()
-        return result
-    }
-}
-
-private suspend fun ContentResolver.readImageUploadPayload(uri: Uri): ImageUploadPayload? {
-    return withContext(Dispatchers.IO) {
-        val mimeType = getType(uri) ?: "image/jpeg"
-        val bytes = openInputStream(uri)?.use { it.readBytes() } ?: return@withContext null
-        if (bytes.isEmpty()) return@withContext null
-
-        val fileName = query(
-            uri,
-            arrayOf(OpenableColumns.DISPLAY_NAME),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index >= 0) cursor.getString(index) else null
-            } else {
-                null
-            }
-        } ?: "company-image-${System.currentTimeMillis()}.jpg"
-
-        ImageUploadPayload(
-            fileName = fileName,
-            mimeType = mimeType,
-            bytes = bytes
         )
     }
 }

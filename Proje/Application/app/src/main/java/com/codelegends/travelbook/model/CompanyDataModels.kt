@@ -33,6 +33,7 @@ data class CompanyTourDetailDto(
     val startDate: String? = null,
     val endDate: String? = null,
     val imageUrl: String? = null,
+    val images: List<String>? = null,
     val services: List<String>? = null,
     val rating: Double? = null,
     val reviewCount: Int? = null,

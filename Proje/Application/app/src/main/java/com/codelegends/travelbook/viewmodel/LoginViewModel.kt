@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LoginUiState(
-    val selectedRoleIndex: Int = 1,
+    val selectedRoleIndex: Int = 0,
     val email: String = "",
     val password: String = "",
     val isPasswordVisible: Boolean = false,

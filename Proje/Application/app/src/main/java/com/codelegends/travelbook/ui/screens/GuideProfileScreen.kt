@@ -1,8 +1,8 @@
 package com.codelegends.travelbook.ui.screens
 
-import android.content.ContentResolver
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import com.codelegends.travelbook.core.config.AppConfig
+import com.codelegends.travelbook.util.readImagePickerPayload
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
@@ -33,6 +33,8 @@ import coil.compose.AsyncImage
 import com.codelegends.travelbook.ui.components.TravelBookTextField
 import com.codelegends.travelbook.viewmodel.GuideProfileViewModel
 import com.codelegends.travelbook.viewmodel.GuideProfileUiState
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
@@ -43,22 +45,54 @@ fun GuideProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // Image Picker Launchers
     val profileImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { context.contentResolver.readImageUploadPayload(it)?.let { p -> viewModel.uploadProfileImage(p.fileName, p.mimeType, p.bytes) } }
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val payload = context.contentResolver.readImagePickerPayload(uri, "guide-profile")
+            if (payload == null) {
+                snackbarHostState.showSnackbar("Görsel okunamadı veya 5 MB sınırı aşıldı")
+                return@launch
+            }
+            viewModel.uploadProfileImage(payload.fileName, payload.mimeType, payload.bytes)
+        }
     }
     val bannerImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { context.contentResolver.readImageUploadPayload(it)?.let { p -> viewModel.uploadBannerImage(p.fileName, p.mimeType, p.bytes) } }
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val payload = context.contentResolver.readImagePickerPayload(uri, "guide-banner")
+            if (payload == null) {
+                snackbarHostState.showSnackbar("Görsel okunamadı veya 5 MB sınırı aşıldı")
+                return@launch
+            }
+            viewModel.uploadBannerImage(payload.fileName, payload.mimeType, payload.bytes)
+        }
     }
     val galleryImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { context.contentResolver.readImageUploadPayload(it)?.let { p -> viewModel.uploadGalleryImage(p.fileName, p.mimeType, p.bytes) } }
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val payload = context.contentResolver.readImagePickerPayload(uri, "guide-gallery")
+            if (payload == null) {
+                snackbarHostState.showSnackbar("Görsel okunamadı veya 5 MB sınırı aşıldı")
+                return@launch
+            }
+            viewModel.uploadGalleryImage(payload.fileName, payload.mimeType, payload.bytes)
+        }
     }
 
     LaunchedEffect(uiState.infoMessage) {
         uiState.infoMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.consumeInfoMessage()
+        }
+    }
+
+    LaunchedEffect(uiState.saveErrorMessage) {
+        uiState.saveErrorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.dismissSaveError()
         }
     }
 
@@ -251,12 +285,21 @@ private fun ProfileHeader(
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-                AsyncImage(
-                    model = profile.bannerImageUrl ?: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                val resolvedBannerUrl = AppConfig.resolveImageUrl(profile.bannerImageUrl)
+                if (resolvedBannerUrl != null) {
+                    AsyncImage(
+                        model = resolvedBannerUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(listOf(Color(0xFF1E2A3A), Color(0xFF2D3436)))
+                        )
+                    )
+                }
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)))))
                 
                 IconButton(
@@ -274,9 +317,10 @@ private fun ProfileHeader(
             Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).offset(y = (-40).dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Box(modifier = Modifier.size(100.dp).clip(CircleShape).border(4.dp, MaterialTheme.colorScheme.surface, CircleShape).background(MaterialTheme.colorScheme.surface).clickable { onProfileImageClick() }) {
-                        if (profile.profileImageUrl != null) {
+                        val resolvedProfileUrl = AppConfig.resolveImageUrl(profile.profileImageUrl)
+                        if (resolvedProfileUrl != null) {
                             AsyncImage(
-                                model = profile.profileImageUrl,
+                                model = resolvedProfileUrl,
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -440,7 +484,7 @@ private fun GalleryGrid(images: List<String>, onDelete: (String) -> Unit) {
     ) {
         items(images) { url ->
             Box(Modifier.aspectRatio(1f).clip(RoundedCornerShape(8.dp))) {
-                AsyncImage(model = url, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                AsyncImage(model = AppConfig.resolveImageUrl(url), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 IconButton(
                     onClick = { onDelete(url) },
                     modifier = Modifier.align(Alignment.TopEnd).size(24.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape)
@@ -502,20 +546,18 @@ fun Switch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, scale: Float = 
 
 // Helpers
 private fun formatMemberSince(date: String?): String {
-    return "Ocak 2024" // TODO: Actual parsing
-}
-
-data class LocalImagePayload(
-    val fileName: String,
-    val mimeType: String,
-    val bytes: ByteArray
-)
-
-private fun ContentResolver.readImageUploadPayload(uri: Uri): LocalImagePayload? {
-    return try {
-        val bytes = openInputStream(uri)?.use { it.readBytes() } ?: return null
-        val fileName = "upload_${System.currentTimeMillis()}.jpg"
-        val mimeType = getType(uri) ?: "image/jpeg"
-        LocalImagePayload(fileName, mimeType, bytes)
-    } catch (e: Exception) { null }
+    if (date.isNullOrBlank()) return "Belirtilmedi"
+    val output = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("tr-TR"))
+    listOf(
+        "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+        "yyyy-MM-dd'T'HH:mm:ssX",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd"
+    ).forEach { format ->
+        runCatching {
+            val parsed = SimpleDateFormat(format, Locale.US).parse(date)
+            if (parsed != null) return output.format(parsed)
+        }
+    }
+    return date
 }
