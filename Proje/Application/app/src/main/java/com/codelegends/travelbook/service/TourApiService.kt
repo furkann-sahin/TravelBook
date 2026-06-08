@@ -1,11 +1,14 @@
 package com.codelegends.travelbook.service
 
+import com.codelegends.travelbook.model.ApiListEnvelope
 import com.codelegends.travelbook.model.ApiObjectEnvelope
+import com.codelegends.travelbook.model.FavoriteDto
 import com.codelegends.travelbook.model.PlatformStatsDto
 import com.codelegends.travelbook.model.PublicTourListResponseDto
 import com.codelegends.travelbook.model.PurchaseDataDto
 import com.codelegends.travelbook.model.UserTourDetailDto
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -37,4 +40,20 @@ interface TourApiService {
 
     @DELETE("users/purchases/{purchaseId}")
     suspend fun cancelPurchase(@Path("purchaseId") purchaseId: String): Response<ApiObjectEnvelope<Unit>>
+
+    // Favorites
+    @GET("users/{userId}/favorites")
+    suspend fun getFavorites(@Path("userId") userId: String): Response<ApiListEnvelope<FavoriteDto>>
+
+    @POST("users/{userId}/favorites")
+    suspend fun addFavorite(
+        @Path("userId") userId: String,
+        @Body request: com.codelegends.travelbook.model.AddFavoriteRequest
+    ): Response<ApiObjectEnvelope<FavoriteDto>>
+
+    @DELETE("users/{userId}/favorites/{tourId}")
+    suspend fun removeFavorite(
+        @Path("userId") userId: String,
+        @Path("tourId") tourId: String
+    ): Response<ApiObjectEnvelope<Unit>>
 }

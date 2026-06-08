@@ -79,6 +79,7 @@ import com.codelegends.travelbook.ui.screens.PublicHomeScreen
 import com.codelegends.travelbook.ui.screens.PublicToursScreen
 import com.codelegends.travelbook.ui.screens.RegisterScreen
 import com.codelegends.travelbook.ui.screens.TourListingScreen
+import com.codelegends.travelbook.ui.screens.UserFavoritesScreen
 import com.codelegends.travelbook.ui.screens.UserGuideListScreen
 import com.codelegends.travelbook.ui.screens.UserHomeScreen
 import com.codelegends.travelbook.ui.screens.UserProfileScreen
@@ -362,12 +363,23 @@ private fun UserAppShell(
                         UserHomeScreen(
                             onExploreTours = {
                                 shellNavController.navigateToTopLevel(AppRoute.UserTours.route)
+                            },
+                            onNavigateToFavorites = {
+                                shellNavController.navigateToTopLevel(AppRoute.UserFavorites.route)
                             }
                         )
                     }
 
                     composable(AppRoute.UserTours.route) {
                         TourListingScreen(
+                            onTourClick = { tourId ->
+                                shellNavController.navigate(AppRoute.UserTourDetail.createRoute(tourId))
+                            }
+                        )
+                    }
+
+                    composable(AppRoute.UserFavorites.route) {
+                        UserFavoritesScreen(
                             onTourClick = { tourId ->
                                 shellNavController.navigate(AppRoute.UserTourDetail.createRoute(tourId))
                             }

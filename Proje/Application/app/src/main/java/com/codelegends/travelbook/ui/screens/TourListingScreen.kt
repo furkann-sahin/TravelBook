@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
@@ -29,12 +31,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,9 +71,18 @@ fun TourListingScreen(
     viewModel: TourListingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var isFilterVisible by remember { mutableStateOf(false) }
 
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.dismissSnackbar()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Surface(shadowElevation = 4.dp) {
                 Column(
@@ -207,7 +223,13 @@ fun TourListingScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(uiState.tours) { tour ->
-                        TourItem(tour = tour, onClick = { onTourClick(tour.id) })
+                        TourItem(
+                            tour = tour,
+                            isFavorite = uiState.favoriteTourIds.contains(tour.id),
+                            isTogglingFavorite = uiState.togglingFavoriteId == tour.id,
+                            onFavoriteClick = { viewModel.toggleFavorite(tour.id) },
+                            onClick = { onTourClick(tour.id) }
+                        )
                     }
                 }
             }
@@ -218,6 +240,9 @@ fun TourListingScreen(
 @Composable
 fun TourItem(
     tour: FeaturedTourSummary,
+    isFavorite: Boolean,
+    isTogglingFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     onClick: () -> Unit
 ) {
     Card(
@@ -256,6 +281,29 @@ fun TourItem(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onFavoriteClick,
+                        enabled = !isTogglingFavorite,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        if (isTogglingFavorite) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Surface(
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                                color = Color.White.copy(alpha = 0.8f),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    tint = if (isFavorite) Color.Red else Color.Gray,
+                                    modifier = Modifier.padding(6.dp)
+                                )
+                            }
                         }
                     }
 

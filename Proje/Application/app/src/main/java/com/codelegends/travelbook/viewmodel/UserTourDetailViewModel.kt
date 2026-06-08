@@ -8,6 +8,7 @@ import com.codelegends.travelbook.model.CreateReviewRequest
 import com.codelegends.travelbook.model.ReviewDto
 import com.codelegends.travelbook.model.UpdateReviewRequest
 import com.codelegends.travelbook.model.UserTourDetailDto
+import com.codelegends.travelbook.repository.FavoriteRepository
 import com.codelegends.travelbook.repository.PublicTourRepository
 import com.codelegends.travelbook.repository.ReviewRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,13 +37,16 @@ data class UserTourDetailUiState(
     val snackbarMessage: String? = null,
     val isPurchasing: Boolean = false,
     val isPurchased: Boolean = false,
-    val purchaseId: String? = null
+    val purchaseId: String? = null,
+    val isFavorite: Boolean = false,
+    val isTogglingFavorite: Boolean = false
 )
 
 @HiltViewModel
 class UserTourDetailViewModel @Inject constructor(
     private val publicTourRepository: PublicTourRepository,
     private val reviewRepository: ReviewRepository,
+    private val favoriteRepository: FavoriteRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -74,6 +78,7 @@ class UserTourDetailViewModel @Inject constructor(
                             isPurchasing = false
                         ) 
                     }
+                    checkIfFavorite(tourId)
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
@@ -196,6 +201,57 @@ class UserTourDetailViewModel @Inject constructor(
 
     fun dismissSnackbar() {
         _uiState.update { it.copy(snackbarMessage = null) }
+    }
+
+    private fun checkIfFavorite(tourId: String) {
+        val userId = _uiState.value.currentUserId ?: return
+        
+        // Önce cache'den kontrol et (Anlık görsel geri bildirim için)
+        if (favoriteRepository.isFavorite(tourId)) {
+            _uiState.update { it.copy(isFavorite = true) }
+        }
+
+        viewModelScope.launch {
+            when (val result = favoriteRepository.getFavorites(userId)) {
+                is ApiResult.Success -> {
+                    val isFav = result.data.any { it.tourId == tourId }
+                    _uiState.update { it.copy(isFavorite = isFav) }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    fun toggleFavorite(tourId: String) {
+        val userId = _uiState.value.currentUserId ?: return
+        val isFav = _uiState.value.isFavorite
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTogglingFavorite = true) }
+            val result = if (isFav) {
+                favoriteRepository.removeFavorite(userId, tourId)
+            } else {
+                when (val res = favoriteRepository.addFavorite(userId, tourId)) {
+                    is ApiResult.Success -> ApiResult.Success(Unit)
+                    is ApiResult.Error -> ApiResult.Error(res.message, res.code)
+                }
+            }
+
+            when (result) {
+                is ApiResult.Success -> {
+                    _uiState.update { 
+                        it.copy(
+                            isFavorite = !isFav,
+                            isTogglingFavorite = false,
+                            snackbarMessage = if (isFav) "Favorilerden kaldırıldı" else "Favorilere eklendi"
+                        ) 
+                    }
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isTogglingFavorite = false, snackbarMessage = result.message) }
+                }
+            }
+        }
     }
 
     fun purchaseTour(tourId: String) {
