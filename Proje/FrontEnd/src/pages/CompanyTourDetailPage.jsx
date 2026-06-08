@@ -195,7 +195,6 @@ export default function CompanyTourDetailPage() {
       const body = {
         name: editForm.name.trim(),
         description: editForm.description.trim(),
-        location: `${editForm.departureLocation.trim()} → ${editForm.arrivalLocation.trim()}`,
         price: Number(editForm.price),
         startDate: editForm.startDate,
         endDate: editForm.endDate,
@@ -288,7 +287,7 @@ export default function CompanyTourDetailPage() {
   const routeLabel =
     tour.departureLocation && tour.arrivalLocation
       ? `${tour.departureLocation} → ${tour.arrivalLocation}`
-      : tour.location || "—";
+      : "—";
   const remaining = tour.totalCapacity != null && tour.filledCapacity != null
     ? tour.totalCapacity - tour.filledCapacity
     : null;

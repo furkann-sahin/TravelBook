@@ -230,7 +230,8 @@ const getUserPurchases = async (req, res) => {
         ? {
             id: p.tourId._id,
             title: p.tourId.title || p.tourId.name,
-            location: p.tourId.location,
+            departureLocation: p.tourId.departureLocation || "",
+            arrivalLocation: p.tourId.arrivalLocation || "",
             price: p.tourId.price,
             startDate: p.tourId.startDate,
             endDate: p.tourId.endDate,

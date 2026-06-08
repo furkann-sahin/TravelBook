@@ -152,9 +152,14 @@ export default function UserTours() {
 
   // Filtreleme işlemi (frontend)
   const filteredTours = tours.filter((tour) => {
+    const routeText = [tour.departureLocation, tour.arrivalLocation]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
     return (
       (!filters.location ||
-        tour.location.toLowerCase().includes(filters.location.toLowerCase())) &&
+        routeText.includes(filters.location.toLowerCase())) &&
       (!filters.minPrice || tour.price >= Number(filters.minPrice)) &&
       (!filters.maxPrice || tour.price <= Number(filters.maxPrice)) &&
       (!filters.date || tour.startDate === filters.date)
@@ -268,7 +273,9 @@ export default function UserTours() {
                           sx={{ fontSize: 18, color: "secondary.main" }}
                         />
                         <Typography variant="body2" color="text.secondary">
-                          {tour.location}
+                          {tour.departureLocation && tour.arrivalLocation
+                            ? `${tour.departureLocation} → ${tour.arrivalLocation}`
+                            : ""}
                         </Typography>
                       </Box>
 
@@ -304,7 +311,9 @@ export default function UserTours() {
                           ₺{tour.price.toLocaleString("tr-TR")}
                         </Typography>
                         <Chip
-                          label={tour.location}
+                          label={tour.departureLocation && tour.arrivalLocation
+                            ? `${tour.departureLocation} → ${tour.arrivalLocation}`
+                            : ""}
                           size="small"
                           variant="outlined"
                         />
@@ -372,7 +381,9 @@ export default function UserTours() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
                 <LocationOnIcon sx={{ fontSize: 16, color: "secondary.main" }} />
                 <Typography variant="body2" color="text.secondary">
-                  {selectedTour.location}
+                  {selectedTour.departureLocation && selectedTour.arrivalLocation
+                    ? `${selectedTour.departureLocation} → ${selectedTour.arrivalLocation}`
+                    : ""}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
@@ -427,7 +438,9 @@ export default function UserTours() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
                 <LocationOnIcon sx={{ fontSize: 16, color: "secondary.main" }} />
                 <Typography variant="body2" color="text.secondary">
-                  {cancelTour.location}
+                  {cancelTour.departureLocation && cancelTour.arrivalLocation
+                    ? `${cancelTour.departureLocation} → ${cancelTour.arrivalLocation}`
+                    : ""}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>

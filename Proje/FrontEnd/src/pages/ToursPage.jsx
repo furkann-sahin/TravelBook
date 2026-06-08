@@ -628,7 +628,7 @@ export default function ToursPage() {
                 <Typography variant="body2" color="text.secondary">
                   {selectedTour.departureLocation && selectedTour.arrivalLocation
                     ? `${selectedTour.departureLocation} → ${selectedTour.arrivalLocation}`
-                    : selectedTour.location || "-"}
+                    : "-"}
                 </Typography>
               </Box>
               <Box
@@ -716,7 +716,7 @@ export default function ToursPage() {
                 <Typography variant="body2" color="text.secondary">
                   {cancelTour.departureLocation && cancelTour.arrivalLocation
                     ? `${cancelTour.departureLocation} → ${cancelTour.arrivalLocation}`
-                    : cancelTour.location || "-"}
+                    : "-"}
                 </Typography>
               </Box>
               <Box

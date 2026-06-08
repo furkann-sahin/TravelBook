@@ -11,5 +11,5 @@ export function getRouteLabel(tour) {
   if (tour.departureLocation && tour.arrivalLocation) {
     return `${tour.departureLocation} → ${tour.arrivalLocation}`;
   }
-  return tour.location || "";
+  return "";
 }

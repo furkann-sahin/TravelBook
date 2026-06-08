@@ -177,7 +177,7 @@ export default function TourDetailPage() {
   const routeLabel =
     tour.departureLocation && tour.arrivalLocation
       ? `${tour.departureLocation} → ${tour.arrivalLocation}`
-      : tour.location || "—";
+      : "—";
 
   const heroImage =
     tour.images?.length > 0 ? getImageUrl(tour.images[0]) : FALLBACK_IMAGE;

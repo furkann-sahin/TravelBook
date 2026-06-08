@@ -419,7 +419,9 @@ function TourCard({ tour, formatDate, formatPrice, onRemove }) {
   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
   <LocationOnIcon sx={{ fontSize: 18, color: "text.secondary" }} />
   <Typography variant="body2" color="text.secondary" noWrap>
-  {tour.location}
+  {tour.departureLocation && tour.arrivalLocation
+    ? `${tour.departureLocation} → ${tour.arrivalLocation}`
+    : ""}
   </Typography>
   </Box>
 

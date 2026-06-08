@@ -34,7 +34,6 @@ const companyTourParamsSchema = Joi.object({
 const createTourBodySchema = Joi.object({
   name: Joi.string().trim().min(2).max(200).required(),
   description: Joi.string().trim().min(10).max(4000).required(),
-  location: Joi.string().trim().min(2).max(200).required(),
   price: Joi.number().min(0).required(),
   startDate: Joi.date().iso().required(),
   endDate: Joi.date().iso().greater(Joi.ref("startDate")).required(),
@@ -50,12 +49,21 @@ const createTourBodySchema = Joi.object({
     Joi.array().items(Joi.string().trim().max(120)),
     Joi.string().trim().max(2000),
   ),
+}).custom((value, helpers) => {
+  const hasRouteLocations = Boolean(value.departureLocation?.trim() && value.arrivalLocation?.trim());
+
+  if (!hasRouteLocations) {
+    return helpers.error("any.invalid");
+  }
+
+  return value;
+}, "location-shape").messages({
+  "any.invalid": "Konum için departureLocation/arrivalLocation çifti gereklidir",
 });
 
 const updateTourBodySchema = Joi.object({
   name: Joi.string().trim().min(2).max(200),
   description: Joi.string().trim().min(10).max(4000),
-  location: Joi.string().trim().min(2).max(200),
   price: Joi.number().min(0),
   startDate: Joi.date().iso(),
   endDate: Joi.date().iso(),
@@ -64,6 +72,17 @@ const updateTourBodySchema = Joi.object({
   arrivalLocation: Joi.string().trim().max(200).allow("", null),
   services: Joi.array().items(Joi.string().trim().max(120)),
   places: Joi.array().items(Joi.string().trim().max(120)),
+}).custom((value, helpers) => {
+  const hasDeparture = value.departureLocation !== undefined;
+  const hasArrival = value.arrivalLocation !== undefined;
+
+  if (hasDeparture !== hasArrival) {
+    return helpers.error("any.invalid");
+  }
+
+  return value;
+}, "route-location-shape").messages({
+  "any.invalid": "departureLocation ve arrivalLocation birlikte gönderilmelidir",
 }).min(1);
 
 const tourIdParamsSchema = Joi.object({

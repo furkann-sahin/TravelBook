@@ -168,7 +168,6 @@ export default function CreateTourPage() {
       const formData = new FormData();
       formData.append("name", form.name.trim());
       formData.append("description", form.description.trim());
-      formData.append("location", `${form.departureLocation.trim()} → ${form.arrivalLocation.trim()}`);
       formData.append("price", Number(form.price));
       formData.append("startDate", form.startDate);
       formData.append("endDate", form.endDate);

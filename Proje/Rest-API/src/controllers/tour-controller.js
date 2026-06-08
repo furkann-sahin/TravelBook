@@ -36,7 +36,6 @@ const mapTourDetail = (tour, reviews = []) => ({
   title: tour.title || tour.name,
   description: tour.description,
   price: tour.price,
-  location: tour.location,
   departureLocation: tour.departureLocation || "",
   arrivalLocation: tour.arrivalLocation || "",
   date: tour.date || tour.startDate,
@@ -83,7 +82,13 @@ const getTours = async (req, res) => {
 
     if (location) {
       const escapedLocation = location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      andFilters.push({ location: { $regex: escapedLocation, $options: "i" } });
+      andFilters.push({
+        $or: [
+          { location: { $regex: escapedLocation, $options: "i" } },
+          { departureLocation: { $regex: escapedLocation, $options: "i" } },
+          { arrivalLocation: { $regex: escapedLocation, $options: "i" } },
+        ],
+      });
     }
 
     const priceFilter = {};
@@ -128,7 +133,7 @@ const getTours = async (req, res) => {
       Tour.countDocuments(query),
       Tour.find(query)
         .select(
-          "name location price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places",
+          "name price startDate endDate images services rating companyId guideId departureLocation arrivalLocation places",
         )
         .sort({ startDate: 1 })
         .skip(skip)
@@ -141,7 +146,6 @@ const getTours = async (req, res) => {
     const tourList = tours.map((tour) => ({
       id: tour._id,
       name: tour.name,
-      location: tour.location,
       departureLocation: tour.departureLocation || "",
       arrivalLocation: tour.arrivalLocation || "",
       places: tour.places || [],

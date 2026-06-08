@@ -171,7 +171,9 @@ export default function FavoritesList() {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
                       <LocationOnIcon sx={{ fontSize: 18, color: "secondary.main" }} />
                       <Typography variant="body2" color="text.secondary">
-                        {tour.location}
+                        {tour.departureLocation && tour.arrivalLocation
+                          ? `${tour.departureLocation} → ${tour.arrivalLocation}`
+                          : ""}
                       </Typography>
                     </Box>
 
@@ -258,7 +260,9 @@ export default function FavoritesList() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
                 <LocationOnIcon sx={{ fontSize: 16, color: "secondary.main" }} />
                 <Typography variant="body2" color="text.secondary">
-                  {selectedTour.location}
+                  {selectedTour.departureLocation && selectedTour.arrivalLocation
+                    ? `${selectedTour.departureLocation} → ${selectedTour.arrivalLocation}`
+                    : ""}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>

@@ -29,14 +29,15 @@ const listCompanyTours = async (req, res) => {
 
     const tours = await Tour.find({ companyId })
       .select(
-        "name location price startDate endDate images services rating",
+        "name price startDate endDate images services rating departureLocation arrivalLocation",
       )
       .sort({ startDate: -1 });
 
     const tourList = tours.map((tour) => ({
       id: tour._id,
       name: tour.name,
-      location: tour.location,
+      departureLocation: tour.departureLocation || "",
+      arrivalLocation: tour.arrivalLocation || "",
       price: tour.price,
       startDate: tour.startDate,
       endDate: tour.endDate,
@@ -83,7 +84,9 @@ const createTour = async (req, res) => {
     // Fields validated by Joi; cast numeric/date types (multipart/form-data string conversion)
     const name = req.body.name;
     const description = req.body.description;
-    const location = req.body.location;
+    const departureLocation = req.body.departureLocation?.trim() || "";
+    const arrivalLocation = req.body.arrivalLocation?.trim() || "";
+    const location = `${departureLocation} → ${arrivalLocation}`;
     const price = Number(req.body.price);
     const totalCapacity = Number(req.body.totalCapacity);
     const start = new Date(req.body.startDate);
@@ -139,8 +142,8 @@ const createTour = async (req, res) => {
       endDate: end,
       totalCapacity,
       places,
-      departureLocation: req.body.departureLocation?.trim() || "",
-      arrivalLocation: req.body.arrivalLocation?.trim() || "",
+      departureLocation,
+      arrivalLocation,
       images,
       services,
       companyId,
@@ -174,7 +177,8 @@ const createTour = async (req, res) => {
         id: tour._id,
         name: tour.name,
         description: tour.description,
-        location: tour.location,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
         price: tour.price,
         startDate: tour.startDate,
         endDate: tour.endDate,
@@ -286,7 +290,8 @@ const getCompanyTourDetail = async (req, res) => {
         id: tour._id,
         name: tour.name,
         description: tour.description,
-        location: tour.location,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
         price: tour.price,
         startDate: tour.startDate,
         endDate: tour.endDate,
@@ -334,9 +339,11 @@ const updateCompanyTour = async (req, res) => {
     }
 
     const allowedFields = [
-      "name", "description", "location", "price", "startDate", "endDate",
+      "name", "description", "price", "startDate", "endDate",
       "totalCapacity", "departureLocation", "arrivalLocation",
     ];
+
+    let locationChanged = false;
 
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
@@ -346,8 +353,17 @@ const updateCompanyTour = async (req, res) => {
           tour[field] = new Date(req.body[field]);
         } else {
           tour[field] = req.body[field];
+          if (field === "departureLocation" || field === "arrivalLocation") {
+            locationChanged = true;
+          }
         }
       }
+    }
+
+    if (locationChanged || (req.body.departureLocation !== undefined && req.body.arrivalLocation !== undefined)) {
+      const departureLocation = (req.body.departureLocation ?? tour.departureLocation ?? "").trim();
+      const arrivalLocation = (req.body.arrivalLocation ?? tour.arrivalLocation ?? "").trim();
+      tour.location = `${departureLocation} → ${arrivalLocation}`;
     }
 
     // Handle places array
@@ -373,7 +389,8 @@ const updateCompanyTour = async (req, res) => {
         id: tour._id,
         name: tour.name,
         description: tour.description,
-        location: tour.location,
+        departureLocation: tour.departureLocation,
+        arrivalLocation: tour.arrivalLocation,
         price: tour.price,
         startDate: tour.startDate,
         endDate: tour.endDate,

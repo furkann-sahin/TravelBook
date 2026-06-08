@@ -52,12 +52,6 @@ function normalizeTour(tour) {
         ? [normalizedImageUrl]
         : [];
 
-  const normalizedLocation =
-    pickFirstString(
-      tour.location,
-      [tour.departureLocation, tour.arrivalLocation].filter(Boolean).join(" -> "),
-    );
-
   return {
     ...tour,
     id: normalizedId,
@@ -66,7 +60,6 @@ function normalizeTour(tour) {
     title: normalizedTitle,
     imageUrl: normalizedImageUrl,
     images: normalizedImages,
-    location: normalizedLocation,
   };
 }
 

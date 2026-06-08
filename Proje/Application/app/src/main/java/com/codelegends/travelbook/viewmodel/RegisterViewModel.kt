@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class RegisterUiState(
-    val selectedRoleIndex: Int = 1,
+    val selectedRoleIndex: Int = 0,
     // Common
     val email: String = "",
     val password: String = "",
