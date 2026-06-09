@@ -23,6 +23,23 @@ if (missingEnv.length > 0) {
 require("./src/models/db"); // Database connection and model registration
 require("./src/configs/passport"); // Register passport strategies
 
+const { connectRedis } = require("./src/utils/redisClient");
+const { connectRabbitMQ } = require("./src/utils/rabbitmqClient");
+const { initConsumers } = require("./src/utils/rabbitmqConsumer");
+
+// Initialize external services
+const initializeServices = async () => {
+  try {
+    await connectRedis();
+    await connectRabbitMQ();
+    await initConsumers();
+    console.log("[STARTUP] Harici servisler başarıyla başlatıldı (Redis & RabbitMQ)");
+  } catch (error) {
+    console.error("[STARTUP] Harici servisler başlatılırken hata oluştu:", error);
+  }
+};
+initializeServices();
+
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
 const userFavoriteRoutes = require("./src/routes/user-favorite-routes");

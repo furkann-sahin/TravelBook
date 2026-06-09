@@ -24,16 +24,37 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     environment:
       NODE_ENV: production
       PORT: 3000
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-travelbook-dev-secret}
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/travelbook}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
       FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:8080,http://127.0.0.1:8080}
     ports:
       - "3000:3000"
     volumes:
       - api_uploads:/usr/src/app/public/uploads
+
+  redis:
+    image: redis:alpine
+    container_name: travelbook-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: travelbook-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
   frontend:
     build:

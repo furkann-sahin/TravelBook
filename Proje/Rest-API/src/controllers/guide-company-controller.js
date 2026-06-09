@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Guide = mongoose.model("Guide");
 const Company = mongoose.model("Company");
 const { createResponse } = require("../utils/create-response");
+const { publishToQueue } = require("../utils/rabbitmqClient");
+const { redisClient } = require("../utils/redisClient");
 
 // Rehberin kayıt olduğu firmaları listeleme (GET /api/guides/:guideId/companies)
 const listSavedGuideCompanies = async (req, res) => {
@@ -84,6 +86,19 @@ const applyToCompany = async (req, res) => {
       await company.save();
     }
 
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${req.params.guideId}/companies`);
+
+    // RabbitMQ'ya mesaj gönder
+    await publishToQueue("company_notification_queue", {
+      guideId: guide._id,
+      guideName: `${guide.firstName} ${guide.lastName}`,
+      companyId: company._id,
+      companyName: company.name,
+      action: "application",
+      timestamp: new Date(),
+    });
+
     createResponse(res, 201, {
       status: "success",
       message: "Firmaya başarıyla kayıt oldunuz",
@@ -132,6 +147,9 @@ const removeFromCompany = async (req, res) => {
       company.registeredGuides.pull(new mongoose.Types.ObjectId(guideId));
       await company.save();
     }
+
+    // Cache Invalidation
+    await redisClient.del(`cache:/api/guides/${guideId}/companies`);
 
     createResponse(res, 200, {
       status: "success",

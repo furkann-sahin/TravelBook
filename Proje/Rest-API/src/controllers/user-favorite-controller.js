@@ -17,7 +17,7 @@ const getFavorites = async (req, res) => {
 
     const user = await User.findById(userId).populate({
       path: "favorites",
-      select: "name price startDate endDate images rating companyId departureLocation arrivalLocation",
+      select: "name location price startDate endDate images rating companyId",
       populate: { path: "companyId", select: "name" },
     });
 
@@ -31,8 +31,7 @@ const getFavorites = async (req, res) => {
     const favorites = user.favorites.map((tour) => ({
       id: tour._id,
       name: tour.name,
-      departureLocation: tour.departureLocation || "",
-      arrivalLocation: tour.arrivalLocation || "",
+      location: tour.location,
       price: tour.price,
       startDate: tour.startDate,
       endDate: tour.endDate,

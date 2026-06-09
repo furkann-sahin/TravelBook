@@ -16,6 +16,11 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
+    location: {
+      type: String,
+      trim: true,
+      required: true,
+    },
     date: {
       type: Date,
     },
@@ -101,7 +106,7 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
-tourSchema.index({ price: 1, startDate: 1 });
+tourSchema.index({ location: 1, price: 1, startDate: 1 });
 tourSchema.index({ companyId: 1, startDate: -1 });
 
 tourSchema.pre("validate", function () {
