@@ -8,7 +8,6 @@ import android.provider.OpenableColumns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import androidx.core.graphics.scale
 
 data class ImagePickerPayload(
     val fileName: String,
@@ -85,8 +84,12 @@ private fun compressImage(rawBytes: ByteArray): ByteArray? {
     // Fine-scale if still larger than MAX_DIMENSION after subsampling
     val bitmap = if (decoded.width > MAX_DIMENSION || decoded.height > MAX_DIMENSION) {
         val scale = MAX_DIMENSION.toFloat() / maxOf(decoded.width, decoded.height)
-        val scaled =
-            decoded.scale((decoded.width * scale).toInt(), (decoded.height * scale).toInt())
+        val scaled = Bitmap.createScaledBitmap(
+            decoded,
+            (decoded.width * scale).toInt(),
+            (decoded.height * scale).toInt(),
+            true
+        )
         if (scaled !== decoded) decoded.recycle()
         scaled
     } else {

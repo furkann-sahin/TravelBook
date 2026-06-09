@@ -23,6 +23,13 @@ if (missingEnv.length > 0) {
 require("./src/models/db"); // Database connection and model registration
 require("./src/configs/passport"); // Register passport strategies
 
+const { connectRedis } = require("./src/configs/redis");
+const { connectRabbitMQ } = require("./src/configs/rabbitmq");
+const { startAuditConsumer } = require("./src/consumers/audit-consumer");
+
+connectRedis();
+connectRabbitMQ().then(() => startAuditConsumer());
+
 const userAuthRoutes = require("./src/routes/user-auth-routes");
 const userRoutes = require("./src/routes/user-routes");
 const userFavoriteRoutes = require("./src/routes/user-favorite-routes");
@@ -96,6 +103,8 @@ const allowCrossDomain = (req, res, next) => {
   }
   next();
 };
+
+app.set("trust proxy", 1);
 
 app.use(allowCrossDomain);
 app.use(
