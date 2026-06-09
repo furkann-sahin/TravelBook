@@ -13,10 +13,11 @@ import com.codelegends.travelbook.service.TourApiService
 import java.io.IOException
 import javax.inject.Inject
 
+const val TAG = "PublicTourRepo"
+
 class PublicTourRepositoryImpl @Inject constructor(
     private val tourApiService: TourApiService
 ) : PublicTourRepository {
-    private val TAG = "PublicTourRepo"
     
     // Geçici session bazlı cache: tourId -> purchaseId
     private val purchaseCache = mutableMapOf<String, String>()
@@ -205,7 +206,6 @@ class PublicTourRepositoryImpl @Inject constructor(
         return FeaturedTourSummary(
             id = id,
             title = title,
-            location = dto.location.orEmpty(),
             departureLocation = dto.departureLocation.orEmpty(),
             arrivalLocation = dto.arrivalLocation.orEmpty(),
             price = dto.price ?: 0.0,

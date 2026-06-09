@@ -22,19 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -73,9 +68,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.codelegends.travelbook.core.config.AppConfig
@@ -173,7 +166,7 @@ private fun UserTourDetailContent(
                 UserTourInfoCard(tour = tour)
 
                 // Capacity Info
-                if (tour.totalCapacity != null && tour.remainingCapacity != null) {
+                if (tour.totalCapacity != null) {
                     TourCapacityCard(tour = tour)
                 }
 
@@ -379,7 +372,7 @@ private fun TourCapacityCard(tour: UserTourDetailDto) {
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Text(
-                    text = "${tour.remainingCapacity ?: 0} / ${tour.totalCapacity ?: 0} Kişi",
+                    text = "${tour.remainingCapacity} / ${tour.totalCapacity ?: 0} Kişi",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

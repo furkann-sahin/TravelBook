@@ -971,13 +971,6 @@ private fun GuideAppShell(
     }
 }
 
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "$title Yakında Eklenecek", style = MaterialTheme.typography.titleLarge)
-    }
-}
-
 private fun NavHostController.navigateToTopLevel(route: String) {
     navigate(route) {
         popUpTo(graph.findStartDestination().id) {

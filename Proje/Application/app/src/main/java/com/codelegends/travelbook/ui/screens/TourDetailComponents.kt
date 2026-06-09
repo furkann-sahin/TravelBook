@@ -408,7 +408,7 @@ internal fun TourPriceBanner(tour: CompanyTourDetail) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "${tour.remainingCapacity}/${tour.totalCapacity}",
+                        text = "${tour.filledCapacity}/${tour.totalCapacity}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White
@@ -419,7 +419,7 @@ internal fun TourPriceBanner(tour: CompanyTourDetail) {
                         color = Color.White.copy(alpha = 0.72f)
                     )
                     val fillFraction = if (tour.totalCapacity > 0)
-                        (tour.totalCapacity - tour.remainingCapacity).toFloat() / tour.totalCapacity.toFloat()
+                        tour.filledCapacity.toFloat() / tour.totalCapacity.toFloat()
                     else 0f
                     LinearProgressIndicator(
                         progress = { fillFraction.coerceIn(0f, 1f) },

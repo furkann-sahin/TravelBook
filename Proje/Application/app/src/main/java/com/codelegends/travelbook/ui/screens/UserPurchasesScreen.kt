@@ -14,8 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +51,7 @@ fun UserPurchasesScreen(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
+            PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTabIndex == index,
@@ -70,7 +68,7 @@ fun UserPurchasesScreen(
                     ErrorState(message = uiState.errorMessage!!, onRetry = viewModel::loadPurchases)
                 } else {
                     val currentList = if (selectedTabIndex == 0) uiState.futurePurchases else uiState.pastPurchases
-                    
+
                     if (currentList.isEmpty()) {
                         EmptyState(
                             message = if (selectedTabIndex == 0) "Henüz planlanmış bir seyahatiniz yok." else "Geçmiş seyahat kaydınız bulunmuyor."

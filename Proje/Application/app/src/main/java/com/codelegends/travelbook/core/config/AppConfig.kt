@@ -3,7 +3,7 @@ package com.codelegends.travelbook.core.config
 import com.codelegends.travelbook.BuildConfig
 
 object AppConfig {
-    val apiBaseUrl: String = BuildConfig.API_BASE_URL.ensureTrailingSlash()
+    val apiBaseUrl: String = BuildConfig.API_BASE_URL
     val backendOrigin: String = apiBaseUrl.removeSuffix("api/").removeSuffix("/")
 
     const val CONNECT_TIMEOUT_SECONDS: Long = 30
@@ -19,6 +19,3 @@ object AppConfig {
         }
     }
 }
-
-private fun String.ensureTrailingSlash(): String =
-    if (endsWith('/')) this else "$this/"

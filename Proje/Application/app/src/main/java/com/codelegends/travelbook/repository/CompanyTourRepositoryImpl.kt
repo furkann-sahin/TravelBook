@@ -302,7 +302,6 @@ class CompanyTourRepositoryImpl @Inject constructor(
         return CompanyTourSummary(
             id = id,
             name = dto.name.orEmpty(),
-            location = dto.location.orEmpty(),
             departureLocation = dto.departureLocation.orEmpty(),
             arrivalLocation = dto.arrivalLocation.orEmpty(),
             price = dto.price ?: 0.0,
@@ -333,7 +332,7 @@ class CompanyTourRepositoryImpl @Inject constructor(
             places = dto.places.orEmpty(),
             price = dto.price ?: 0.0,
             totalCapacity = dto.totalCapacity ?: 0,
-            remainingCapacity = dto.remainingCapacity ?: 0,
+            filledCapacity = dto.filledCapacity ?: 0,
             startDate = dto.startDate.orEmpty(),
             endDate = dto.endDate.orEmpty(),
             imagePath = imagePath,

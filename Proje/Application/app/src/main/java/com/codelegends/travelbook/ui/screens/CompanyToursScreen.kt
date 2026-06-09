@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AssistChip
@@ -37,13 +36,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.codelegends.travelbook.core.config.AppConfig
 import com.codelegends.travelbook.model.CompanyTourSummary
 import com.codelegends.travelbook.ui.components.TBEmptyState
@@ -163,22 +162,6 @@ private fun CompanyTourCard(tour: CompanyTourSummary, onClick: () -> Unit = {}) 
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                if (tour.location.isNotBlank()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = " ${tour.location}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(

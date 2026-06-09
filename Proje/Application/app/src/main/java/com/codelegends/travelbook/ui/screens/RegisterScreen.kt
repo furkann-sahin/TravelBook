@@ -187,14 +187,11 @@ fun RegisterScreen(
                     }
 
                     val selectedRole = AuthRole.entries[uiState.selectedRoleIndex]
-                    if (selectedRole == AuthRole.COMPANY) {
-                        CompanyRegisterForm(uiState = uiState, viewModel = viewModel)
-                    } else if (selectedRole == AuthRole.GUIDE) {
-                        GuideRegisterForm(uiState = uiState, viewModel = viewModel)
-                    } else if (selectedRole == AuthRole.USER) {
-                        UserRegisterForm(uiState = uiState, viewModel = viewModel)
-                    } else {
-                        ComingSoonRoleForm(roleName = selectedRole.displayName)
+
+                    when(selectedRole){
+                        AuthRole.COMPANY -> CompanyRegisterForm(uiState = uiState, viewModel = viewModel)
+                        AuthRole.GUIDE -> GuideRegisterForm(uiState = uiState, viewModel = viewModel)
+                        AuthRole.USER -> UserRegisterForm(uiState = uiState, viewModel = viewModel)
                     }
 
                     Spacer(Modifier.height(20.dp))
@@ -462,23 +459,6 @@ private fun UserRegisterForm(
             label = "Şifreyi Onayla",
             isVisible = uiState.isPasswordVisible,
             onVisibilityToggle = viewModel::onPasswordVisibilityToggled
-        )
-    }
-}
-
-@Composable
-private fun ComingSoonRoleForm(roleName: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Text(
-            text = "$roleName kaydı yakında desteklenecek.",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
         )
     }
 }

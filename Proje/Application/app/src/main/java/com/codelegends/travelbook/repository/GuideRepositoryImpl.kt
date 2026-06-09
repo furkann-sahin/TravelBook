@@ -259,7 +259,6 @@ class GuideRepositoryImpl @Inject constructor(
         return CompanyTourSummary(
             id = id,
             name = dto.name.orEmpty(),
-            location = dto.location.orEmpty(),
             departureLocation = dto.departureLocation.orEmpty(),
             arrivalLocation = dto.arrivalLocation.orEmpty(),
             price = dto.price ?: 0.0,

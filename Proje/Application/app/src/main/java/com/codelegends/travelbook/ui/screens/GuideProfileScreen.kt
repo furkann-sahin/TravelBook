@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.codelegends.travelbook.ui.components.TravelBookTextField
@@ -435,7 +434,7 @@ private fun ProfileCompletionBar(percentage: Int) {
 }
 
 @Composable
-private fun InfoSection(title: String, icon: ImageVector, isEditing: Boolean, content: @Composable () -> Unit) {
+private fun InfoSection(title: String, icon: ImageVector, content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
@@ -540,8 +539,8 @@ private fun DangerZone(fullName: String, confirmText: String, onConfirmChange: (
 }
 
 @Composable
-fun Switch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, scale: Float = 1f) {
-    androidx.compose.material3.Switch(
+fun Switch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = Modifier.padding(0.dp)
