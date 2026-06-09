@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,6 +34,13 @@ class FavoriteViewModel @Inject constructor(
     val uiState: StateFlow<FavoriteUiState> = _uiState.asStateFlow()
 
     init {
+        // Repository'deki flow'u gözlemle
+        viewModelScope.launch {
+            favoriteRepository.favoritesFlow.collectLatest { list ->
+                _uiState.update { it.copy(favorites = list.filter { fav -> fav.tourId != null && fav.tour != null }) }
+            }
+        }
+        
         loadFavorites()
     }
 
@@ -49,17 +57,18 @@ class FavoriteViewModel @Inject constructor(
 
             _uiState.update { it.copy(currentUserId = userId) }
             
-            // Veri gelmeden önce cache'i temizle ve API'den taze veriyi çek
-            favoriteRepository.getFavorites(userId)
-
+            // API'den güncelle (Sonuç direkt flow üzerinden UI'a yansıyacak)
             when (val result = favoriteRepository.getFavorites(userId)) {
                 is ApiResult.Success -> {
-                    // tourId null olanları filtrele (Bozuk veri koruması)
-                    val validFavorites = result.data.filter { it.tourId != null && it.tour != null }
-                    _uiState.update { it.copy(favorites = validFavorites, isLoading = false) }
+                    _uiState.update { it.copy(isLoading = false) }
                 }
                 is ApiResult.Error -> {
-                    _uiState.update { it.copy(errorMessage = result.message, isLoading = false) }
+                    // Eğer liste boşsa hata göster, değilse (cache varsa) sadece sessizce kal
+                    if (_uiState.value.favorites.isEmpty()) {
+                        _uiState.update { it.copy(errorMessage = result.message, isLoading = false) }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, snackbarMessage = "Favoriler güncellenemedi: ${result.message}") }
+                    }
                 }
             }
         }
@@ -70,12 +79,7 @@ class FavoriteViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = favoriteRepository.removeFavorite(userId, tourId)) {
                 is ApiResult.Success -> {
-                    _uiState.update { state ->
-                        state.copy(
-                            favorites = state.favorites.filter { it.tourId != tourId },
-                            snackbarMessage = "Favorilerden kaldırıldı"
-                        )
-                    }
+                    _uiState.update { it.copy(snackbarMessage = "Favorilerden kaldırıldı") }
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(snackbarMessage = result.message) }

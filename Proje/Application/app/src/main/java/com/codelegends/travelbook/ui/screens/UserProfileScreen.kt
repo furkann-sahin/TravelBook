@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardTravel
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -65,6 +66,7 @@ import com.codelegends.travelbook.viewmodel.UserProfileViewModel
 fun UserProfileScreen(
     onAccountDeleted: () -> Unit,
     onNavigateToPurchases: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -138,6 +140,17 @@ fun UserProfileScreen(
                             Icon(Icons.Default.CardTravel, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
                             Text("✈️ Seyahatlerim")
+                        }
+
+                        Button(
+                            onClick = onNavigateToFavorites,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                        ) {
+                            Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("❤️ Favorilerim")
                         }
 
                         Button(
