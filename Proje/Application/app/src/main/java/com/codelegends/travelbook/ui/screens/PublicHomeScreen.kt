@@ -478,7 +478,8 @@ private fun FeaturedTourCard(tour: FeaturedTourSummary) {
                 val route =
                     if (tour.departureLocation.isNotBlank() && tour.arrivalLocation.isNotBlank()) {
                         "${tour.departureLocation} → ${tour.arrivalLocation}"
-                    } else tour.location
+                    } else "Konum bilgisi yok"
+
 
                 if (route.isNotBlank()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

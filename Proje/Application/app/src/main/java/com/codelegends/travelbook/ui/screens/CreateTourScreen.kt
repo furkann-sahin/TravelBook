@@ -1,8 +1,6 @@
 package com.codelegends.travelbook.ui.screens
 
-import android.content.ContentResolver
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.TravelExplore
@@ -50,7 +50,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -70,9 +74,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.codelegends.travelbook.viewmodel.CreateTourEvent
 import com.codelegends.travelbook.viewmodel.CreateTourViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.util.Calendar
+import java.util.TimeZone
+import com.codelegends.travelbook.util.FormatUtils
+import com.codelegends.travelbook.util.readImagePickerPayload
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.ByteArray
@@ -107,21 +113,17 @@ fun CreateTourScreen(
     var placeInput by remember { mutableStateOf("") }
     var imagePreviewUri by remember { mutableStateOf<Uri?>(null) }
     var guideMenuExpanded by remember { mutableStateOf(false) }
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val payload = withContext(Dispatchers.IO) {
-                context.contentResolver.readCreateTourImagePayload(uri)
-            }
+            val payload = context.contentResolver.readImagePickerPayload(uri, "tour-image")
             if (payload == null) {
-                snackbarHostState.showSnackbar("Görsel okunamadı")
-                return@launch
-            }
-            if (payload.bytes.size > 5 * 1024 * 1024) {
-                snackbarHostState.showSnackbar("Dosya boyutu en fazla 5 MB olmalıdır.")
+                snackbarHostState.showSnackbar("Görsel okunamadı veya 5 MB sınırı aşıldı")
                 return@launch
             }
             imagePreviewUri = uri
@@ -298,22 +300,36 @@ fun CreateTourScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedTextField(
-                    value = uiState.form.startDate,
-                    onValueChange = viewModel::onStartDateChanged,
-                    label = { Text("Başlangıç (YYYY-AA-GG) *") },
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = uiState.form.endDate,
-                    onValueChange = viewModel::onEndDateChanged,
-                    label = { Text("Bitiş (YYYY-AA-GG) *") },
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                    singleLine = true
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = if (uiState.form.startDate.isBlank()) ""
+                                else FormatUtils.formatDate(uiState.form.startDate),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Başlangıç Tarihi *") },
+                        trailingIcon = {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    Box(modifier = Modifier.matchParentSize().clickable { showStartDatePicker = true })
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = if (uiState.form.endDate.isBlank()) ""
+                                else FormatUtils.formatDate(uiState.form.endDate),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Bitiş Tarihi *") },
+                        trailingIcon = {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    Box(modifier = Modifier.matchParentSize().clickable { showEndDatePicker = true })
+                }
             }
 
             SectionLabel("Tur Görseli")
@@ -514,6 +530,50 @@ fun CreateTourScreen(
             Spacer(Modifier.height(16.dp))
         }
     }
+
+    if (showStartDatePicker) {
+        val startDatePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = uiState.form.startDate.isoDateToMillis()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showStartDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    startDatePickerState.selectedDateMillis?.let { millis ->
+                        viewModel.onStartDateChanged(millisToIsoDate(millis))
+                    }
+                    showStartDatePicker = false
+                }) { Text("Tamam") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartDatePicker = false }) { Text("İptal") }
+            }
+        ) {
+            DatePicker(state = startDatePickerState)
+        }
+    }
+
+    if (showEndDatePicker) {
+        val endDatePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = uiState.form.endDate.isoDateToMillis()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showEndDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    endDatePickerState.selectedDateMillis?.let { millis ->
+                        viewModel.onEndDateChanged(millisToIsoDate(millis))
+                    }
+                    showEndDatePicker = false
+                }) { Text("Tamam") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndDatePicker = false }) { Text("İptal") }
+            }
+        ) {
+            DatePicker(state = endDatePickerState)
+        }
+    }
 }
 
 @Composable
@@ -526,52 +586,28 @@ private fun SectionLabel(text: String) {
     )
 }
 
-private data class CreateTourImagePayload(
-    val fileName: String,
-    val mimeType: String,
-    val bytes: ByteArray
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CreateTourImagePayload
-
-        if (fileName != other.fileName) return false
-        if (mimeType != other.mimeType) return false
-        if (!bytes.contentEquals(other.bytes)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = fileName.hashCode()
-        result = 31 * result + mimeType.hashCode()
-        result = 31 * result + bytes.contentHashCode()
-        return result
-    }
+private fun millisToIsoDate(millis: Long): String {
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    cal.timeInMillis = millis
+    return "%04d-%02d-%02d".format(
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH) + 1,
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
 }
 
-private fun ContentResolver.readCreateTourImagePayload(uri: Uri): CreateTourImagePayload? {
-    val mimeType = getType(uri) ?: "image/jpeg"
-    val allowed = listOf("image/jpeg", "image/png", "image/webp", "image/gif")
-    if (mimeType !in allowed) return null
-
-    val bytes = openInputStream(uri)?.use { it.readBytes() } ?: return null
-    if (bytes.isEmpty()) return null
-
-    val fileName = query(
-        uri,
-        arrayOf(OpenableColumns.DISPLAY_NAME),
-        null,
-        null,
-        null
-    )?.use { cursor ->
-        if (cursor.moveToFirst()) {
-            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (index >= 0) cursor.getString(index) else null
-        } else null
-    } ?: "tour-image-${System.currentTimeMillis()}.jpg"
-
-    return CreateTourImagePayload(fileName = fileName, mimeType = mimeType, bytes = bytes)
+private fun String.isoDateToMillis(): Long? {
+    if (length < 10) return null
+    return try {
+        val parts = split("-")
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        cal.set(Calendar.YEAR, parts[0].toInt())
+        cal.set(Calendar.MONTH, parts[1].toInt() - 1)
+        cal.set(Calendar.DAY_OF_MONTH, parts[2].toInt())
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        cal.timeInMillis
+    } catch (_: Exception) { null }
 }

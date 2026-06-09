@@ -56,14 +56,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.codelegends.travelbook.model.FeaturedTourSummary
 import com.codelegends.travelbook.ui.components.TravelBookTextField
 import com.codelegends.travelbook.ui.theme.TravelBookTheme
 import com.codelegends.travelbook.viewmodel.TourListingViewModel
-import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
+import com.codelegends.travelbook.util.FormatUtils
 
 @Composable
 fun TourListingScreen(
@@ -338,7 +338,7 @@ fun TourItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(4.dp))
-                    Text(text = tour.location, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = "${tour.departureLocation} → ${tour.arrivalLocation}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -346,7 +346,7 @@ fun TourItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(4.dp))
-                    Text(text = "${tour.startDate} - ${tour.endDate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = " ${FormatUtils.formatDateRange(tour.startDate, tour.endDate)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -363,7 +363,7 @@ fun TourItem(
                         Text(text = "Düzenleyen Firma", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(
-                        text = "₺${String.format(Locale.getDefault(), "%.0f", tour.price)}",
+                        text = "₺${String.format(LocalLocale.current.platformLocale, "%.0f", tour.price)}",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary

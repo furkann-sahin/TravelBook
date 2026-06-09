@@ -15,7 +15,6 @@ import com.codelegends.travelbook.model.UserRegisterRequestDto
 import com.codelegends.travelbook.model.UserSession
 import com.codelegends.travelbook.service.UserApiService
 import com.codelegends.travelbook.service.UserAuthApiService
-import retrofit2.Response
 import java.io.IOException
 import javax.inject.Inject
 

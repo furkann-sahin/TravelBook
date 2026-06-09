@@ -4,6 +4,10 @@ const Company = mongoose.model("Company");
 const Guide = mongoose.model("Guide");
 const { createResponse } = require("../utils/create-response");
 const { persistUploadedImage } = require("../utils/image-storage");
+const { getRedisClient } = require("../configs/redis");
+const { publishTourEvent } = require("../configs/rabbitmq");
+
+const CACHE_TTL = 3600; // 1 hour
 
 // List tours for a company
 const listCompanyTours = async (req, res) => {
@@ -27,6 +31,20 @@ const listCompanyTours = async (req, res) => {
       });
     }
 
+    const cacheKey = `company:tours:${companyId}`;
+    const redis = getRedisClient();
+
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return createResponse(res, 200, JSON.parse(cached));
+        }
+      } catch (err) {
+        console.error("[Redis] Cache read error:", err.message);
+      }
+    }
+
     const tours = await Tour.find({ companyId })
       .select(
         "name price startDate endDate images services rating departureLocation arrivalLocation",
@@ -47,10 +65,17 @@ const listCompanyTours = async (req, res) => {
       rating: tour.rating,
     }));
 
-    createResponse(res, 200, {
-      status: "success",
-      data: tourList,
-    });
+    const responseBody = { status: "success", data: tourList };
+
+    if (redis) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(responseBody), "EX", CACHE_TTL);
+      } catch (err) {
+        console.error("[Redis] Cache write error:", err.message);
+      }
+    }
+
+    createResponse(res, 200, responseBody);
   } catch (error) {
     createResponse(res, 500, {
       status: "error",
@@ -170,6 +195,24 @@ const createTour = async (req, res) => {
       });
     }
 
+    // Invalidate company tours list cache
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        await redis.del(`company:tours:${companyId}`);
+      } catch (err) {
+        console.error("[Redis] Cache invalidation error:", err.message);
+      }
+    }
+
+    // Publish tour.created event
+    await publishTourEvent("tour.created", {
+      eventType: "tour.created",
+      tourId: tour._id.toString(),
+      tourName: tour.name,
+      companyId,
+    });
+
     createResponse(res, 201, {
       status: "success",
       message: "Tur başarıyla oluşturuldu",
@@ -260,6 +303,20 @@ const getCompanyTourDetail = async (req, res) => {
       });
     }
 
+    const cacheKey = `company:tour:${companyId}:${tourId}`;
+    const redis = getRedisClient();
+
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return createResponse(res, 200, JSON.parse(cached));
+        }
+      } catch (err) {
+        console.error("[Redis] Cache read error:", err.message);
+      }
+    }
+
     const tour = await Tour.findOne({ _id: tourId, companyId });
     if (!tour) {
       return createResponse(res, 404, {
@@ -284,7 +341,7 @@ const getCompanyTourDetail = async (req, res) => {
       }
     }
 
-    createResponse(res, 200, {
+    const responseBody = {
       status: "success",
       data: {
         id: tour._id,
@@ -309,7 +366,17 @@ const getCompanyTourDetail = async (req, res) => {
         rating: tour.rating,
         reviewCount: tour.reviewCount,
       },
-    });
+    };
+
+    if (redis) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(responseBody), "EX", CACHE_TTL);
+      } catch (err) {
+        console.error("[Redis] Cache write error:", err.message);
+      }
+    }
+
+    createResponse(res, 200, responseBody);
   } catch (error) {
     createResponse(res, 500, {
       status: "error",
@@ -382,6 +449,16 @@ const updateCompanyTour = async (req, res) => {
 
     await tour.save();
 
+    // Invalidate company tours list and tour detail cache
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        await redis.del(`company:tours:${companyId}`, `company:tour:${companyId}:${tourId}`);
+      } catch (err) {
+        console.error("[Redis] Cache invalidation error:", err.message);
+      }
+    }
+
     createResponse(res, 200, {
       status: "success",
       message: "Tur başarıyla güncellendi",
@@ -433,6 +510,8 @@ const deleteCompanyTour = async (req, res) => {
       });
     }
 
+    const tourName = tour.name;
+
     // Remove tour from guide's registeredTours if assigned
     if (tour.guideId) {
       await Guide.findByIdAndUpdate(tour.guideId, {
@@ -441,6 +520,24 @@ const deleteCompanyTour = async (req, res) => {
     }
 
     await Tour.findByIdAndDelete(tourId);
+
+    // Invalidate company tours list and tour detail cache
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        await redis.del(`company:tours:${companyId}`, `company:tour:${companyId}:${tourId}`);
+      } catch (err) {
+        console.error("[Redis] Cache invalidation error:", err.message);
+      }
+    }
+
+    // Publish tour.deleted event
+    await publishTourEvent("tour.deleted", {
+      eventType: "tour.deleted",
+      tourId,
+      tourName,
+      companyId,
+    });
 
     createResponse(res, 200, {
       status: "success",

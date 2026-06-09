@@ -49,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -136,7 +135,7 @@ fun GuideMyToursScreen(
                                 isRemoving = uiState.isRemoving
                             )
                         }
-                        
+
                         item {
                             Spacer(modifier = Modifier.height(LocalNavBarHeight.current))
                         }
@@ -154,7 +153,7 @@ private fun GuideTourCard(
     isRemoving: Boolean
 ) {
     val isCompleted = isTourCompleted(tour.endDate)
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,11 +210,16 @@ private fun GuideTourCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     if (isCompleted) {
                         AssistChip(
                             onClick = { },
-                            label = { Text("Tamamlandı", style = MaterialTheme.typography.labelSmall) },
+                            label = {
+                                Text(
+                                    "Tamamlandı",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                 labelColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -234,10 +238,13 @@ private fun GuideTourCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    val locationText = if (tour.departureLocation.isNotBlank() && tour.arrivalLocation.isNotBlank()) {
-                        "${tour.departureLocation} - ${tour.arrivalLocation}"
-                    } else tour.location
-                    
+                    val locationText =
+                        if (tour.departureLocation.isNotBlank() && tour.arrivalLocation.isNotBlank()) {
+                            "${tour.departureLocation} - ${tour.arrivalLocation}"
+                        } else {
+                            tour.departureLocation.ifBlank { tour.arrivalLocation.ifBlank { "Konum bilgisi yok" } }
+                        }
+
                     Text(
                         text = locationText,
                         style = MaterialTheme.typography.bodySmall,

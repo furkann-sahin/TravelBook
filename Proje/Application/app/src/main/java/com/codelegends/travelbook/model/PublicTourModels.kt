@@ -13,7 +13,6 @@ data class PublicTourDto(
     @SerializedName("_id") val objectId: String? = null,
     val name: String? = null,
     val title: String? = null,
-    val location: String? = null,
     val departureLocation: String? = null,
     val arrivalLocation: String? = null,
     val price: Double? = null,
@@ -27,15 +26,11 @@ data class PublicTourDto(
     @SerializedName("filledCapacity") val filledCapacity: Int? = null,
     @SerializedName("isPurchased") val isPurchased: Boolean? = null,
     @SerializedName("purchaseId") val purchaseId: String? = null
-) {
-    val remainingCapacity: Int
-        get() = (totalCapacity ?: 0) - (filledCapacity ?: 0)
-}
+)
 
 data class FeaturedTourSummary(
     val id: String,
     val title: String,
-    val location: String,
     val departureLocation: String,
     val arrivalLocation: String,
     val price: Double,

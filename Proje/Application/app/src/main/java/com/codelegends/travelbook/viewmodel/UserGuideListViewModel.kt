@@ -34,8 +34,7 @@ class UserGuideListViewModel @Inject constructor(
     fun fetchGuides() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = guideRepository.getAllGuides()
-            when (result) {
+            when (val result = guideRepository.getAllGuides()) {
                 is ApiResult.Success -> {
                     _uiState.update { it.copy(guides = result.data, isLoading = false) }
                 }

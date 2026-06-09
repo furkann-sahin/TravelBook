@@ -7,11 +7,28 @@ const Review = mongoose.model("Review");
 const User = mongoose.model("User");
 const { createResponse } = require("../utils/create-response");
 const { persistUploadedImage } = require("../utils/image-storage");
+const { getRedisClient } = require("../configs/redis");
+
+const CACHE_TTL = 3600; // 1 hour
 
 // Get company detail
 const getCompanyDetail = async (req, res) => {
   try {
     const { companyId } = req.params;
+
+    const cacheKey = `company:profile:${companyId}`;
+    const redis = getRedisClient();
+
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return createResponse(res, 200, JSON.parse(cached));
+        }
+      } catch (err) {
+        console.error("[Redis] Cache read error:", err.message);
+      }
+    }
 
     const company = await Company.findById(companyId);
 
@@ -22,10 +39,17 @@ const getCompanyDetail = async (req, res) => {
       });
     }
 
-    createResponse(res, 200, {
-      status: "success",
-      data: company,
-    });
+    const responseBody = { status: "success", data: company };
+
+    if (redis) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(responseBody), "EX", CACHE_TTL);
+      } catch (err) {
+        console.error("[Redis] Cache write error:", err.message);
+      }
+    }
+
+    createResponse(res, 200, responseBody);
   } catch (error) {
     createResponse(res, 500, {
       status: "error",
@@ -159,6 +183,16 @@ const updateCompany = async (req, res) => {
       });
     }
 
+    // Invalidate company profile cache
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        await redis.del(`company:profile:${companyId}`);
+      } catch (err) {
+        console.error("[Redis] Cache invalidation error:", err.message);
+      }
+    }
+
     createResponse(res, 200, {
       status: "success",
       message: "Profil başarıyla güncellendi",
@@ -200,6 +234,11 @@ const uploadProfileImage = async (req, res) => {
         message: "Firma bulunamadı",
       });
     }
+    // Invalidate company profile cache
+    const redisP = getRedisClient();
+    if (redisP) {
+      try { await redisP.del(`company:profile:${companyId}`); } catch (err) { console.error("[Redis] Cache invalidation error:", err.message); }
+    }
     createResponse(res, 200, {
       status: "success",
       data: { profileImageUrl: imageUrl },
@@ -239,6 +278,11 @@ const uploadBannerImage = async (req, res) => {
         status: "error",
         message: "Firma bulunamadı",
       });
+    }
+    // Invalidate company profile cache
+    const redisB = getRedisClient();
+    if (redisB) {
+      try { await redisB.del(`company:profile:${companyId}`); } catch (err) { console.error("[Redis] Cache invalidation error:", err.message); }
     }
     createResponse(res, 200, {
       status: "success",

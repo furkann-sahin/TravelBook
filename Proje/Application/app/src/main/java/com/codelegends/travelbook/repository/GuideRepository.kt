@@ -19,6 +19,6 @@ interface GuideRepository {
     suspend fun listMyCompanies(guideId: String): ApiResult<List<CompanyProfileSummary>>
     suspend fun removeFromCompany(guideId: String, companyId: String): ApiResult<Unit>
 
-    suspend fun listMyTours(guideId: String): ApiResult<List<com.codelegends.travelbook.model.CompanyTourSummary>>
+    suspend fun listMyTours(guideId: String): ApiResult<List<CompanyTourSummary>>
     suspend fun removeTourRegistration(guideId: String, tourId: String): ApiResult<Unit>
 }
