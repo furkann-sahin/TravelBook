@@ -55,6 +55,17 @@ class UserTourDetailViewModel @Inject constructor(
             val session = sessionManager.sessionFlow.firstOrNull()
             _uiState.update { it.copy(currentUserId = session?.userId) }
         }
+
+        // Favori durumunu flow üzerinden takip et
+        viewModelScope.launch {
+            favoriteRepository.favoritesFlow.collectLatest { favorites ->
+                val tourId = _uiState.value.tour?.id ?: _uiState.value.tour?.objectId
+                if (tourId != null) {
+                    val isFav = favorites.any { it.tourId == tourId }
+                    _uiState.update { it.copy(isFavorite = isFav) }
+                }
+            }
+        }
     }
 
     fun loadTourDetail(tourId: String) {
@@ -62,7 +73,6 @@ class UserTourDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = publicTourRepository.getTourDetail(tourId)) {
                 is ApiResult.Success -> {
-                    // Backend'den veri gelmese bile local cache'den kontrol et
                     val isLocallyPurchased = publicTourRepository.isTourPurchased(tourId)
                     val localPurchaseId = publicTourRepository.getPurchaseId(tourId)
 
@@ -72,10 +82,10 @@ class UserTourDetailViewModel @Inject constructor(
                             tour = result.data,
                             isPurchased = (result.data.isPurchased == true) || isLocallyPurchased,
                             purchaseId = result.data.purchaseId ?: localPurchaseId,
-                            isPurchasing = false
+                            isPurchasing = false,
+                            isFavorite = favoriteRepository.isFavorite(tourId) // Manuel senkronizasyon (flow gecikirse diye)
                         ) 
                     }
-                    checkIfFavorite(tourId)
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
@@ -112,7 +122,7 @@ class UserTourDetailViewModel @Inject constructor(
                             snackbarMessage = "Yorumunuz eklendi"
                         )
                     }
-                    loadTourDetail(tourId) // Refresh to see the new review and updated stats
+                    loadTourDetail(tourId)
                 }
                 is ApiResult.Error -> {
                     _uiState.update {
@@ -200,25 +210,6 @@ class UserTourDetailViewModel @Inject constructor(
         _uiState.update { it.copy(snackbarMessage = null) }
     }
 
-    private fun checkIfFavorite(tourId: String) {
-        val userId = _uiState.value.currentUserId ?: return
-        
-        // Önce cache'den kontrol et (Anlık görsel geri bildirim için)
-        if (favoriteRepository.isFavorite(tourId)) {
-            _uiState.update { it.copy(isFavorite = true) }
-        }
-
-        viewModelScope.launch {
-            when (val result = favoriteRepository.getFavorites(userId)) {
-                is ApiResult.Success -> {
-                    val isFav = result.data.any { it.tourId == tourId }
-                    _uiState.update { it.copy(isFavorite = isFav) }
-                }
-                else -> {}
-            }
-        }
-    }
-
     fun toggleFavorite(tourId: String) {
         val userId = _uiState.value.currentUserId ?: return
         val isFav = _uiState.value.isFavorite
@@ -238,7 +229,6 @@ class UserTourDetailViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     _uiState.update { 
                         it.copy(
-                            isFavorite = !isFav,
                             isTogglingFavorite = false,
                             snackbarMessage = if (isFav) "Favorilerden kaldırıldı" else "Favorilere eklendi"
                         ) 
@@ -264,7 +254,7 @@ class UserTourDetailViewModel @Inject constructor(
                             snackbarMessage = "Tur satın alma işlemi başarılı"
                         )
                     }
-                    loadTourDetail(tourId) // Kapasiteyi güncellemek için tekrar yükle
+                    loadTourDetail(tourId)
                 }
                 is ApiResult.Error -> {
                     _uiState.update {
@@ -281,7 +271,7 @@ class UserTourDetailViewModel @Inject constructor(
     fun cancelPurchase(tourId: String) {
         val purchaseId = _uiState.value.purchaseId ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isPurchasing = true) } // Reuse purchasing state for loading
+            _uiState.update { it.copy(isPurchasing = true) }
             when (val result = publicTourRepository.cancelPurchase(purchaseId)) {
                 is ApiResult.Success -> {
                     _uiState.update {

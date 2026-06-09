@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,27 +48,21 @@ class TourListingViewModel @Inject constructor(
         viewModelScope.launch {
             val session = sessionManager.sessionFlow.firstOrNull()
             _uiState.update { it.copy(currentUserId = session?.userId) }
-            refreshFavorites()
-            fetchTours()
-        }
-    }
-
-    private fun refreshFavorites() {
-        val userId = _uiState.value.currentUserId ?: return
-        viewModelScope.launch {
-            when (val result = favoriteRepository.getFavorites(userId)) {
-                is ApiResult.Success -> {
-                    val ids = result.data.mapNotNull { it.tourId }.toSet()
+            
+            // Favori listesini flow üzerinden takip et
+            viewModelScope.launch {
+                favoriteRepository.favoritesFlow.collectLatest { list ->
+                    val ids = list.mapNotNull { it.tourId }.toSet()
                     _uiState.update { it.copy(favoriteTourIds = ids) }
                 }
-                else -> {
-                    // Cache'den yükle (Eğer API hatası varsa veya cache zaten doluysa)
-                    val cachedIds = _uiState.value.tours.map { it.id }.filter { favoriteRepository.isFavorite(it) }.toSet()
-                    if (cachedIds.isNotEmpty()) {
-                        _uiState.update { it.copy(favoriteTourIds = cachedIds) }
-                    }
-                }
             }
+
+            // Başlangıçta API'den favorileri çek
+            _uiState.value.currentUserId?.let { userId ->
+                favoriteRepository.getFavorites(userId)
+            }
+            
+            fetchTours()
         }
     }
 
@@ -90,13 +85,7 @@ class TourListingViewModel @Inject constructor(
             when (result) {
                 is ApiResult.Success -> {
                     _uiState.update { state ->
-                        val newIds = if (isFavorite) {
-                            state.favoriteTourIds - tourId
-                        } else {
-                            state.favoriteTourIds + tourId
-                        }
                         state.copy(
-                            favoriteTourIds = newIds,
                             togglingFavoriteId = null,
                             snackbarMessage = if (isFavorite) "Favorilerden kaldırıldı" else "Favorilere eklendi"
                         )

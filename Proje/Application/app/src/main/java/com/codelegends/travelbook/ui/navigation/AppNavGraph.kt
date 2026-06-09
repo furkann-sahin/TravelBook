@@ -412,6 +412,9 @@ private fun UserAppShell(
                             onAccountDeleted = onLoggedOut,
                             onNavigateToPurchases = {
                                 shellNavController.navigate(AppRoute.UserPurchases.route)
+                            },
+                            onNavigateToFavorites = {
+                                shellNavController.navigateToTopLevel(AppRoute.UserFavorites.route)
                             }
                         )
                     }
