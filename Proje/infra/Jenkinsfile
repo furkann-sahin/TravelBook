@@ -5,6 +5,8 @@ pipeline {
         // Jenkins Credentials Store'da tanımlanması gereken secret'lar
         JWT_SECRET      = credentials('travelbook-jwt-secret')
         MONGODB_URI     = credentials('travelbook-mongodb-uri')
+        REDIS_URL       = credentials('travelbook-redis-url')
+        RABBITMQ_URL    = credentials('travelbook-rabbitmq-url')
         COMPOSE_PROJECT = 'travelbook'
         API_IMAGE       = 'travelbook-api'
         FRONTEND_IMAGE  = 'travelbook-frontend'

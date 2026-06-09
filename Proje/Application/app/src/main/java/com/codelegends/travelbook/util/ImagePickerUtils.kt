@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.core.graphics.scale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -84,12 +85,8 @@ private fun compressImage(rawBytes: ByteArray): ByteArray? {
     // Fine-scale if still larger than MAX_DIMENSION after subsampling
     val bitmap = if (decoded.width > MAX_DIMENSION || decoded.height > MAX_DIMENSION) {
         val scale = MAX_DIMENSION.toFloat() / maxOf(decoded.width, decoded.height)
-        val scaled = Bitmap.createScaledBitmap(
-            decoded,
-            (decoded.width * scale).toInt(),
-            (decoded.height * scale).toInt(),
-            true
-        )
+        val scaled =
+            decoded.scale((decoded.width * scale).toInt(), (decoded.height * scale).toInt())
         if (scaled !== decoded) decoded.recycle()
         scaled
     } else {

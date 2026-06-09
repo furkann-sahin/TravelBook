@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import com.codelegends.travelbook.core.config.AppConfig
 import com.codelegends.travelbook.util.readImagePickerPayload
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -134,7 +133,6 @@ fun GuideProfileScreen(
                         InfoSection(
                             title = "Hakkımda",
                             icon = Icons.Default.Info,
-                            isEditing = uiState.isEditing
                         ) {
                             if (uiState.isEditing) {
                                 TravelBookTextField(
@@ -152,7 +150,7 @@ fun GuideProfileScreen(
 
                         Spacer(Modifier.height(24.dp))
 
-                        InfoSection(title = "Uzmanlık Bilgileri", icon = Icons.Default.Verified, isEditing = uiState.isEditing) {
+                        InfoSection(title = "Uzmanlık Bilgileri", icon = Icons.Default.Verified) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 if (uiState.isEditing) {
                                     TravelBookTextField(value = uiState.form.languages, onValueChange = viewModel::onLanguagesChanged, label = "Diller", helperText = "Virgülle ayırarak yazın")
@@ -168,7 +166,7 @@ fun GuideProfileScreen(
 
                         Spacer(Modifier.height(24.dp))
 
-                        InfoSection(title = "İletişim Bilgileri", icon = Icons.Default.ContactPage, isEditing = uiState.isEditing) {
+                        InfoSection(title = "İletişim Bilgileri", icon = Icons.Default.ContactPage) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 InfoRow(label = "E-posta", value = profile.email)
                                 if (uiState.isEditing) {
@@ -182,7 +180,7 @@ fun GuideProfileScreen(
 
                         Spacer(Modifier.height(24.dp))
 
-                        InfoSection(title = "Sosyal Medya", icon = Icons.Default.Share, isEditing = uiState.isEditing) {
+                        InfoSection(title = "Sosyal Medya", icon = Icons.Default.Share) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 if (uiState.isEditing) {
                                     TravelBookTextField(value = uiState.form.instagram, onValueChange = viewModel::onInstagramChanged, label = "Instagram")
@@ -196,7 +194,7 @@ fun GuideProfileScreen(
 
                         Spacer(Modifier.height(24.dp))
 
-                        InfoSection(title = "İstatistikler", icon = Icons.Default.BarChart, isEditing = false) {
+                        InfoSection(title = "İstatistikler", icon = Icons.Default.BarChart) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 StatCard(Modifier.weight(1f), "Toplam Tur", "${uiState.stats?.totalTours ?: 0}", Icons.Default.Map)
                                 StatCard(Modifier.weight(1f), "Deneyim", "${profile.experienceYears} Yıl", Icons.Default.History)
@@ -206,7 +204,7 @@ fun GuideProfileScreen(
 
                         Spacer(Modifier.height(24.dp))
 
-                        InfoSection(title = "Öne Çıkan Kareler", icon = Icons.Default.Collections, isEditing = true) {
+                        InfoSection(title = "Öne Çıkan Kareler", icon = Icons.Default.Collections) {
                             Column {
                                 if (profile.galleryImages.isEmpty()) {
                                     Text("Henüz fotoğraf eklenmedi.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -386,7 +384,7 @@ private fun ProfileHeader(
                     Spacer(Modifier.width(8.dp))
                     Text(if (profile.available) "Müsait" else "Meşgul", style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.width(12.dp))
-                    Switch(checked = profile.available, onCheckedChange = onAvailabilityChange, scale = 0.8f)
+                    Switch(checked = profile.available, onCheckedChange = onAvailabilityChange)
                 }
 
                 Row {

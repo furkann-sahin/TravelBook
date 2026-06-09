@@ -67,7 +67,9 @@ fun UserFavoritesScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Surface(shadowElevation = 4.dp) {
-                Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)) {
                     Text(
                         text = "Favorilerim",
                         style = MaterialTheme.typography.headlineSmall,
@@ -77,14 +79,18 @@ fun UserFavoritesScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (!uiState.errorMessage.isNullOrBlank()) {
                 Text(
                     text = uiState.errorMessage!!,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
                     textAlign = TextAlign.Center
                 )
             } else if (uiState.favorites.isEmpty()) {
@@ -132,7 +138,9 @@ private fun FavoriteItem(
     val tour = favorite.tour ?: return
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -141,11 +149,15 @@ private fun FavoriteItem(
             AsyncImage(
                 model = tour.imageUrl ?: tour.images?.firstOrNull(),
                 contentDescription = null,
-                modifier = Modifier.width(120.dp).fillMaxSize(),
+                modifier = Modifier
+                    .width(120.dp)
+                    .fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 
-            Column(modifier = Modifier.padding(12.dp).weight(1f)) {
+            Column(modifier = Modifier
+                .padding(12.dp)
+                .weight(1f)) {
                 Text(
                     text = tour.title ?: tour.name ?: "Tur",
                     style = MaterialTheme.typography.titleMedium,
@@ -153,13 +165,22 @@ private fun FavoriteItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(Modifier.height(4.dp))
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.LocationOn,
+                        null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text(text = tour.location.orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "${tour.departureLocation} → ${tour.arrivalLocation}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Spacer(Modifier.weight(1f))
@@ -176,7 +197,12 @@ private fun FavoriteItem(
                         color = MaterialTheme.colorScheme.secondary
                     )
                     IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Delete, "Kaldır", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.Default.Delete,
+                            "Kaldır",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }

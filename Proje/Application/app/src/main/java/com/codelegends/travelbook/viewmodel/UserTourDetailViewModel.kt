@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.firstOrNull
@@ -76,15 +77,15 @@ class UserTourDetailViewModel @Inject constructor(
                     val isLocallyPurchased = publicTourRepository.isTourPurchased(tourId)
                     val localPurchaseId = publicTourRepository.getPurchaseId(tourId)
 
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            isLoading = false, 
+                            isLoading = false,
                             tour = result.data,
                             isPurchased = (result.data.isPurchased == true) || isLocallyPurchased,
                             purchaseId = result.data.purchaseId ?: localPurchaseId,
                             isPurchasing = false,
                             isFavorite = favoriteRepository.isFavorite(tourId) // Manuel senkronizasyon (flow gecikirse diye)
-                        ) 
+                        )
                     }
                 }
                 is ApiResult.Error -> {
@@ -213,7 +214,7 @@ class UserTourDetailViewModel @Inject constructor(
     fun toggleFavorite(tourId: String) {
         val userId = _uiState.value.currentUserId ?: return
         val isFav = _uiState.value.isFavorite
-        
+
         viewModelScope.launch {
             _uiState.update { it.copy(isTogglingFavorite = true) }
             val result = if (isFav) {
@@ -227,11 +228,11 @@ class UserTourDetailViewModel @Inject constructor(
 
             when (result) {
                 is ApiResult.Success -> {
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
                             isTogglingFavorite = false,
                             snackbarMessage = if (isFav) "Favorilerden kaldırıldı" else "Favorilere eklendi"
-                        ) 
+                        )
                     }
                 }
                 is ApiResult.Error -> {
